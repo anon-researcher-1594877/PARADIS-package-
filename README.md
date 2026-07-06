@@ -23,8 +23,11 @@ data and habitat-suitability (HS) maps.  It implements:
 ### From source (development)
 
 ```bash
-git clone https://github.com/your-org/paradis.git
+# make sure you are in the appropriate directory before cloning
+git clone https://github.com/anon-researcher-1594877/PARADIS-package-.git
+# change your directory to be in ./PARADIS-package-/paradis, the folder where the .toml is
 cd paradis
+# install everything
 pip install -e ".[dev,geo]"
 ```
 
