@@ -56,7 +56,7 @@ def align_folders(
     variable_parts:
         ``variable_parts[folder_idx][match_idx]`` → species name string.
     """
-    file_lists = [os.listdir(f) for f in folders]
+    file_lists = [sorted(os.listdir(f)) for f in folders]
     var_parts_per_folder = []
 
     for fmt, files in zip(name_formats, file_lists):
@@ -87,7 +87,26 @@ def align_folders(
     else:
         print("All files aligned successfully.")
 
-    return ordered, var_parts_per_folder
+    return ordered, var_parts_per_folder, file_lists
+
+
+# ---------------------------------------------------------------------------
+# Sampling effort helpers
+# ---------------------------------------------------------------------------
+
+def _build_effort_map(folder_sampling_effort: str) -> dict[str, str]:
+    """Scan *folder_sampling_effort* and return a dict mapping normalised group
+    names to their full file paths.
+
+    Files must be named ``sampling_effort_<group>.tif`` (case-insensitive).
+    """
+    effort_map: dict[str, str] = {}
+    for fname in os.listdir(folder_sampling_effort):
+        lower = fname.lower()
+        if lower.startswith("sampling_effort_") and lower.endswith(".tif"):
+            group_key = lower[len("sampling_effort_"):-len(".tif")].replace("_", " ").strip()
+            effort_map[group_key] = os.path.join(folder_sampling_effort, fname)
+    return effort_map
 
 
 # ---------------------------------------------------------------------------
@@ -98,9 +117,13 @@ def learn_over_folder(
     folder_hs: str,
     folder_obs: str,
     folder_range: str,
-    path_taxa_ref: str,
     path_mdd_table: str,
     output_folder: str,
+    path_taxa_ref: str | None = None,
+    path_sampling_effort_groups: str | None = None,
+    folder_sampling_effort: str | None = None,
+    sampling_effort_species_col: str = "SpeciesName",
+    sampling_effort_group_col: str = "SamplingEffortGroup",
     save_fig_folder: str | None = None,
     name_formats: list[str] | None = None,
     mdd_col: str = "Dispersal_km",
@@ -109,10 +132,20 @@ def learn_over_folder(
     max_iter: int = 50,
     n_calibration_samples: int = 800,
     time_budget: float = 30.0,
+    test_species: str | list[str] | None = None,
 ) -> pd.DataFrame:
     """Run the full PARADIS calibration pipeline for every species in *folder_hs*.
 
     Previously computed species are skipped (resume-friendly).
+
+    Sampling effort can be provided in two ways (mutually exclusive):
+
+    * **Single raster** – pass ``path_taxa_ref``: one raster used for all
+      species (original behaviour).
+    * **Per-species raster** – pass both ``path_sampling_effort_groups`` and
+      ``folder_sampling_effort``: the CSV maps each species to a group name,
+      and the folder must contain files named
+      ``sampling_effort_<group>.tif`` for each group.
 
     Parameters
     ----------
@@ -122,12 +155,20 @@ def learn_over_folder(
         Directory of observation count rasters.
     folder_range:
         Directory of current-range rasters.
-    path_taxa_ref:
-        Path to the reference-taxa sampling-effort raster.
     path_mdd_table:
         CSV with columns *species_col* and *mdd_col*.
     output_folder:
         Directory for the output CSV.
+    path_taxa_ref:
+        Path to a single sampling-effort raster used for all species.
+    path_sampling_effort_groups:
+        CSV mapping species names to sampling effort groups.
+    folder_sampling_effort:
+        Folder with ``sampling_effort_<group>.tif`` files.
+    sampling_effort_species_col:
+        Column name for species names in the sampling effort groups CSV.
+    sampling_effort_group_col:
+        Column name for group names in the sampling effort groups CSV.
     save_fig_folder:
         Optional directory for diagnostic figures.
     name_formats:
@@ -152,21 +193,72 @@ def learn_over_folder(
     if name_formats is None:
         name_formats = ["XxX.tif", "XxX.tif", "XxX.tif"]
 
-    os.makedirs(output_folder, exist_ok=True)
-    if save_fig_folder:
-        os.makedirs(save_fig_folder, exist_ok=True)
+    # Validate sampling-effort arguments
+    use_per_species_effort = path_sampling_effort_groups is not None
+    if use_per_species_effort and folder_sampling_effort is None:
+        raise ValueError(
+            "folder_sampling_effort must be provided together with "
+            "path_sampling_effort_groups."
+        )
+    if not use_per_species_effort and path_taxa_ref is None:
+        raise ValueError(
+            "Provide either path_taxa_ref (single raster) or both "
+            "path_sampling_effort_groups and folder_sampling_effort."
+        )
 
-    ordered, var_parts = align_folders(
+    os.makedirs(output_folder, exist_ok=True)
+    if save_fig_folder is None:
+        save_fig_folder = os.path.join(output_folder, "figs")
+    os.makedirs(save_fig_folder, exist_ok=True)
+
+    ordered, var_parts, file_lists = align_folders(
         [folder_hs, folder_obs, folder_range], name_formats
     )
     mdd_table = pd.read_csv(path_mdd_table)
-    taxa_ref = np.array(Image.open(path_taxa_ref))
+
+    # --- Sampling effort setup ---
+    if use_per_species_effort:
+        effort_groups_df = pd.read_csv(path_sampling_effort_groups)
+        sp_to_group: dict[str, str] = {
+            str(row[sampling_effort_species_col]).replace("_", " ").strip().lower():
+            str(row[sampling_effort_group_col]).strip()
+            for _, row in effort_groups_df.iterrows()
+        }
+        effort_file_map = _build_effort_map(folder_sampling_effort)
+        _effort_cache: dict[str, np.ndarray] = {}
+        taxa_ref_global = None
+        print(f"[batch] Per-species sampling effort mode — "
+              f"{len(sp_to_group)} species mapped, "
+              f"{len(effort_file_map)} group rasters found: "
+              f"{list(effort_file_map.keys())}")
+    else:
+        taxa_ref_global = np.array(Image.open(path_taxa_ref))
+        sp_to_group = {}
+        effort_file_map = {}
+        _effort_cache = {}
+        print("[batch] Single sampling-effort raster mode.")
 
     output_csv = os.path.join(output_folder, "learned_parameters.csv")
     records = []
 
-    for i in range(len(ordered[0])):
-        sp_name = var_parts[0][i]
+    indices = list(range(len(ordered[0])))
+    if test_species is not None:
+        names = [test_species] if isinstance(test_species, str) else test_species
+        test_keys = {n.replace(" ", "_").lower() for n in names}
+        indices = [
+            i for i in indices
+            if var_parts[0][ordered[0][i]].replace(" ", "_").lower() in test_keys
+        ]
+        if not indices:
+            available = [var_parts[0][ordered[0][i]] for i in range(len(ordered[0]))]
+            raise ValueError(
+                f"test_species={names!r} not found. "
+                f"Available: {available}"
+            )
+        print(f"[batch] test_species mode — running only: {names}")
+
+    for i in indices:
+        sp_name = var_parts[0][ordered[0][i]]
         record: dict = {"scientific_name": sp_name, "ew": None, "n": None,
                         "r": None, "tg": None, "Err": None}
 
@@ -187,13 +279,13 @@ def learn_over_folder(
 
         try:
             hs = np.array(Image.open(
-                os.path.join(folder_hs,  os.listdir(folder_hs) [ordered[0][i]])
+                os.path.join(folder_hs,    file_lists[0][ordered[0][i]])
             )).astype(float)
             obs = np.array(Image.open(
-                os.path.join(folder_obs, os.listdir(folder_obs)[ordered[1][i]])
+                os.path.join(folder_obs,   file_lists[1][ordered[1][i]])
             )).astype(float)
             cr = np.array(Image.open(
-                os.path.join(folder_range, os.listdir(folder_range)[ordered[2][i]])
+                os.path.join(folder_range, file_lists[2][ordered[2][i]])
             )).astype(float)
 
             # Normalise
@@ -201,12 +293,45 @@ def learn_over_folder(
             hs = hs / np.nanmax(hs)
             cr[cr == np.nanmin(cr)] = 0.0
             cr = cr / np.nanmax(cr)
+            obs[obs < 0] = 0.0
 
             mdd_val = float(mdd_match[mdd_col].values[0])
+            n_obs_total = int(np.nansum(obs))
+            sp_display = sp_name.replace("_", " ")
+            fn_hs  = file_lists[0][ordered[0][i]]
+            fn_obs = file_lists[1][ordered[1][i]]
+            fn_cr  = file_lists[2][ordered[2][i]]
+            print(
+                f"\033[92m[{sp_display}]\033[0m  MDD={mdd_val} km  obs={n_obs_total}  "
+                f"\033[93mHS={fn_hs}  Obs={fn_obs}  CR={fn_cr}\033[0m"
+            )
             hmean = float(hs[cr > 0].mean())
 
+            # Resolve sampling-effort raster for this species
+            if use_per_species_effort:
+                sp_key = sp_name.replace("_", " ").strip().lower()
+                group = sp_to_group.get(sp_key)
+                if group is None:
+                    print(f"  [{sp_name}] No sampling effort group found — skipping.")
+                    record["Err"] = "no_sampling_effort_group"
+                    records.append(record)
+                    _append_csv(output_csv, record)
+                    continue
+                group_key = group.replace("_", " ").strip().lower()
+                if group_key not in effort_file_map:
+                    print(f"  [{sp_name}] Raster for group '{group}' not found — skipping.")
+                    record["Err"] = f"missing_raster_group_{group}"
+                    records.append(record)
+                    _append_csv(output_csv, record)
+                    continue
+                if group_key not in _effort_cache:
+                    _effort_cache[group_key] = np.array(Image.open(effort_file_map[group_key]))
+                taxa_ref = _effort_cache[group_key]
+            else:
+                taxa_ref = taxa_ref_global
+
             pres_thresh = calibrate_presence_threshold(
-                cr, obs, taxa_ref, plot=False,
+                cr, obs, taxa_ref, plot=save_fig_folder is not None,
                 save_path=(
                     os.path.join(save_fig_folder, f"{sp_name}_pres_thresh.png")
                     if save_fig_folder else None
@@ -215,7 +340,7 @@ def learn_over_folder(
             )
 
             L, k, x0 = estimate_carrying_capacity(
-                hs, obs, taxa_ref, cr, plot=False,
+                hs, obs, taxa_ref, cr, plot=save_fig_folder is not None,
                 presence_threshold=pres_thresh,
                 save_path=(
                     os.path.join(save_fig_folder, f"{sp_name}_carrying_cap.png")
@@ -250,7 +375,10 @@ def learn_over_folder(
                 n_random_sites=3,
                 average_method="size",
                 plot=False,
+                plot_summary=True,
                 verbose=False,
+                save_fig_folder=save_fig_folder,
+                species_name=sp_name,
             )
 
             record.update({"ew": Ew, "n": n, "r": r, "tg": Tg})
@@ -308,17 +436,21 @@ class BatchLearner:
         folder_hs: str,
         folder_obs: str,
         folder_range: str,
-        path_taxa_ref: str,
         path_mdd_table: str,
         output_folder: str,
+        path_taxa_ref: str | None = None,
+        path_sampling_effort_groups: str | None = None,
+        folder_sampling_effort: str | None = None,
         **kwargs,
     ) -> None:
         self.folder_hs = folder_hs
         self.folder_obs = folder_obs
         self.folder_range = folder_range
-        self.path_taxa_ref = path_taxa_ref
         self.path_mdd_table = path_mdd_table
         self.output_folder = output_folder
+        self.path_taxa_ref = path_taxa_ref
+        self.path_sampling_effort_groups = path_sampling_effort_groups
+        self.folder_sampling_effort = folder_sampling_effort
         self._kwargs = kwargs
 
     def run(self) -> pd.DataFrame:
@@ -327,9 +459,11 @@ class BatchLearner:
             self.folder_hs,
             self.folder_obs,
             self.folder_range,
-            self.path_taxa_ref,
             self.path_mdd_table,
             self.output_folder,
+            path_taxa_ref=self.path_taxa_ref,
+            path_sampling_effort_groups=self.path_sampling_effort_groups,
+            folder_sampling_effort=self.folder_sampling_effort,
             **self._kwargs,
         )
 

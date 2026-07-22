@@ -171,10 +171,13 @@ def assess_site_quality(
                   f"lo={low_extent*100:.1f}%"
                   f"{reason_str}")
 
+        xs_abs, ys_abs = np.where((taxa_maps[i] >= 1) & (obs_maps[i] == 0))
+
         if plot:
             ax.imshow(hs_maps[i], cmap="viridis")
             ax.contour(hs_maps[i], levels=[threshold], colors="black", linestyles="--")
-            ax.scatter(ys_taxa, xs_taxa, color="blue", marker="^", alpha=0.3)
+            ax.scatter(ys_abs, xs_abs, color="blue", marker="^", alpha=0.3,
+                       s=10, label="absence")
             ax.set_title(
                 r"$\frac{\sigma_{1,2}^2}{\sigma_T^2}= $" + str(round(separation, 2))
                 + "  low= " + str(round(low_extent * 100, 2)) + " %"
@@ -183,7 +186,7 @@ def assess_site_quality(
         if pass_obs and pass_sep and pass_bal:
             if plot:
                 ax.set_ylabel(f"ID{id_selected}  n_obs={n_obs:.0f}")
-                ax.scatter(ys, xs, color="green", marker="+")
+                ax.scatter(ys, xs, color="green", marker="+", s=10, label="presence")
             id_selected += 1
             selected[0].append(hs_maps[i])
             selected[1].append(obs_maps[i])
@@ -197,7 +200,7 @@ def assess_site_quality(
             if not pass_bal:
                 rejection_counts[2] += 1
             if plot:
-                ax.scatter(ys, xs, color="red", marker="+")
+                ax.scatter(ys, xs, color="red", marker="+", s=10, label="presence")
 
     if plot:
         plt.tight_layout()

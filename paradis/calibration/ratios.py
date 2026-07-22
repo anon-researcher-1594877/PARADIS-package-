@@ -222,10 +222,19 @@ def compute_all_posteriors(
         ax = axes[i]
         ax.set_title(f"Site {site_idx}")
         ax.imshow(hs_win, cmap="viridis")
+
+        # Recover 2-D coordinates of all taxa pixels and the selection mask
+        x_all, y_all = np.where(taxa_win > 0)
+        obs_flat = obs_win[taxa_win > 0]
+        is_abs_flat = obs_flat == 0
+
+        sel_abs   = mask & is_abs_flat          # selected absences
+        unsel_abs = (~mask) & is_abs_flat       # non-selected absences
+
         x_pres, y_pres = np.where((obs_win >= 1) & (taxa_win > 0))
-        x_abs,  y_abs  = np.where((obs_win == 0) & (taxa_win > 0))
-        ax.scatter(y_pres, x_pres, color="green", marker="o", s=10)
-        ax.scatter(y_abs,  x_abs,  color="red",   marker="x", s=5, alpha=0.3)
+        ax.scatter(y_pres,              x_pres,              color="green", marker="o",  s=10)
+        ax.scatter(y_all[unsel_abs],    x_all[unsel_abs],    color="red",   marker="x",  s=5,  alpha=0.3)
+        ax.scatter(y_all[sel_abs],      x_all[sel_abs],      color="blue",  marker="^",  s=15, alpha=0.7)
 
     fig.suptitle(f"Calibration sites – {species_name or ''}", fontsize=12)
     plt.tight_layout()

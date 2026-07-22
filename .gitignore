@@ -18,8 +18,8 @@ htmlcov/
 .ipynb_checkpoints/
 
 # Environments
-.venv/
-venv/
+.venv*/
+venv*/
 env/
 
 # Editor

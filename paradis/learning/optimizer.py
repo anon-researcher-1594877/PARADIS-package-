@@ -30,6 +30,7 @@ Classes
 from __future__ import annotations
 
 import math
+import os
 
 import numpy as np
 import torch
@@ -245,6 +246,8 @@ def learn_dispersal_parameters(
     plot: bool = False,
     plot_summary: bool = True,
     verbose: bool = False,
+    save_fig_folder: str | None = None,
+    species_name: str | None = None,
 ) -> tuple:
     """Estimate dispersal parameters by Adam gradient descent.
 
@@ -345,8 +348,9 @@ def learn_dispersal_parameters(
     # ------------------------------------------------------------------
     # Optimisation
     # ------------------------------------------------------------------
-    all_costs, all_n, all_r, all_tg = [], [], [], []
+    all_costs, all_full_cost, all_n, all_r, all_tg = [], [], [], [], []
     n_runs = len(learning_runs)
+    print("\033[93m[Optimization steps will be printed every 100 steps ... please wait]\033[0m")
 
     for run_idx, site_loop_idx in enumerate(
         tqdm(learning_runs, desc="Optimisation run", position=0, leave=True)
@@ -356,6 +360,7 @@ def learn_dispersal_parameters(
                      for _ in range(3)]
         optimizer = torch.optim.Adam(params)
         losses, ln, lr, ltg = [], [], [], []
+        full_cost_hist: list[tuple[int, float]] = []   # (step, full-dataset cost)
 
         run_label = (
             f"Steps (run {run_idx+1}/{n_runs})" if n_runs > 1 else "Steps"
@@ -364,7 +369,7 @@ def learn_dispersal_parameters(
             range(max_iter),
             desc=f"  {run_label}",
             position=1,
-            leave=False,
+            leave=True,
         )
 
         for step in step_bar:
@@ -437,8 +442,23 @@ def learn_dispersal_parameters(
                 gT=f"{grads[2]:+.3f}",
             )
 
-            # Verbose print every 10 steps (matches original script behaviour).
-            if step % 10 == 0:
+            # Full-dataset cost every 100 steps (visualisation only, no gradient).
+            if step % 100 == 0:
+                with torch.no_grad():
+                    full_loss = cost_function(
+                        mdd, posteriors_and_masks, calibration_sites,
+                        (n_s, r_s, tg_s),
+                        list(range(n_sites_total)),
+                        carrying_capacity_params,
+                        hmean,
+                        adj_mats,
+                        K_is_list,
+                        plot=False,
+                        verbose=False,
+                    )
+                full_cost_hist.append((step, full_loss.item()))
+
+            if step % 100 == 0:
                 print(f"  step {step:4d} | loss={loss_val:.5f}"
                       f" | n={n_val:7.1f}  r={r_val:.6f}  Tg={tg_val:.3f}"
                       f" | grads: n={grads[0]:+.4f}  r={grads[1]:+.4f}"
@@ -447,6 +467,7 @@ def learn_dispersal_parameters(
 
         step_bar.close()
         all_costs.append(losses)
+        all_full_cost.append(full_cost_hist)
         all_n.append(ln)
         all_r.append(lr)
         all_tg.append(ltg)
@@ -492,6 +513,14 @@ def learn_dispersal_parameters(
     # Summary plots  (suppressed when plot_summary=False)
     # ------------------------------------------------------------------
     if plot_summary:
+        prefix = f"{species_name}_" if species_name else ""
+
+        def _save_show(filename: str) -> None:
+            if save_fig_folder:
+                plt.savefig(os.path.join(save_fig_folder, filename),
+                            dpi=150, bbox_inches="tight")
+            plt.show()
+
         # Normalised cost curves
         plt.figure()
         for idx in range(len(all_costs)):
@@ -499,13 +528,24 @@ def learn_dispersal_parameters(
             norm = (arr - arr.min()) / (arr.max() - arr.min() + 1e-9)
             label = (f"run {learning_runs[idx]}" if not all_together
                      else f"mini-batch run {idx+1}")
-            plt.plot(norm, label=label)
+            plt.plot(norm, alpha=0.5, label=label)
+
+            # Full-dataset cost overlay (red "+" markers + red curve)
+            full_hist = all_full_cost[idx]
+            if full_hist:
+                fc_steps = np.array([s for s, _ in full_hist])
+                fc_vals  = np.array([v for _, v in full_hist])
+                fc_norm  = (fc_vals - arr.min()) / (arr.max() - arr.min() + 1e-9)
+                plt.plot(fc_steps, fc_norm, color="red", linewidth=1.2,
+                         label="full-dataset cost")
+                plt.plot(fc_steps, fc_norm, "+", color="red", markersize=8)
+
         plt.xlabel("Optimisation step")
         plt.ylabel("Normalised cost")
         plt.title("Cost function evolution during optimisation")
         plt.legend()
         plt.grid(linestyle="--", color="grey", linewidth=0.2, alpha=0.5)
-        plt.show()
+        _save_show(f"{prefix}cost.png")
 
         # Endpoint scatter (n vs r, r vs Tg, n vs Tg)
         sizes_scatter = (
@@ -537,7 +577,8 @@ def learn_dispersal_parameters(
             plt.title(f"Endpoint projections: {ylabel} vs {xlabel}")
             plt.grid(linestyle="--", color="grey", linewidth=0.2, alpha=0.5)
             plt.legend()
-            plt.show()
+            slug = f"{ylabel.split()[0].lower()}_vs_{xlabel.split()[0].lower()}"
+            _save_show(f"{prefix}scatter_{slug}.png")
 
         # 3-D interactive plot (Plotly)
         _kde_3d_plotly(

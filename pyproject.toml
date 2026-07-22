@@ -41,6 +41,7 @@ dependencies = [
     "tqdm>=4.65",
     "Pillow>=10.0",
     "estar>=1.6.6",
+    "nbformat>=4.2.0",
 ]
 
 [project.optional-dependencies]
