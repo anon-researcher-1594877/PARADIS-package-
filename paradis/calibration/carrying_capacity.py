@@ -253,8 +253,15 @@ def estimate_carrying_capacity(
         n_pts.append(len(posteriors))
 
     if not hs_vals:
-        warnings.warn("No valid HS bins found; cannot fit carrying capacity.")
-        return 0.0, 1.0, 0.5
+        # No HS bin contained enough valid presence pixels to compute a
+        # posterior. This typically means the species has too few observations
+        # to populate even a single HS bin inside the current range.
+        # Raising ValueError (instead of just warning) lets the batch pipeline
+        # catch it, record the cause, and skip to the next species cleanly.
+        raise ValueError(
+            "Not enough observations for the species to construct K=f(HS): "
+            "no valid HS bin found inside the current range."
+        )
 
     centers = 0.5 * (np.array(ci_lo) + np.array(ci_hi))
     params = fit_logistic(hs_vals, centers, sigmas, verbose=False)
@@ -269,30 +276,81 @@ def estimate_carrying_capacity(
     )
 
     if plot or save_path is not None:
-        X = np.linspace(0, 1, 100)
-        Y = logistic(X, L, k, x0)
-        plt.figure()
-        plt.scatter(hs_vals, ab_vals, label="Mode", color="steelblue")
-        for i in range(len(hs_vals)):
-            plt.plot([hs_vals[i], hs_vals[i]], [ci_lo[i], ci_hi[i]],
-                     color="grey", linestyle="--",
-                     label="95 % CI" if i == 0 else "")
-            plt.text(hs_vals[i], ab_vals[i], str(n_pts[i]), fontsize=7)
-        plt.plot(X, Y, color="red", alpha=0.7, linewidth=2.5, label="Fitted logistic")
-        if presence_threshold is not None:
-            plt.axhline(presence_threshold, color="green", linestyle="--",
-                        label="Presence threshold")
-        plt.xlabel("Habitat Suitability")
-        plt.ylabel(r"Relative abundance $\frac{N_{sp}}{N_{taxa}}$")
-        plt.title(f"Carrying capacity – {species_name or ''}")
-        plt.legend()
-        plt.grid(linestyle="--", alpha=0.3, color="grey")
-        plt.xlim(0, 1)
-        if save_path is not None:
-            plt.savefig(save_path, dpi=200)
-        if plot:
-            plt.show()
+        plot_carrying_capacity(
+            bin_data, L, k, x0,
+            presence_threshold=presence_threshold,
+            species_name=species_name,
+            save_path=save_path,
+            show=plot,
+        )
 
     if return_bins:
         return L, k, x0, bin_data
     return L, k, x0
+
+
+def plot_carrying_capacity(
+    bin_data: dict,
+    L: float,
+    k: float,
+    x0: float,
+    presence_threshold: float | None = None,
+    species_name: str | None = None,
+    save_path: str | None = None,
+    show: bool = True,
+) -> None:
+    """Plot the fitted K=f(HS) logistic curve with optional presence threshold.
+
+    Separated from :func:`estimate_carrying_capacity` so the plot can be
+    regenerated with a corrected presence threshold without re-running the
+    heavy HS-bin computation.
+
+    Parameters
+    ----------
+    bin_data:
+        Dict with keys ``hs_vals``, ``ab_vals``, ``ci_lo``, ``ci_hi``,
+        ``n_pts`` as returned by ``estimate_carrying_capacity(return_bins=True)``.
+    L, k, x0:
+        Logistic parameters from the same call.
+    presence_threshold:
+        Horizontal line drawn on the plot (the corrected threshold).
+    species_name:
+        Used in the figure title.
+    save_path:
+        If provided, save the figure to this path.
+    show:
+        If True, call plt.show().
+    """
+    hs_vals = bin_data["hs_vals"]
+    ab_vals = bin_data["ab_vals"]
+    ci_lo   = bin_data["ci_lo"]
+    ci_hi   = bin_data["ci_hi"]
+    n_pts   = bin_data["n_pts"]
+
+    X = np.linspace(0, 1, 100)
+    Y = logistic(X, L, k, x0)
+
+    plt.figure()
+    plt.scatter(hs_vals, ab_vals, label="Mode", color="steelblue")
+    for i in range(len(hs_vals)):
+        plt.plot([hs_vals[i], hs_vals[i]], [ci_lo[i], ci_hi[i]],
+                 color="grey", linestyle="--",
+                 label="95 % CI" if i == 0 else "")
+        plt.text(hs_vals[i], ab_vals[i], str(n_pts[i]), fontsize=7)
+    plt.plot(X, Y, color="red", alpha=0.7, linewidth=2.5, label="Fitted logistic")
+
+    if presence_threshold is not None:
+        plt.axhline(presence_threshold, color="green", linestyle="--",
+                    label=f"Presence threshold ({presence_threshold:.3f})")
+
+    plt.xlabel("Habitat Suitability")
+    plt.ylabel(r"Relative abundance $\frac{N_{sp}}{N_{taxa}}$")
+    plt.title(f"Carrying capacity – {species_name or ''}")
+    plt.legend()
+    plt.grid(linestyle="--", alpha=0.3, color="grey")
+    plt.xlim(0, 1)
+
+    if save_path is not None:
+        plt.savefig(save_path, dpi=200)
+    if show:
+        plt.show()

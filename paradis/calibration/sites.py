@@ -122,6 +122,15 @@ def assess_site_quality(
 
     selected: list = [[], [], [], []]
     n = len(hs_maps)
+
+    # When no candidate windows were passed (all observation points were
+    # filtered out by the distance constraint or the minimum-obs check),
+    # math.ceil(n / cols) causes a ZeroDivisionError because cols=0.
+    # Return immediately with an empty selection so the caller can keep
+    # iterating or raise a meaningful error.
+    if n == 0:
+        return selected, [0, 0, 0]
+
     cols = math.ceil(math.sqrt(n))
     rows = math.ceil(n / cols)
     rejection_counts = [0, 0, 0]
@@ -143,14 +152,40 @@ def assess_site_quality(
         xs, ys = np.where(obs_maps[i] >= 1)
         xs_taxa, ys_taxa = np.where(taxa_maps[i] >= 1)
 
-        threshold = filters.threshold_otsu(gray)
-        m0 = gray <= threshold
-        m1 = gray > threshold
-        mu0, mu1, muT = gray[m0].mean(), gray[m1].mean(), gray.mean()
-        sigT2 = ((gray - muT) ** 2).mean()
-        sigW2 = m0.mean() * ((gray[m0] - mu0) ** 2).mean() + m1.mean() * ((gray[m1] - mu1) ** 2).mean()
-        separation = (sigT2 - sigW2) / sigT2
-        low_extent = m0.sum() / (m0.sum() + m1.sum())
+        if gray.size == 0:
+            # The calibration window contains only zero-valued pixels (no valid
+            # HS data). There is nothing to compute — force separation=0 so the
+            # site is rejected by the pass_sep criterion below.
+            separation = 0.0
+            low_extent = 0.5
+        else:
+            threshold = filters.threshold_otsu(gray)
+            m0 = gray <= threshold   # low-HS pixels (below Otsu threshold)
+            m1 = gray > threshold    # high-HS pixels (above Otsu threshold)
+
+            if m0.sum() == 0 or m1.sum() == 0:
+                # Otsu's threshold fell exactly at the min or max of gray,
+                # putting all pixels into one class and leaving the other empty.
+                # This happens when HS values in the window are nearly uniform.
+                # mean() on an empty array would raise a RuntimeWarning, and the
+                # separation score would be meaningless anyway, so we set
+                # separation=0 to trigger rejection.
+                separation = 0.0
+                low_extent = 0.5
+            else:
+                mu0, mu1, muT = gray[m0].mean(), gray[m1].mean(), gray.mean()
+                # sigT2: total variance of HS values in the window
+                sigT2 = ((gray - muT) ** 2).mean()
+                # sigW2: weighted within-class variance (Otsu criterion)
+                sigW2 = (m0.mean() * ((gray[m0] - mu0) ** 2).mean()
+                         + m1.mean() * ((gray[m1] - mu1) ** 2).mean())
+                # separation = fraction of variance explained by the two-class
+                # split; equals 0 when HS is uniform, 1 when perfectly bimodal.
+                # Guard against sigT2==0 (all pixels identical) to avoid ZeroDivisionError.
+                separation = (sigT2 - sigW2) / sigT2 if sigT2 > 0 else 0.0
+                # low_extent: fraction of pixels in the low-HS class,
+                # used to check that the window is spatially balanced.
+                low_extent = m0.sum() / (m0.sum() + m1.sum())
 
         n_obs = np.nansum(obs_maps[i])
         pass_obs = n_obs > criteria[0]

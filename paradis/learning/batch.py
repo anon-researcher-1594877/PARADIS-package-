@@ -22,7 +22,7 @@ from PIL import Image
 
 from paradis.calibration.sites import sample_calibration_sites
 from paradis.calibration.presence import calibrate_presence_threshold
-from paradis.calibration.carrying_capacity import estimate_carrying_capacity
+from paradis.calibration.carrying_capacity import estimate_carrying_capacity, plot_carrying_capacity
 from paradis.calibration.ratios import compute_all_posteriors
 from paradis.learning.optimizer import learn_dispersal_parameters
 
@@ -301,8 +301,16 @@ def learn_over_folder(
             fn_hs  = file_lists[0][ordered[0][i]]
             fn_obs = file_lists[1][ordered[1][i]]
             fn_cr  = file_lists[2][ordered[2][i]]
+            if use_per_species_effort:
+                sp_key_disp = sp_name.replace("_", " ").strip().lower()
+                group_disp  = sp_to_group.get(sp_key_disp, "unknown")
+            else:
+                group_disp = "global"
             print(
-                f"\033[92m[{sp_display}]\033[0m  MDD={mdd_val} km  obs={n_obs_total}  "
+                f"\033[92m[{sp_display}]\033[0m  "
+                f"\033[33mMDD={mdd_val} km\033[0m  "
+                f"\033[94m[{group_disp}]\033[0m  "
+                f"obs={n_obs_total}  "
                 f"\033[93mHS={fn_hs}  Obs={fn_obs}  CR={fn_cr}\033[0m"
             )
             hmean = float(hs[cr > 0].mean())
@@ -339,15 +347,37 @@ def learn_over_folder(
                 species_name=sp_name,
             )
 
-            L, k, x0 = estimate_carrying_capacity(
-                hs, obs, taxa_ref, cr, plot=save_fig_folder is not None,
-                presence_threshold=pres_thresh,
-                save_path=(
-                    os.path.join(save_fig_folder, f"{sp_name}_carrying_cap.png")
-                    if save_fig_folder else None
-                ),
+            # Run the heavy HS-bin computation without plotting yet, so we can
+            # correct the presence threshold before the figure is generated.
+            L, k, x0, bin_data = estimate_carrying_capacity(
+                hs, obs, taxa_ref, cr,
+                plot=False,
+                save_path=None,
                 species_name=sp_name,
+                return_bins=True,
             )
+
+            # Kmax is the asymptote L of the fitted logistic K=f(HS).
+            # If the presence threshold exceeds Kmax the threshold is
+            # unreliable (it would classify every pixel as absent), so we
+            # fall back to Kmax/2 and warn the user.
+            Kmax = L
+            if pres_thresh > Kmax:
+                print(
+                    f"\033[93m  [{sp_name}] presence_threshold ({pres_thresh:.4f}) "
+                    f"> Kmax ({Kmax:.4f}) — correcting to Kmax/2 = {Kmax/2:.4f}\033[0m"
+                )
+                pres_thresh = Kmax / 2
+
+            # Now plot with the (possibly corrected) threshold.
+            if save_fig_folder is not None:
+                plot_carrying_capacity(
+                    bin_data, L, k, x0,
+                    presence_threshold=pres_thresh,
+                    species_name=sp_name,
+                    save_path=os.path.join(save_fig_folder, f"{sp_name}_carrying_cap.png"),
+                    show=True,
+                )
 
             calib_sites = sample_calibration_sites(
                 hs, obs, taxa_ref,
@@ -358,6 +388,16 @@ def learn_over_folder(
                 plot=False,
                 verbose=False,
             )
+
+            # If the time budget expired without finding any site that passes
+            # the quality criteria, the learning cannot proceed. Raise an
+            # explicit error rather than letting a ZeroDivisionError occur
+            # deep inside the optimiser.
+            if len(calib_sites) == 0:
+                raise ValueError(
+                    "Cannot find reliable calibration sites for this species: "
+                    "no window passed the quality criteria within the time budget."
+                )
 
             posts_masks = compute_all_posteriors(
                 calib_sites, verbose=False,
@@ -384,9 +424,12 @@ def learn_over_folder(
             record.update({"ew": Ew, "n": n, "r": r, "tg": Tg})
             print(f"  {sp_name}: Ew={Ew:.1f}  n={n:.1f}  r={r:.5f}  Tg={Tg:.2f}")
 
-        except Exception:
-            record["Err"] = traceback.format_exc(limit=1)
-            print(f"Error processing {sp_name}:\n{record['Err']}")
+        except Exception as e:
+            # Save only the error message (not the full traceback) in the CSV,
+            # so the output stays readable. Print the full traceback to the
+            # console for debugging.
+            record["Err"] = str(e)
+            print(f"Error processing {sp_name}:\n{traceback.format_exc(limit=1)}")
 
         records.append(record)
         _append_csv(output_csv, record)
