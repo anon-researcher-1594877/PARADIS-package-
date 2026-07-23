@@ -232,14 +232,25 @@ def compute_all_posteriors(
         unsel_abs = (~mask) & is_abs_flat       # non-selected absences
 
         x_pres, y_pres = np.where((obs_win >= 1) & (taxa_win > 0))
-        ax.scatter(y_pres,              x_pres,              color="green", marker="o",  s=10)
-        ax.scatter(y_all[unsel_abs],    x_all[unsel_abs],    color="red",   marker="x",  s=5,  alpha=0.3)
-        ax.scatter(y_all[sel_abs],      x_all[sel_abs],      color="blue",  marker="^",  s=15, alpha=0.7)
+        ax.scatter(y_pres,              x_pres,              color="green", marker="o",  s=10, label="Presence")
+        ax.scatter(y_all[unsel_abs],    x_all[unsel_abs],    color="red",   marker="x",  s=5,  alpha=0.3, label="Absence (not selected)")
+        ax.scatter(y_all[sel_abs],      x_all[sel_abs],      color="blue",  marker="^",  s=15, alpha=0.7, label="Absence (selected)")
+
+    # Turn off any unused axes (when n is not a perfect rows*cols grid)
+    for j in range(n, len(axes)):
+        axes[j].axis("off")
+
+    # Build a single shared legend for the whole figure from the first
+    # subplot's handles (all subplots use the same marker/color scheme),
+    # instead of repeating a legend on every tiny panel.
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="lower center", ncol=3,
+               bbox_to_anchor=(0.5, -0.02), fontsize=9, markerscale=2)
 
     fig.suptitle(f"Calibration sites – {species_name or ''}", fontsize=12)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.03, 1, 1])
     if save_path is not None:
-        plt.savefig(save_path, dpi=200)
+        plt.savefig(save_path, dpi=200, bbox_inches="tight")
     plt.show()
 
     return all_posteriors, all_masks

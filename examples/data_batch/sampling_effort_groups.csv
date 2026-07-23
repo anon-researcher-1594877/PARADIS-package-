@@ -1,0 +1,1260 @@
+,Code,Code_old,Class,Order,Family,SpeciesName,SamplingEffortGroup
+0,AMP020101002,A1,Amphibia,Anura,Alytidae,Alytes cisternasii,Amphibia
+1,AMP020501003,A10,Amphibia,Anura,Bufonidae,Bufo verrucosissimus,Amphibia
+2,AMP020503001,A100,Amphibia,Anura,Bufonidae,Bufotes balearicus,Amphibia
+3,AMP020503002,A101,Amphibia,Anura,Bufonidae,Bufotes boulengeri,Amphibia
+4,AMP010213007,A104,Amphibia,Caudata,Salamandridae,Triturus macedonicus,Amphibia
+5,AMP020503005,A11,Amphibia,Anura,Bufonidae,Bufotes viridis,Amphibia
+6,AMP010202001,A12,Amphibia,Caudata,Salamandridae,Chioglossa lusitanica,Amphibia
+7,AMP020102001,A13,Amphibia,Anura,Alytidae,Discoglossus galganoi,Amphibia
+8,AMP020102002,A14,Amphibia,Anura,Alytidae,Discoglossus jeanneae,Amphibia
+9,AMP020102003,A15,Amphibia,Anura,Alytidae,Discoglossus montalentii,Amphibia
+10,AMP020102004,A16,Amphibia,Anura,Alytidae,Discoglossus pictus,Amphibia
+11,AMP020102005,A17,Amphibia,Anura,Alytidae,Discoglossus sardus,Amphibia
+12,AMP010201002,A18,Amphibia,Caudata,Salamandridae,Calotriton asper,Amphibia
+13,AMP010203001,A19,Amphibia,Caudata,Salamandridae,Euproctus montanus,Amphibia
+14,AMP020101003,A2,Amphibia,Anura,Alytidae,Alytes dickhilleni,Amphibia
+15,AMP010203002,A20,Amphibia,Caudata,Salamandridae,Euproctus platycephalus,Amphibia
+16,AMP020601001,A21,Amphibia,Anura,Hylidae,Hyla arborea,Amphibia
+17,AMP020601002,A22,Amphibia,Anura,Hylidae,Hyla intermedia,Amphibia
+18,AMP020601003,A23,Amphibia,Anura,Hylidae,Hyla meridionalis,Amphibia
+19,AMP020601007,A24,Amphibia,Anura,Hylidae,Hyla sarda,Amphibia
+20,AMP020601008,A25,Amphibia,Anura,Hylidae,Hyla savignyi,Amphibia
+21,AMP010206001,A26,Amphibia,Caudata,Salamandridae,Lyciasalamandra antalyana,Amphibia
+22,AMP010206003,A27,Amphibia,Caudata,Salamandridae,Lyciasalamandra atifi,Amphibia
+23,AMP010206004,A28,Amphibia,Caudata,Salamandridae,Lyciasalamandra billae,Amphibia
+24,AMP010206005,A29,Amphibia,Caudata,Salamandridae,Lyciasalamandra fazilae,Amphibia
+25,AMP020101004,A3,Amphibia,Anura,Alytidae,Alytes muletensis,Amphibia
+26,AMP010206006,A30,Amphibia,Caudata,Salamandridae,Lyciasalamandra flavimembris,Amphibia
+27,AMP010206007,A31,Amphibia,Caudata,Salamandridae,Lyciasalamandra helverseni,Amphibia
+28,AMP010206009,A32,Amphibia,Caudata,Salamandridae,Lyciasalamandra luschani,Amphibia
+29,AMP010207001,A33,Amphibia,Caudata,Salamandridae,Mertensiella caucasica,Amphibia
+30,AMP010208002,A34,Amphibia,Caudata,Salamandridae,Neurergus crocatus,Amphibia
+31,AMP010208003,A35,Amphibia,Caudata,Salamandridae,Neurergus strauchii,Amphibia
+32,AMP020301002,A36,Amphibia,Anura,Pelobatidae,Pelobates cultripes,Amphibia
+33,AMP020301003,A37,Amphibia,Anura,Pelobatidae,Pelobates fuscus,Amphibia
+34,AMP020301004,A38,Amphibia,Anura,Pelobatidae,Pelobates syriacus,Amphibia
+35,AMP020401002,A39,Amphibia,Anura,Pelodytidae,Pelodytes caucasicus,Amphibia
+36,AMP020101005,A4,Amphibia,Anura,Alytidae,Alytes obstetricans,Amphibia
+37,AMP020401004,A40,Amphibia,Anura,Pelodytidae,Pelodytes ibericus,Amphibia
+38,AMP020401005,A41,Amphibia,Anura,Pelodytidae,Pelodytes punctatus,Amphibia
+39,AMP010210001,A42,Amphibia,Caudata,Salamandridae,Pleurodeles waltl,Amphibia
+40,AMP010401001,A43,Amphibia,Caudata,Proteidae,Proteus anguinus,Amphibia
+41,AMP020702001,A44,Amphibia,Anura,Ranidae,Rana arvalis,Amphibia
+42,AMP020701001,A45,Amphibia,Anura,Ranidae,Pelophylax bedriagae,Amphibia
+43,AMP020701002,A46,Amphibia,Anura,Ranidae,Pelophylax bergeri,Amphibia
+44,AMP020701004,A47,Amphibia,Anura,Ranidae,Pelophylax cerigensis,Amphibia
+45,AMP020701005,A48,Amphibia,Anura,Ranidae,Pelophylax cretensis,Amphibia
+46,AMP020702002,A49,Amphibia,Anura,Ranidae,Rana dalmatina,Amphibia
+47,AMP020201001,A5,Amphibia,Anura,Bombinatoridae,Bombina bombina,Amphibia
+48,AMP020701007,A50,Amphibia,Anura,Ranidae,Pelophylax epeiroticus,Amphibia
+49,AMP020701008,A51,Amphibia,Anura,Ranidae,Pelophylax esculentus,Amphibia
+50,AMP020702003,A52,Amphibia,Anura,Ranidae,Rana graeca,Amphibia
+51,AMP020701009,A53,Amphibia,Anura,Ranidae,Pelophylax grafi,Amphibia
+52,AMP020701010,A54,Amphibia,Anura,Ranidae,Pelophylax hispanicus,Amphibia
+53,AMP020702005,A55,Amphibia,Anura,Ranidae,Rana iberica,Amphibia
+54,AMP020702006,A56,Amphibia,Anura,Ranidae,Rana italica,Amphibia
+55,AMP020701011,A57,Amphibia,Anura,Ranidae,Pelophylax kurtmuelleri,Amphibia
+56,AMP020702007,A58,Amphibia,Anura,Ranidae,Rana latastei,Amphibia
+57,AMP020701012,A59,Amphibia,Anura,Ranidae,Pelophylax lessonae,Amphibia
+58,AMP020201002,A6,Amphibia,Anura,Bombinatoridae,Bombina pachypus,Amphibia
+59,AMP020702008,A60,Amphibia,Anura,Ranidae,Rana macrocnemis,Amphibia
+60,AMP020701013,A61,Amphibia,Anura,Ranidae,Pelophylax perezi,Amphibia
+61,AMP020702010,A62,Amphibia,Anura,Ranidae,Rana pyrenaica,Amphibia
+62,AMP020701014,A63,Amphibia,Anura,Ranidae,Pelophylax ridibundus,Amphibia
+63,AMP020701015,A64,Amphibia,Anura,Ranidae,Pelophylax shqipericus,Amphibia
+64,AMP020702011,A65,Amphibia,Anura,Ranidae,Rana tavasensis,Amphibia
+65,AMP020702012,A66,Amphibia,Anura,Ranidae,Rana temporaria,Amphibia
+66,AMP010211001,A67,Amphibia,Caudata,Salamandridae,Salamandra atra,Amphibia
+67,AMP010211002,A68,Amphibia,Caudata,Salamandridae,Salamandra corsica,Amphibia
+68,AMP010211003,A69,Amphibia,Caudata,Salamandridae,Salamandra infraimmaculata,Amphibia
+69,AMP020201003,A7,Amphibia,Anura,Bombinatoridae,Bombina variegata,Amphibia
+70,AMP010211004,A70,Amphibia,Caudata,Salamandridae,Salamandra lanzai,Amphibia
+71,AMP010211005,A71,Amphibia,Caudata,Salamandridae,Salamandra salamandra,Amphibia
+72,AMP010101001,A72,Amphibia,Caudata,Hynobiidae,Salamandrella keyserlingii,Amphibia
+73,AMP010212001,A73,Amphibia,Caudata,Salamandridae,Salamandrina perspicillata,Amphibia
+74,AMP010212002,A74,Amphibia,Caudata,Salamandridae,Salamandrina terdigitata,Amphibia
+75,AMP010301001,A75,Amphibia,Caudata,Plethodontidae,Speleomantes ambrosii,Amphibia
+76,AMP010301002,A76,Amphibia,Caudata,Plethodontidae,Speleomantes flavus,Amphibia
+77,AMP010301003,A77,Amphibia,Caudata,Plethodontidae,Speleomantes genei,Amphibia
+78,AMP010301004,A78,Amphibia,Caudata,Plethodontidae,Speleomantes imperialis,Amphibia
+79,AMP010301005,A79,Amphibia,Caudata,Plethodontidae,Speleomantes italicus,Amphibia
+80,AMP020501001,A8,Amphibia,Anura,Bufonidae,Bufo bufo,Amphibia
+81,AMP010301006,A80,Amphibia,Caudata,Plethodontidae,Speleomantes sarrabusensis,Amphibia
+82,AMP010301007,A81,Amphibia,Caudata,Plethodontidae,Speleomantes strinatii,Amphibia
+83,AMP010301008,A82,Amphibia,Caudata,Plethodontidae,Speleomantes supramontis,Amphibia
+84,AMP010204001,A83,Amphibia,Caudata,Salamandridae,Ichthyosaura alpestris,Amphibia
+85,AMP010205001,A84,Amphibia,Caudata,Salamandridae,Lissotriton boscai,Amphibia
+86,AMP010213002,A85,Amphibia,Caudata,Salamandridae,Triturus carnifex,Amphibia
+87,AMP010213003,A86,Amphibia,Caudata,Salamandridae,Triturus cristatus,Amphibia
+88,AMP010213004,A87,Amphibia,Caudata,Salamandridae,Triturus dobrogicus,Amphibia
+89,AMP010205003,A88,Amphibia,Caudata,Salamandridae,Lissotriton helveticus,Amphibia
+90,AMP010205004,A89,Amphibia,Caudata,Salamandridae,Lissotriton italicus,Amphibia
+91,AMP020502001,A9,Amphibia,Anura,Bufonidae,Epidalea calamita,Amphibia
+92,AMP010213006,A90,Amphibia,Caudata,Salamandridae,Triturus karelinii,Amphibia
+93,AMP010213008,A91,Amphibia,Caudata,Salamandridae,Triturus marmoratus,Amphibia
+94,AMP010205008,A92,Amphibia,Caudata,Salamandridae,Lissotriton montandoni,Amphibia
+95,AMP010213009,A93,Amphibia,Caudata,Salamandridae,Triturus pygmaeus,Amphibia
+96,AMP010209003,A94,Amphibia,Caudata,Salamandridae,Ommatotriton vittatus,Amphibia
+97,AMP010205010,A95,Amphibia,Caudata,Salamandridae,Lissotriton vulgaris,Amphibia
+98,AMP020701003,A96,Amphibia,Anura,Ranidae,Pelophylax caralitanus,Amphibia
+99,AMP010209002,A97,Amphibia,Caudata,Salamandridae,Ommatotriton ophryticus,Amphibia
+100,AMP010201001,A99,Amphibia,Caudata,Salamandridae,Calotriton arnoldi,Amphibia
+101,AVE130101001,B1,Aves,Gaviformes,Gaviidae,Gavia stellata,Aves
+102,AVE140301001,B10,Aves,Procellariformes,Procellariidae,Fulmarus glacialis,Aves
+103,AVE180212001,B100,Aves,Accipitriformes,Accipitridae,Accipiter brevipes,Aves
+104,AVE180212002,B101,Aves,Accipitriformes,Accipitridae,Accipiter nisus,Aves
+105,AVE180212003,B102,Aves,Accipitriformes,Accipitridae,Accipiter gentilis,Aves
+106,AVE180215002,B103,Aves,Accipitriformes,Accipitridae,Buteo buteo,Aves
+107,AVE180215003,B104,Aves,Accipitriformes,Accipitridae,Buteo rufinus,Aves
+108,AVE180215001,B105,Aves,Accipitriformes,Accipitridae,Buteo lagopus,Aves
+109,AVE180208001,B106,Aves,Accipitriformes,Accipitridae,Clanga pomarina,Aves
+110,AVE180208002,B107,Aves,Accipitriformes,Accipitridae,Clanga clanga,Aves
+111,AVE180210001,B108,Aves,Accipitriformes,Accipitridae,Aquila nipalensis,Aves
+112,AVE180210002,B109,Aves,Accipitriformes,Accipitridae,Aquila adalberti,Aves
+113,AVE180210003,B110,Aves,Accipitriformes,Accipitridae,Aquila heliaca,Aves
+114,AVE180210004,B111,Aves,Accipitriformes,Accipitridae,Aquila chrysaetos,Aves
+115,AVE180210005,B112,Aves,Accipitriformes,Accipitridae,Aquila fasciata,Aves
+116,AVE180209001,B113,Aves,Accipitriformes,Accipitridae,Hieraaetus pennatus,Aves
+117,AVE230101001,B114,Aves,Falconiformes,Falconidae,Falco naumanni,Aves
+118,AVE230101002,B115,Aves,Falconiformes,Falconidae,Falco tinnunculus,Aves
+119,AVE230101003,B116,Aves,Falconiformes,Falconidae,Falco vespertinus,Aves
+120,AVE230101004,B117,Aves,Falconiformes,Falconidae,Falco eleonorae,Aves
+121,AVE230101005,B118,Aves,Falconiformes,Falconidae,Falco columbarius,Aves
+122,AVE230101006,B119,Aves,Falconiformes,Falconidae,Falco subbuteo,Aves
+123,AVE140302001,B12,Aves,Procellariformes,Procellariidae,Pterodroma madeira,Aves
+124,AVE230101007,B120,Aves,Falconiformes,Falconidae,Falco biarmicus,Aves
+125,AVE230101008,B121,Aves,Falconiformes,Falconidae,Falco cherrug,Aves
+126,AVE230101009,B122,Aves,Falconiformes,Falconidae,Falco rusticolus,Aves
+127,AVE230101010,B123,Aves,Falconiformes,Falconidae,Falco peregrinus,Aves
+128,AVE020110001,B124,Aves,Galliformes,Phasianidae,Lagopus lagopus,Aves
+129,AVE020110002,B125,Aves,Galliformes,Phasianidae,Lagopus muta,Aves
+130,AVE020108001,B126,Aves,Galliformes,Phasianidae,Tetrao urogallus,Aves
+131,AVE020108002,B127,Aves,Galliformes,Phasianidae,Tetrao tetrix,Aves
+132,AVE020108003,B128,Aves,Galliformes,Phasianidae,Tetrao mlokosiewiczi,Aves
+133,AVE020109001,B129,Aves,Galliformes,Phasianidae,Tetrastes bonasia,Aves
+134,AVE140303001,B13,Aves,Procellariformes,Procellariidae,Bulweria bulwerii,Aves
+135,AVE020104001,B130,Aves,Galliformes,Phasianidae,Tetraogallus caucasicus,Aves
+136,AVE020104002,B131,Aves,Galliformes,Phasianidae,Tetraogallus caspius,Aves
+137,AVE020103001,B132,Aves,Galliformes,Phasianidae,Alectoris graeca,Aves
+138,AVE020103002,B133,Aves,Galliformes,Phasianidae,Alectoris chukar,Aves
+139,AVE020103004,B134,Aves,Galliformes,Phasianidae,Alectoris barbara,Aves
+140,AVE020103003,B135,Aves,Galliformes,Phasianidae,Alectoris rufa,Aves
+141,AVE020101001,B136,Aves,Galliformes,Phasianidae,Ammoperdix griseogularis,Aves
+142,AVE020105001,B137,Aves,Galliformes,Phasianidae,Francolinus francolinus,Aves
+143,AVE020107001,B138,Aves,Galliformes,Phasianidae,Perdix perdix,Aves
+144,AVE020102001,B139,Aves,Galliformes,Phasianidae,Coturnix coturnix,Aves
+145,AVE140304001,B14,Aves,Procellariformes,Procellariidae,Calonectris diomedea,Aves
+146,AVE020106001,B140,Aves,Galliformes,Phasianidae,Phasianus colchicus,Aves
+147,AVE110601001,B141,Aves,Charadriiformes,Turnicidae,Turnix sylvaticus,Aves
+148,AVE100201001,B142,Aves,Gruiformes,Gruidae,Anthropoides virgo,Aves
+149,AVE100202001,B143,Aves,Gruiformes,Gruidae,Grus grus,Aves
+150,AVE100101001,B144,Aves,Gruiformes,Rallidae,Rallus aquaticus,Aves
+151,AVE100102001,B145,Aves,Gruiformes,Rallidae,Crex crex,Aves
+152,AVE100107001,B146,Aves,Gruiformes,Rallidae,Zapornia parva,Aves
+153,AVE100107002,B147,Aves,Gruiformes,Rallidae,Zapornia pusilla,Aves
+154,AVE100103001,B148,Aves,Gruiformes,Rallidae,Porzana porzana,Aves
+155,AVE100106001,B149,Aves,Gruiformes,Rallidae,Porphyrio porphyrio,Aves
+156,AVE140305001,B15,Aves,Procellariformes,Procellariidae,Puffinus puffinus,Aves
+157,AVE100104001,B150,Aves,Gruiformes,Rallidae,Gallinula chloropus,Aves
+158,AVE100105002,B151,Aves,Gruiformes,Rallidae,Fulica cristata,Aves
+159,AVE100105001,B152,Aves,Gruiformes,Rallidae,Fulica atra,Aves
+160,AVE070101001,B153,Aves,Otidiformes,Otididae,Otis tarda,Aves
+161,AVE070103001,B154,Aves,Otidiformes,Otididae,Tetrax tetrax,Aves
+162,AVE110301001,B155,Aves,Charadriiformes,Haematopodidae,Haematopus ostralegus,Aves
+163,AVE110201001,B156,Aves,Charadriiformes,Recurvirostridae,Himantopus himantopus,Aves
+164,AVE110202001,B157,Aves,Charadriiformes,Recurvirostridae,Recurvirostra avosetta,Aves
+165,AVE110101001,B158,Aves,Charadriiformes,Burhinidae,Burhinus oedicnemus,Aves
+166,AVE110702001,B159,Aves,Charadriiformes,Glareolidae,Glareola pratincola,Aves
+167,AVE140305002,B16,Aves,Procellariformes,Procellariidae,Puffinus yelkouan,Aves
+168,AVE110702002,B160,Aves,Charadriiformes,Glareolidae,Glareola nordmanni,Aves
+169,AVE110402001,B161,Aves,Charadriiformes,Charadriidae,Vanellus vanellus,Aves
+170,AVE110402002,B162,Aves,Charadriiformes,Charadriidae,Vanellus spinosus,Aves
+171,AVE110402003,B163,Aves,Charadriiformes,Charadriidae,Vanellus indicus,Aves
+172,AVE110402005,B165,Aves,Charadriiformes,Charadriidae,Vanellus leucurus,Aves
+173,AVE110401002,B166,Aves,Charadriiformes,Charadriidae,Pluvialis apricaria,Aves
+174,AVE110401001,B167,Aves,Charadriiformes,Charadriidae,Pluvialis squatarola,Aves
+175,AVE110403004,B168,Aves,Charadriiformes,Charadriidae,Charadrius hiaticula,Aves
+176,AVE110403005,B169,Aves,Charadriiformes,Charadriidae,Charadrius dubius,Aves
+177,AVE140305003,B17,Aves,Procellariformes,Procellariidae,Puffinus mauretanicus,Aves
+178,AVE110403003,B170,Aves,Charadriiformes,Charadriidae,Charadrius alexandrinus,Aves
+179,AVE110403001,B171,Aves,Charadriiformes,Charadriidae,Charadrius leschenaultii,Aves
+180,AVE110403002,B172,Aves,Charadriiformes,Charadriidae,Charadrius asiaticus,Aves
+181,AVE110403006,B173,Aves,Charadriiformes,Charadriidae,Charadrius morinellus,Aves
+182,AVE110506001,B174,Aves,Charadriiformes,Scolopacidae,Scolopax rusticola,Aves
+183,AVE110505001,B175,Aves,Charadriiformes,Scolopacidae,Lymnocryptes minimus,Aves
+184,AVE110507003,B176,Aves,Charadriiformes,Scolopacidae,Gallinago stenura,Aves
+185,AVE110507001,B177,Aves,Charadriiformes,Scolopacidae,Gallinago media,Aves
+186,AVE110507002,B178,Aves,Charadriiformes,Scolopacidae,Gallinago gallinago,Aves
+187,AVE110502002,B179,Aves,Charadriiformes,Scolopacidae,Limosa limosa,Aves
+188,AVE110502001,B180,Aves,Charadriiformes,Scolopacidae,Limosa lapponica,Aves
+189,AVE110501001,B181,Aves,Charadriiformes,Scolopacidae,Numenius phaeopus,Aves
+190,AVE110501002,B182,Aves,Charadriiformes,Scolopacidae,Numenius arquata,Aves
+191,AVE110511002,B183,Aves,Charadriiformes,Scolopacidae,Tringa erythropus,Aves
+192,AVE110511006,B184,Aves,Charadriiformes,Scolopacidae,Tringa totanus,Aves
+193,AVE110511004,B185,Aves,Charadriiformes,Scolopacidae,Tringa stagnatilis,Aves
+194,AVE110511003,B186,Aves,Charadriiformes,Scolopacidae,Tringa nebularia,Aves
+195,AVE110511001,B187,Aves,Charadriiformes,Scolopacidae,Tringa ochropus,Aves
+196,AVE110511005,B188,Aves,Charadriiformes,Scolopacidae,Tringa glareola,Aves
+197,AVE110508001,B189,Aves,Charadriiformes,Scolopacidae,Xenus cinereus,Aves
+198,AVE140101001,B19,Aves,Procellariformes,Oceanitidae,Pelagodroma marina,Aves
+199,AVE110510001,B190,Aves,Charadriiformes,Scolopacidae,Actitis hypoleucos,Aves
+200,AVE110503001,B191,Aves,Charadriiformes,Scolopacidae,Arenaria interpres,Aves
+201,AVE110504001,B192,Aves,Charadriiformes,Scolopacidae,Calidris canutus,Aves
+202,AVE110504005,B193,Aves,Charadriiformes,Scolopacidae,Calidris alba,Aves
+203,AVE110504008,B194,Aves,Charadriiformes,Scolopacidae,Calidris minuta,Aves
+204,AVE110504004,B195,Aves,Charadriiformes,Scolopacidae,Calidris temminckii,Aves
+205,AVE110504006,B197,Aves,Charadriiformes,Scolopacidae,Calidris alpina,Aves
+206,AVE110504007,B198,Aves,Charadriiformes,Scolopacidae,Calidris maritima,Aves
+207,AVE110504003,B199,Aves,Charadriiformes,Scolopacidae,Calidris falcinellus,Aves
+208,AVE130101002,B2,Aves,Gaviformes,Gaviidae,Gavia arctica,Aves
+209,AVE140201001,B20,Aves,Procellariformes,Hydrobatidae,Hydrobates pelagicus,Aves
+210,AVE110504002,B200,Aves,Charadriiformes,Scolopacidae,Calidris pugnax,Aves
+211,AVE110509001,B201,Aves,Charadriiformes,Scolopacidae,Phalaropus lobatus,Aves
+212,AVE110509002,B202,Aves,Charadriiformes,Scolopacidae,Phalaropus fulicarius,Aves
+213,AVE110801001,B203,Aves,Charadriiformes,Stercorariidae,Stercorarius skua,Aves
+214,AVE110801002,B204,Aves,Charadriiformes,Stercorariidae,Stercorarius pomarinus,Aves
+215,AVE110801003,B205,Aves,Charadriiformes,Stercorariidae,Stercorarius parasiticus,Aves
+216,AVE110801004,B206,Aves,Charadriiformes,Stercorariidae,Stercorarius longicaudus,Aves
+217,AVE111007001,B207,Aves,Charadriiformes,Laridae,Larus canus,Aves
+218,AVE111006003,B208,Aves,Charadriiformes,Laridae,Ichthyaetus audouinii,Aves
+219,AVE111007008,B209,Aves,Charadriiformes,Laridae,Larus marinus,Aves
+220,AVE140202001,B21,Aves,Procellariformes,Hydrobatidae,Oceanodroma leucorhoa,Aves
+221,AVE111007007,B210,Aves,Charadriiformes,Laridae,Larus hyperboreus,Aves
+222,AVE111007002,B212,Aves,Charadriiformes,Laridae,Larus argentatus,Aves
+223,AVE111007006,B213,Aves,Charadriiformes,Laridae,Larus fuscus,Aves
+224,AVE111007004,B214,Aves,Charadriiformes,Laridae,Larus cachinnans,Aves
+225,AVE111007005,B215,Aves,Charadriiformes,Laridae,Larus armenicus,Aves
+226,AVE111006002,B216,Aves,Charadriiformes,Laridae,Ichthyaetus ichthyaetus,Aves
+227,AVE111004002,B217,Aves,Charadriiformes,Laridae,Chroicocephalus ridibundus,Aves
+228,AVE111004001,B218,Aves,Charadriiformes,Laridae,Chroicocephalus genei,Aves
+229,AVE111006001,B219,Aves,Charadriiformes,Laridae,Ichthyaetus melanocephalus,Aves
+230,AVE140202002,B22,Aves,Procellariformes,Hydrobatidae,Oceanodroma castro,Aves
+231,AVE111005001,B220,Aves,Charadriiformes,Laridae,Hydrocoloeus minutus,Aves
+232,AVE111002001,B221,Aves,Charadriiformes,Laridae,Pagophila eburnea,Aves
+233,AVE111003001,B222,Aves,Charadriiformes,Laridae,Xema sabini,Aves
+234,AVE111001001,B223,Aves,Charadriiformes,Laridae,Rissa tridactyla,Aves
+235,AVE111009001,B224,Aves,Charadriiformes,Laridae,Gelochelidon nilotica,Aves
+236,AVE111010001,B225,Aves,Charadriiformes,Laridae,Hydroprogne caspia,Aves
+237,AVE111013002,B226,Aves,Charadriiformes,Laridae,Thalasseus bengalensis,Aves
+238,AVE111013001,B227,Aves,Charadriiformes,Laridae,Thalasseus sandvicensis,Aves
+239,AVE111012001,B228,Aves,Charadriiformes,Laridae,Sterna dougallii,Aves
+240,AVE111012002,B229,Aves,Charadriiformes,Laridae,Sterna hirundo,Aves
+241,AVE120101001,B23,Aves,Phaethontiformes,Phaethontidae,Phaethon aethereus,Aves
+242,AVE111012003,B230,Aves,Charadriiformes,Laridae,Sterna paradisaea,Aves
+243,AVE111008001,B231,Aves,Charadriiformes,Laridae,Sternula albifrons,Aves
+244,AVE111011003,B233,Aves,Charadriiformes,Laridae,Chlidonias hybrida,Aves
+245,AVE111011002,B234,Aves,Charadriiformes,Laridae,Chlidonias leucopterus,Aves
+246,AVE111011001,B235,Aves,Charadriiformes,Laridae,Chlidonias niger,Aves
+247,AVE110901001,B236,Aves,Charadriiformes,Alcidae,Alle alle,Aves
+248,AVE110902001,B237,Aves,Charadriiformes,Alcidae,Uria aalge,Aves
+249,AVE110902002,B238,Aves,Charadriiformes,Alcidae,Uria lomvia,Aves
+250,AVE110903001,B239,Aves,Charadriiformes,Alcidae,Alca torda,Aves
+251,AVE160101001,B24,Aves,Suliformes,Sulidae,Morus bassanus,Aves
+252,AVE110904001,B240,Aves,Charadriiformes,Alcidae,Cepphus grylle,Aves
+253,AVE110905001,B241,Aves,Charadriiformes,Alcidae,Fratercula arctica,Aves
+254,AVE060102001,B242,Aves,Pterocliformes,Pteroclidae,Pterocles alchata,Aves
+255,AVE060102002,B243,Aves,Pterocliformes,Pteroclidae,Pterocles orientalis,Aves
+256,AVE050101001,B244,Aves,Columbiformes,Columbidae,Columba livia,Aves
+257,AVE050101002,B245,Aves,Columbiformes,Columbidae,Columba oenas,Aves
+258,AVE050101003,B246,Aves,Columbiformes,Columbidae,Columba palumbus,Aves
+259,AVE050101004,B247,Aves,Columbiformes,Columbidae,Columba trocaz,Aves
+260,AVE050102001,B248,Aves,Columbiformes,Columbidae,Streptopelia turtur,Aves
+261,AVE050102002,B249,Aves,Columbiformes,Columbidae,Streptopelia decaocto,Aves
+262,AVE160202001,B25,Aves,Suliformes,Phalacrocoracidae,Phalacrocorax carbo,Aves
+263,AVE050102003,B250,Aves,Columbiformes,Columbidae,Streptopelia senegalensis,Aves
+264,AVE080101001,B251,Aves,Cuculiformes,Cuculidae,Clamator glandarius,Aves
+265,AVE080102002,B252,Aves,Cuculiformes,Cuculidae,Cuculus canorus,Aves
+266,AVE080102001,B253,Aves,Cuculiformes,Cuculidae,Cuculus saturatus,Aves
+267,AVE190101001,B254,Aves,Strigiformes,Tytonidae,Tyto alba,Aves
+268,AVE190201002,B255,Aves,Strigiformes,Strigidae,Otus brucei,Aves
+269,AVE190201001,B256,Aves,Strigiformes,Strigidae,Otus scops,Aves
+270,AVE190202001,B257,Aves,Strigiformes,Strigidae,Bubo bubo,Aves
+271,AVE190202002,B258,Aves,Strigiformes,Strigidae,Bubo scandiacus,Aves
+272,AVE190207001,B259,Aves,Strigiformes,Strigidae,Strix aluco,Aves
+273,AVE160202002,B26,Aves,Suliformes,Phalacrocoracidae,Phalacrocorax aristotelis,Aves
+274,AVE190207002,B260,Aves,Strigiformes,Strigidae,Strix uralensis,Aves
+275,AVE190207003,B261,Aves,Strigiformes,Strigidae,Strix nebulosa,Aves
+276,AVE190204001,B262,Aves,Strigiformes,Strigidae,Surnia ulula,Aves
+277,AVE190205001,B263,Aves,Strigiformes,Strigidae,Glaucidium passerinum,Aves
+278,AVE190206001,B264,Aves,Strigiformes,Strigidae,Athene noctua,Aves
+279,AVE190209001,B265,Aves,Strigiformes,Strigidae,Aegolius funereus,Aves
+280,AVE190208001,B266,Aves,Strigiformes,Strigidae,Asio otus,Aves
+281,AVE190208002,B267,Aves,Strigiformes,Strigidae,Asio flammeus,Aves
+282,AVE090101001,B268,Aves,Caprimulgiformes,Caprimulgidae,Caprimulgus ruficollis,Aves
+283,AVE090101002,B269,Aves,Caprimulgiformes,Caprimulgidae,Caprimulgus europaeus,Aves
+284,AVE160201001,B27,Aves,Suliformes,Phalacrocoracidae,Microcarbo pygmaeus,Aves
+285,AVE090201001,B270,Aves,Caprimulgiformes,Apodidae,Apus melba,Aves
+286,AVE090201002,B271,Aves,Caprimulgiformes,Apodidae,Apus apus,Aves
+287,AVE090201003,B272,Aves,Caprimulgiformes,Apodidae,Apus unicolor,Aves
+288,AVE090201004,B273,Aves,Caprimulgiformes,Apodidae,Apus pallidus,Aves
+289,AVE090201005,B274,Aves,Caprimulgiformes,Apodidae,Apus affinis,Aves
+290,AVE090201006,B275,Aves,Caprimulgiformes,Apodidae,Apus caffer,Aves
+291,AVE210101001,B276,Aves,Coraciiformes,Alcedinidae,Alcedo atthis,Aves
+292,AVE210102001,B277,Aves,Coraciiformes,Alcedinidae,Halcyon smyrnensis,Aves
+293,AVE210103001,B278,Aves,Coraciiformes,Alcedinidae,Ceryle rudis,Aves
+294,AVE170101001,B28,Aves,Pelecaniformes,Pelecanidae,Pelecanus onocrotalus,Aves
+295,AVE210201002,B280,Aves,Coraciiformes,Meropidae,Merops apiaster,Aves
+296,AVE210301001,B281,Aves,Coraciiformes,Coraciidae,Coracias garrulus,Aves
+297,AVE200101001,B282,Aves,Bucerotiformes,Upupidae,Upupa epops,Aves
+298,AVE220101001,B283,Aves,Piciformes,Picidae,Jynx torquilla,Aves
+299,AVE220105001,B284,Aves,Piciformes,Picidae,Dryobates minor,Aves
+300,AVE220103001,B285,Aves,Piciformes,Picidae,Dendrocoptes medius,Aves
+301,AVE220104002,B287,Aves,Piciformes,Picidae,Dendrocopos major,Aves
+302,AVE220104003,B288,Aves,Piciformes,Picidae,Dendrocopos syriacus,Aves
+303,AVE220102001,B289,Aves,Piciformes,Picidae,Picoides tridactylus,Aves
+304,AVE170101002,B29,Aves,Pelecaniformes,Pelecanidae,Pelecanus crispus,Aves
+305,AVE220107001,B290,Aves,Piciformes,Picidae,Dryocopus martius,Aves
+306,AVE220106002,B291,Aves,Piciformes,Picidae,Picus viridis,Aves
+307,AVE220106001,B292,Aves,Piciformes,Picidae,Picus canus,Aves
+308,AVE240601001,B293,Aves,Passeriformes,Alaudidae,Ammomanes deserti,Aves
+309,AVE240604002,B294,Aves,Passeriformes,Alaudidae,Melanocorypha calandra,Aves
+310,AVE240604001,B295,Aves,Passeriformes,Alaudidae,Melanocorypha bimaculata,Aves
+311,AVE240608001,B296,Aves,Passeriformes,Alaudidae,Alauda leucoptera,Aves
+312,AVE240603001,B297,Aves,Passeriformes,Alaudidae,Calandrella brachydactyla,Aves
+313,AVE240606002,B298,Aves,Passeriformes,Alaudidae,Alaudala rufescens,Aves
+314,AVE240606001,B299,Aves,Passeriformes,Alaudidae,Alaudala cheleensis,Aves
+315,AVE130101003,B3,Aves,Gaviformes,Gaviidae,Gavia immer,Aves
+316,AVE170203001,B30,Aves,Pelecaniformes,Ardeidae,Ardea cinerea,Aves
+317,AVE240605001,B300,Aves,Passeriformes,Alaudidae,Chersophilus duponti,Aves
+318,AVE240609002,B301,Aves,Passeriformes,Alaudidae,Galerida cristata,Aves
+319,AVE240607001,B302,Aves,Passeriformes,Alaudidae,Lullula arborea,Aves
+320,AVE240608002,B303,Aves,Passeriformes,Alaudidae,Alauda arvensis,Aves
+321,AVE240602001,B304,Aves,Passeriformes,Alaudidae,Eremophila alpestris,Aves
+322,AVE241101001,B305,Aves,Passeriformes,Hirundinidae,Riparia riparia,Aves
+323,AVE241102001,B306,Aves,Passeriformes,Hirundinidae,Ptyonoprogne rupestris,Aves
+324,AVE241103001,B307,Aves,Passeriformes,Hirundinidae,Hirundo rustica,Aves
+325,AVE241104001,B308,Aves,Passeriformes,Hirundinidae,Cecropis daurica,Aves
+326,AVE241105001,B309,Aves,Passeriformes,Hirundinidae,Delichon urbicum,Aves
+327,AVE170203002,B31,Aves,Pelecaniformes,Ardeidae,Ardea purpurea,Aves
+328,AVE243001004,B310,Aves,Passeriformes,Motacillidae,Motacilla alba,Aves
+329,AVE243001003,B311,Aves,Passeriformes,Motacillidae,Motacilla citreola,Aves
+330,AVE243001002,B312,Aves,Passeriformes,Motacillidae,Motacilla flava,Aves
+331,AVE243001001,B313,Aves,Passeriformes,Motacillidae,Motacilla cinerea,Aves
+332,AVE243002001,B314,Aves,Passeriformes,Motacillidae,Anthus campestris,Aves
+333,AVE243002002,B315,Aves,Passeriformes,Motacillidae,Anthus berthelotii,Aves
+334,AVE243002004,B316,Aves,Passeriformes,Motacillidae,Anthus trivialis,Aves
+335,AVE243002005,B317,Aves,Passeriformes,Motacillidae,Anthus hodgsoni,Aves
+336,AVE243002003,B318,Aves,Passeriformes,Motacillidae,Anthus pratensis,Aves
+337,AVE243002007,B319,Aves,Passeriformes,Motacillidae,Anthus cervinus,Aves
+338,AVE170203003,B32,Aves,Pelecaniformes,Ardeidae,Ardea alba,Aves
+339,AVE243002009,B320,Aves,Passeriformes,Motacillidae,Anthus petrosus,Aves
+340,AVE243002008,B321,Aves,Passeriformes,Motacillidae,Anthus spinoletta,Aves
+341,AVE241201002,B322,Aves,Passeriformes,Pycnonotidae,Pycnonotus xanthopygos,Aves
+342,AVE241801001,B323,Aves,Passeriformes,Regulidae,Regulus regulus,Aves
+343,AVE241801003,B324,Aves,Passeriformes,Regulidae,Regulus ignicapilla,Aves
+344,AVE242701001,B325,Aves,Passeriformes,Bombycillidae,Bombycilla garrulus,Aves
+345,AVE242301001,B326,Aves,Passeriformes,Cinclidae,Cinclus cinclus,Aves
+346,AVE242201001,B327,Aves,Passeriformes,Troglodytidae,Troglodytes troglodytes,Aves
+347,AVE242801001,B328,Aves,Passeriformes,Prunellidae,Prunella collaris,Aves
+348,AVE242801002,B329,Aves,Passeriformes,Prunellidae,Prunella montanella,Aves
+349,AVE170204001,B33,Aves,Pelecaniformes,Ardeidae,Egretta garzetta,Aves
+350,AVE242801003,B330,Aves,Passeriformes,Prunellidae,Prunella ocularis,Aves
+351,AVE242801004,B331,Aves,Passeriformes,Prunellidae,Prunella atrogularis,Aves
+352,AVE242801005,B332,Aves,Passeriformes,Prunellidae,Prunella modularis,Aves
+353,AVE242610001,B333,Aves,Passeriformes,Muscicapidae,Monticola saxatilis,Aves
+354,AVE242610002,B334,Aves,Passeriformes,Muscicapidae,Monticola solitarius,Aves
+355,AVE242501001,B335,Aves,Passeriformes,Turdidae,Zoothera aurea,Aves
+356,AVE242502006,B336,Aves,Passeriformes,Turdidae,Turdus torquatus,Aves
+357,AVE242502004,B337,Aves,Passeriformes,Turdidae,Turdus merula,Aves
+358,AVE242502005,B339,Aves,Passeriformes,Turdidae,Turdus pilaris,Aves
+359,AVE170206001,B34,Aves,Pelecaniformes,Ardeidae,Ardeola ralloides,Aves
+360,AVE242502003,B340,Aves,Passeriformes,Turdidae,Turdus iliacus,Aves
+361,AVE242502002,B341,Aves,Passeriformes,Turdidae,Turdus philomelos,Aves
+362,AVE242502001,B342,Aves,Passeriformes,Turdidae,Turdus viscivorus,Aves
+363,AVE240802001,B343,Aves,Passeriformes,Cisticolidae,Cisticola juncidis,Aves
+364,AVE240801001,B344,Aves,Passeriformes,Cisticolidae,Prinia gracilis,Aves
+365,AVE241401001,B345,Aves,Passeriformes,Scotocercidae,Cettia cetti,Aves
+366,AVE241001001,B346,Aves,Passeriformes,Locustellidae,Locustella lanceolata,Aves
+367,AVE241001004,B347,Aves,Passeriformes,Locustellidae,Locustella naevia,Aves
+368,AVE241001002,B348,Aves,Passeriformes,Locustellidae,Locustella fluviatilis,Aves
+369,AVE241001003,B349,Aves,Passeriformes,Locustellidae,Locustella luscinioides,Aves
+370,AVE170205001,B35,Aves,Pelecaniformes,Ardeidae,Bubulcus ibis,Aves
+371,AVE240903002,B350,Aves,Passeriformes,Acrocephalidae,Acrocephalus melanopogon,Aves
+372,AVE240903001,B351,Aves,Passeriformes,Acrocephalidae,Acrocephalus paludicola,Aves
+373,AVE240903003,B352,Aves,Passeriformes,Acrocephalidae,Acrocephalus schoenobaenus,Aves
+374,AVE240903004,B353,Aves,Passeriformes,Acrocephalidae,Acrocephalus agricola,Aves
+375,AVE240903007,B354,Aves,Passeriformes,Acrocephalidae,Acrocephalus scirpaceus,Aves
+376,AVE240903005,B355,Aves,Passeriformes,Acrocephalidae,Acrocephalus dumetorum,Aves
+377,AVE240903006,B356,Aves,Passeriformes,Acrocephalidae,Acrocephalus palustris,Aves
+378,AVE240903008,B357,Aves,Passeriformes,Acrocephalidae,Acrocephalus arundinaceus,Aves
+379,AVE240901001,B358,Aves,Passeriformes,Acrocephalidae,Iduna caligata,Aves
+380,AVE240901003,B359,Aves,Passeriformes,Acrocephalidae,Iduna pallida,Aves
+381,AVE170207001,B36,Aves,Pelecaniformes,Ardeidae,Nycticorax nycticorax,Aves
+382,AVE240902001,B360,Aves,Passeriformes,Acrocephalidae,Hippolais languida,Aves
+383,AVE240902002,B361,Aves,Passeriformes,Acrocephalidae,Hippolais olivetorum,Aves
+384,AVE240902003,B362,Aves,Passeriformes,Acrocephalidae,Hippolais polyglotta,Aves
+385,AVE240902004,B363,Aves,Passeriformes,Acrocephalidae,Hippolais icterina,Aves
+386,AVE241301005,B364,Aves,Passeriformes,Phylloscopidae,Phylloscopus trochilus,Aves
+387,AVE241301008,B365,Aves,Passeriformes,Phylloscopidae,Phylloscopus collybita,Aves
+388,AVE241301002,B367,Aves,Passeriformes,Phylloscopidae,Phylloscopus bonelli,Aves
+389,AVE241301001,B368,Aves,Passeriformes,Phylloscopidae,Phylloscopus sibilatrix,Aves
+390,AVE241301004,B369,Aves,Passeriformes,Phylloscopidae,Phylloscopus inornatus,Aves
+391,AVE170202001,B37,Aves,Pelecaniformes,Ardeidae,Ixobrychus minutus,Aves
+392,AVE241301012,B370,Aves,Passeriformes,Phylloscopidae,Phylloscopus borealis,Aves
+393,AVE241301011,B371,Aves,Passeriformes,Phylloscopidae,Phylloscopus trochiloides,Aves
+394,AVE241601001,B372,Aves,Passeriformes,Sylviidae,Sylvia atricapilla,Aves
+395,AVE241601002,B373,Aves,Passeriformes,Sylviidae,Sylvia borin,Aves
+396,AVE241601013,B374,Aves,Passeriformes,Sylviidae,Sylvia communis,Aves
+397,AVE241601004,B375,Aves,Passeriformes,Sylviidae,Sylvia curruca,Aves
+398,AVE241601003,B376,Aves,Passeriformes,Sylviidae,Sylvia nisoria,Aves
+399,AVE241601005,B377,Aves,Passeriformes,Sylviidae,Sylvia hortensis,Aves
+400,AVE241601009,B378,Aves,Passeriformes,Sylviidae,Sylvia ruppeli,Aves
+401,AVE241601010,B379,Aves,Passeriformes,Sylviidae,Sylvia cantillans,Aves
+402,AVE170201001,B38,Aves,Pelecaniformes,Ardeidae,Botaurus stellaris,Aves
+403,AVE241601012,B380,Aves,Passeriformes,Sylviidae,Sylvia melanocephala,Aves
+404,AVE241601007,B381,Aves,Passeriformes,Sylviidae,Sylvia melanothorax,Aves
+405,AVE241601008,B382,Aves,Passeriformes,Sylviidae,Sylvia mystacea,Aves
+406,AVE241601014,B383,Aves,Passeriformes,Sylviidae,Sylvia conspicillata,Aves
+407,AVE241601016,B384,Aves,Passeriformes,Sylviidae,Sylvia undata,Aves
+408,AVE241601015,B385,Aves,Passeriformes,Sylviidae,Sylvia sarda,Aves
+409,AVE242601001,B386,Aves,Passeriformes,Muscicapidae,Muscicapa striata,Aves
+410,AVE242608004,B387,Aves,Passeriformes,Muscicapidae,Ficedula hypoleuca,Aves
+411,AVE242608005,B388,Aves,Passeriformes,Muscicapidae,Ficedula albicollis,Aves
+412,AVE242608003,B389,Aves,Passeriformes,Muscicapidae,Ficedula semitorquata,Aves
+413,AVE150101001,B39,Aves,Ciconiiformes,Ciconiidae,Ciconia nigra,Aves
+414,AVE242608002,B390,Aves,Passeriformes,Muscicapidae,Ficedula parva,Aves
+415,AVE242603001,B391,Aves,Passeriformes,Muscicapidae,Erithacus rubecula,Aves
+416,AVE242605001,B392,Aves,Passeriformes,Muscicapidae,Luscinia luscinia,Aves
+417,AVE242605002,B393,Aves,Passeriformes,Muscicapidae,Luscinia megarhynchos,Aves
+418,AVE242606001,B394,Aves,Passeriformes,Muscicapidae,Calliope calliope,Aves
+419,AVE242605003,B395,Aves,Passeriformes,Muscicapidae,Luscinia svecica,Aves
+420,AVE242607001,B396,Aves,Passeriformes,Muscicapidae,Tarsiger cyanurus,Aves
+421,AVE242604001,B397,Aves,Passeriformes,Muscicapidae,Irania gutturalis,Aves
+422,AVE242602001,B398,Aves,Passeriformes,Muscicapidae,Cercotrichas galactotes,Aves
+423,AVE242609002,B399,Aves,Passeriformes,Muscicapidae,Phoenicurus ochruros,Aves
+424,AVE130101004,B4,Aves,Gaviformes,Gaviidae,Gavia adamsii,Aves
+425,AVE150101002,B40,Aves,Ciconiiformes,Ciconiidae,Ciconia ciconia,Aves
+426,AVE242609001,B400,Aves,Passeriformes,Muscicapidae,Phoenicurus phoenicurus,Aves
+427,AVE242611001,B401,Aves,Passeriformes,Muscicapidae,Saxicola rubetra,Aves
+428,AVE242611003,B402,Aves,Passeriformes,Muscicapidae,Saxicola rubicola,Aves
+429,AVE242612007,B403,Aves,Passeriformes,Muscicapidae,Oenanthe leucura,Aves
+430,AVE242612001,B404,Aves,Passeriformes,Muscicapidae,Oenanthe oenanthe,Aves
+431,AVE242612008,B405,Aves,Passeriformes,Muscicapidae,Oenanthe finschii,Aves
+432,AVE242612004,B406,Aves,Passeriformes,Muscicapidae,Oenanthe pleschanka,Aves
+433,AVE242612005,B407,Aves,Passeriformes,Muscicapidae,Oenanthe hispanica,Aves
+434,AVE242612010,B408,Aves,Passeriformes,Muscicapidae,Oenanthe chrysopygia,Aves
+435,AVE242612003,B409,Aves,Passeriformes,Muscicapidae,Oenanthe deserti,Aves
+436,AVE170301001,B41,Aves,Pelecaniformes,Threskiornithidae,Plegadis falcinellus,Aves
+437,AVE242612006,B410,Aves,Passeriformes,Muscicapidae,Oenanthe cypriaca,Aves
+438,AVE242612002,B411,Aves,Passeriformes,Muscicapidae,Oenanthe isabellina,Aves
+439,AVE240701001,B412,Aves,Passeriformes,Panuridae,Panurus biarmicus,Aves
+440,AVE241501001,B413,Aves,Passeriformes,Aegithalidae,Aegithalos caudatus,Aves
+441,AVE240403001,B414,Aves,Passeriformes,Paridae,Poecile lugubris,Aves
+442,AVE240403002,B415,Aves,Passeriformes,Paridae,Poecile palustris,Aves
+443,AVE240403003,B416,Aves,Passeriformes,Paridae,Poecile montanus,Aves
+444,AVE240403004,B417,Aves,Passeriformes,Paridae,Poecile cinctus,Aves
+445,AVE240401001,B418,Aves,Passeriformes,Paridae,Periparus ater,Aves
+446,AVE240402001,B419,Aves,Passeriformes,Paridae,Lophophanes cristatus,Aves
+447,AVE170302001,B42,Aves,Pelecaniformes,Threskiornithidae,Platalea leucorodia,Aves
+448,AVE240405001,B420,Aves,Passeriformes,Paridae,Parus major,Aves
+449,AVE240404001,B421,Aves,Passeriformes,Paridae,Cyanistes caeruleus,Aves
+450,AVE240404003,B422,Aves,Passeriformes,Paridae,Cyanistes cyanus,Aves
+451,AVE242001001,B423,Aves,Passeriformes,Sittidae,Sitta europaea,Aves
+452,AVE242001002,B424,Aves,Passeriformes,Sittidae,Sitta whiteheadi,Aves
+453,AVE242001003,B425,Aves,Passeriformes,Sittidae,Sitta krueperi,Aves
+454,AVE242001004,B426,Aves,Passeriformes,Sittidae,Sitta neumayer,Aves
+455,AVE242001005,B427,Aves,Passeriformes,Sittidae,Sitta tephronota,Aves
+456,AVE241901001,B428,Aves,Passeriformes,Tichodromidae,Tichodroma muraria,Aves
+457,AVE242101001,B429,Aves,Passeriformes,Certhiidae,Certhia familiaris,Aves
+458,AVE030101001,B43,Aves,Phoenicopteriformes,Phoenicopteridae,Phoenicopterus roseus,Aves
+459,AVE242101002,B430,Aves,Passeriformes,Certhiidae,Certhia brachydactyla,Aves
+460,AVE240501001,B431,Aves,Passeriformes,Remizidae,Remiz pendulinus,Aves
+461,AVE240101001,B432,Aves,Passeriformes,Oriolidae,Oriolus oriolus,Aves
+462,AVE240201001,B433,Aves,Passeriformes,Laniidae,Lanius collurio,Aves
+463,AVE240201003,B434,Aves,Passeriformes,Laniidae,Lanius excubitor,Aves
+464,AVE240201002,B435,Aves,Passeriformes,Laniidae,Lanius meridionalis,Aves
+465,AVE240201004,B436,Aves,Passeriformes,Laniidae,Lanius minor,Aves
+466,AVE240201005,B437,Aves,Passeriformes,Laniidae,Lanius nubicus,Aves
+467,AVE240201006,B438,Aves,Passeriformes,Laniidae,Lanius senator,Aves
+468,AVE240301001,B439,Aves,Passeriformes,Corvidae,Perisoreus infaustus,Aves
+469,AVE010103001,B44,Aves,Anseriformes,Anatidae,Cygnus olor,Aves
+470,AVE240302001,B440,Aves,Passeriformes,Corvidae,Garrulus glandarius,Aves
+471,AVE240304001,B442,Aves,Passeriformes,Corvidae,Pica pica,Aves
+472,AVE240305001,B443,Aves,Passeriformes,Corvidae,Nucifraga caryocatactes,Aves
+473,AVE240306001,B444,Aves,Passeriformes,Corvidae,Pyrrhocorax pyrrhocorax,Aves
+474,AVE240306002,B445,Aves,Passeriformes,Corvidae,Pyrrhocorax graculus,Aves
+475,AVE240307001,B446,Aves,Passeriformes,Corvidae,Corvus monedula,Aves
+476,AVE240307002,B447,Aves,Passeriformes,Corvidae,Corvus frugilegus,Aves
+477,AVE240307003,B448,Aves,Passeriformes,Corvidae,Corvus corone,Aves
+478,AVE240307005,B449,Aves,Passeriformes,Corvidae,Corvus corax,Aves
+479,AVE010103003,B45,Aves,Anseriformes,Anatidae,Cygnus cygnus,Aves
+480,AVE242102001,B450,Aves,Passeriformes,Sturnidae,Pastor roseus,Aves
+481,AVE242401001,B451,Aves,Passeriformes,Sturnidae,Sturnus vulgaris,Aves
+482,AVE242401002,B452,Aves,Passeriformes,Sturnidae,Sturnus unicolor,Aves
+483,AVE243301006,B453,Aves,Passeriformes,Emberizidae,Emberiza citrinella,Aves
+484,AVE243301007,B454,Aves,Passeriformes,Emberizidae,Emberiza leucocephalos,Aves
+485,AVE243301005,B455,Aves,Passeriformes,Emberizidae,Emberiza cirlus,Aves
+486,AVE243301004,B456,Aves,Passeriformes,Emberizidae,Emberiza cia,Aves
+487,AVE243301008,B457,Aves,Passeriformes,Emberizidae,Emberiza buchanani,Aves
+488,AVE243301009,B458,Aves,Passeriformes,Emberizidae,Emberiza cineracea,Aves
+489,AVE243301010,B459,Aves,Passeriformes,Emberizidae,Emberiza hortulana,Aves
+490,AVE010103002,B46,Aves,Anseriformes,Anatidae,Cygnus columbianus,Aves
+491,AVE243301011,B460,Aves,Passeriformes,Emberizidae,Emberiza caesia,Aves
+492,AVE243301015,B461,Aves,Passeriformes,Emberizidae,Emberiza pusilla,Aves
+493,AVE243301016,B462,Aves,Passeriformes,Emberizidae,Emberiza rustica,Aves
+494,AVE243301014,B463,Aves,Passeriformes,Emberizidae,Emberiza aureola,Aves
+495,AVE243301001,B464,Aves,Passeriformes,Emberizidae,Emberiza melanocephala,Aves
+496,AVE243301002,B465,Aves,Passeriformes,Emberizidae,Emberiza bruniceps,Aves
+497,AVE243301012,B466,Aves,Passeriformes,Emberizidae,Emberiza pallasi,Aves
+498,AVE243301013,B467,Aves,Passeriformes,Emberizidae,Emberiza schoeniclus,Aves
+499,AVE243301003,B468,Aves,Passeriformes,Emberizidae,Emberiza calandra,Aves
+500,AVE243201001,B469,Aves,Passeriformes,Calcariidae,Calcarius lapponicus,Aves
+501,AVE010101004,B47,Aves,Anseriformes,Anatidae,Anser fabalis,Aves
+502,AVE243202001,B470,Aves,Passeriformes,Calcariidae,Plectrophenax nivalis,Aves
+503,AVE243101001,B471,Aves,Passeriformes,Fringillidae,Fringilla coelebs,Aves
+504,AVE243101003,B472,Aves,Passeriformes,Fringillidae,Fringilla montifringilla,Aves
+505,AVE243104001,B473,Aves,Passeriformes,Fringillidae,Pinicola enucleator,Aves
+506,AVE243103001,B474,Aves,Passeriformes,Fringillidae,Carpodacus erythrinus,Aves
+507,AVE243103002,B475,Aves,Passeriformes,Fringillidae,Carpodacus rubicilla,Aves
+508,AVE243112001,B476,Aves,Passeriformes,Fringillidae,Loxia pytyopsittacus,Aves
+509,AVE243112002,B477,Aves,Passeriformes,Fringillidae,Loxia scotica,Aves
+510,AVE243112003,B478,Aves,Passeriformes,Fringillidae,Loxia curvirostra,Aves
+511,AVE243112004,B479,Aves,Passeriformes,Fringillidae,Loxia leucoptera,Aves
+512,AVE010101005,B48,Aves,Anseriformes,Anatidae,Anser brachyrhynchus,Aves
+513,AVE243109001,B480,Aves,Passeriformes,Fringillidae,Chloris chloris,Aves
+514,AVE243111001,B481,Aves,Passeriformes,Fringillidae,Acanthis flammea,Aves
+515,AVE243111002,B482,Aves,Passeriformes,Fringillidae,Acanthis hornemanni,Aves
+516,AVE243115001,B483,Aves,Passeriformes,Fringillidae,Spinus spinus,Aves
+517,AVE243113001,B484,Aves,Passeriformes,Fringillidae,Carduelis carduelis,Aves
+518,AVE243110001,B485,Aves,Passeriformes,Fringillidae,Linaria flavirostris,Aves
+519,AVE243110002,B486,Aves,Passeriformes,Fringillidae,Linaria cannabina,Aves
+520,AVE243114003,B487,Aves,Passeriformes,Fringillidae,Serinus pusillus,Aves
+521,AVE243114001,B488,Aves,Passeriformes,Fringillidae,Serinus serinus,Aves
+522,AVE243114002,B489,Aves,Passeriformes,Fringillidae,Serinus canaria,Aves
+523,AVE010101002,B49,Aves,Anseriformes,Anatidae,Anser albifrons,Aves
+524,AVE243113002,B490,Aves,Passeriformes,Fringillidae,Carduelis citrinella,Aves
+525,AVE243105002,B491,Aves,Passeriformes,Fringillidae,Pyrrhula pyrrhula,Aves
+526,AVE243105001,B492,Aves,Passeriformes,Fringillidae,Pyrrhula murina,Aves
+527,AVE243102001,B493,Aves,Passeriformes,Fringillidae,Coccothraustes coccothraustes,Aves
+528,AVE243106001,B494,Aves,Passeriformes,Fringillidae,Rhodopechys sanguineus,Aves
+529,AVE243107001,B495,Aves,Passeriformes,Fringillidae,Bucanetes githagineus,Aves
+530,AVE243107002,B496,Aves,Passeriformes,Fringillidae,Bucanetes mongolicus,Aves
+531,AVE243108001,B497,Aves,Passeriformes,Fringillidae,Rhodospiza obsoleta,Aves
+532,AVE242901002,B498,Aves,Passeriformes,Passeridae,Passer italiae,Aves
+533,AVE242901001,B499,Aves,Passeriformes,Passeridae,Passer domesticus,Aves
+534,AVE040101001,B5,Aves,Podicipediformes,Podicipedidae,Tachybaptus ruficollis,Aves
+535,AVE010101003,B50,Aves,Anseriformes,Anatidae,Anser erythropus,Aves
+536,AVE242901003,B500,Aves,Passeriformes,Passeridae,Passer hispaniolensis,Aves
+537,AVE242901004,B501,Aves,Passeriformes,Passeridae,Passer moabiticus,Aves
+538,AVE242901005,B502,Aves,Passeriformes,Passeridae,Passer montanus,Aves
+539,AVE242902001,B503,Aves,Passeriformes,Passeridae,Gymnoris xanthocollis,Aves
+540,AVE242903001,B504,Aves,Passeriformes,Passeridae,Petronia petronia,Aves
+541,AVE242904001,B505,Aves,Passeriformes,Passeridae,Carpospiza brachydactyla,Aves
+542,AVE242905001,B506,Aves,Passeriformes,Passeridae,Montifringilla nivalis,Aves
+543,AVE240609001,B507,Aves,Passeriformes,Alaudidae,Galerida theklae,Aves
+544,AVE050101005,B508,Aves,Columbiformes,Columbidae,Columba bollii,Aves
+545,AVE050101006,B509,Aves,Columbiformes,Columbidae,Columba junoniae,Aves
+546,AVE010101001,B51,Aves,Anseriformes,Anatidae,Anser anser,Aves
+547,AVE243101002,B510,Aves,Passeriformes,Fringillidae,Fringilla teydea,Aves
+548,AVE242611002,B513,Aves,Passeriformes,Muscicapidae,Saxicola dacotiae,Aves
+549,AVE110402004,B514,Aves,Charadriiformes,Charadriidae,Vanellus gregarius,Aves
+550,AVE070102001,B515,Aves,Otidiformes,Otididae,Chlamydotis undulata,Aves
+551,AVE110701001,B516,Aves,Charadriiformes,Glareolidae,Cursorius cursor,Aves
+552,AVE010102001,B53,Aves,Anseriformes,Anatidae,Branta leucopsis,Aves
+553,AVE010104001,B56,Aves,Anseriformes,Anatidae,Tadorna ferruginea,Aves
+554,AVE010104002,B57,Aves,Anseriformes,Anatidae,Tadorna tadorna,Aves
+555,AVE010106002,B58,Aves,Anseriformes,Anatidae,Mareca penelope,Aves
+556,AVE010106001,B59,Aves,Anseriformes,Anatidae,Mareca strepera,Aves
+557,AVE040102003,B6,Aves,Podicipediformes,Podicipedidae,Podiceps cristatus,Aves
+558,AVE010107003,B60,Aves,Anseriformes,Anatidae,Anas crecca,Aves
+559,AVE010107001,B61,Aves,Anseriformes,Anatidae,Anas platyrhynchos,Aves
+560,AVE010107002,B62,Aves,Anseriformes,Anatidae,Anas acuta,Aves
+561,AVE010105001,B63,Aves,Anseriformes,Anatidae,Spatula querquedula,Aves
+562,AVE010105002,B64,Aves,Anseriformes,Anatidae,Spatula clypeata,Aves
+563,AVE010108001,B65,Aves,Anseriformes,Anatidae,Marmaronetta angustirostris,Aves
+564,AVE010109001,B66,Aves,Anseriformes,Anatidae,Netta rufina,Aves
+565,AVE010110001,B67,Aves,Anseriformes,Anatidae,Aythya ferina,Aves
+566,AVE010110002,B68,Aves,Anseriformes,Anatidae,Aythya nyroca,Aves
+567,AVE010110003,B69,Aves,Anseriformes,Anatidae,Aythya fuligula,Aves
+568,AVE040102002,B7,Aves,Podicipediformes,Podicipedidae,Podiceps grisegena,Aves
+569,AVE010110004,B70,Aves,Anseriformes,Anatidae,Aythya marila,Aves
+570,AVE010112002,B71,Aves,Anseriformes,Anatidae,Somateria mollissima,Aves
+571,AVE010112001,B72,Aves,Anseriformes,Anatidae,Somateria spectabilis,Aves
+572,AVE010111001,B73,Aves,Anseriformes,Anatidae,Polysticta stelleri,Aves
+573,AVE010113001,B74,Aves,Anseriformes,Anatidae,Histrionicus histrionicus,Aves
+574,AVE010115001,B75,Aves,Anseriformes,Anatidae,Clangula hyemalis,Aves
+575,AVE010114002,B76,Aves,Anseriformes,Anatidae,Melanitta nigra,Aves
+576,AVE010114001,B77,Aves,Anseriformes,Anatidae,Melanitta fusca,Aves
+577,AVE010116001,B78,Aves,Anseriformes,Anatidae,Bucephala clangula,Aves
+578,AVE010116002,B79,Aves,Anseriformes,Anatidae,Bucephala islandica,Aves
+579,AVE040102001,B8,Aves,Podicipediformes,Podicipedidae,Podiceps auritus,Aves
+580,AVE010117001,B80,Aves,Anseriformes,Anatidae,Mergellus albellus,Aves
+581,AVE010118002,B81,Aves,Anseriformes,Anatidae,Mergus serrator,Aves
+582,AVE010118001,B82,Aves,Anseriformes,Anatidae,Mergus merganser,Aves
+583,AVE010119001,B84,Aves,Anseriformes,Anatidae,Oxyura leucocephala,Aves
+584,AVE180101001,B85,Aves,Accipitriformes,Pandionidae,Pandion haliaetus,Aves
+585,AVE180204001,B86,Aves,Accipitriformes,Accipitridae,Pernis apivorus,Aves
+586,AVE180201001,B87,Aves,Accipitriformes,Accipitridae,Elanus caeruleus,Aves
+587,AVE180213001,B88,Aves,Accipitriformes,Accipitridae,Milvus milvus,Aves
+588,AVE180213002,B89,Aves,Accipitriformes,Accipitridae,Milvus migrans,Aves
+589,AVE040102004,B9,Aves,Podicipediformes,Podicipedidae,Podiceps nigricollis,Aves
+590,AVE180214001,B90,Aves,Accipitriformes,Accipitridae,Haliaeetus albicilla,Aves
+591,AVE180202001,B91,Aves,Accipitriformes,Accipitridae,Gypaetus barbatus,Aves
+592,AVE180203001,B92,Aves,Accipitriformes,Accipitridae,Neophron percnopterus,Aves
+593,AVE180206001,B93,Aves,Accipitriformes,Accipitridae,Gyps fulvus,Aves
+594,AVE180205001,B94,Aves,Accipitriformes,Accipitridae,Aegypius monachus,Aves
+595,AVE180207001,B95,Aves,Accipitriformes,Accipitridae,Circaetus gallicus,Aves
+596,AVE180211001,B96,Aves,Accipitriformes,Accipitridae,Circus aeruginosus,Aves
+597,AVE180211002,B97,Aves,Accipitriformes,Accipitridae,Circus cyaneus,Aves
+598,AVE180211003,B98,Aves,Accipitriformes,Accipitridae,Circus macrourus,Aves
+599,AVE180211004,B99,Aves,Accipitriformes,Accipitridae,Circus pygargus,Aves
+600,MAM060901002,M1,Mammalia,Rodentia,Muridae,Acomys cilicicus,Small Mammalia
+601,MAM060803001,M10,Mammalia,Rodentia,Cricetidae,Allocricetulus eversmanni,Small Mammalia
+602,MAM010202003,M100,Mammalia,Lagomorpha,Leporidae,Lepus granatensis,Small Mammalia
+603,MAM010202007,M101,Mammalia,Lagomorpha,Leporidae,Lepus timidus,Small Mammalia
+604,MAM010202002,M102,Mammalia,Lagomorpha,Leporidae,Lepus tolai,Small Mammalia
+605,MAM040705001,M103,Mammalia,Carnivora,Mustelidae,Lutra lutra,Large Mammalia
+606,MAM040103001,M104,Mammalia,Carnivora,Felidae,Lynx lynx,Large Mammalia
+607,MAM040103002,M105,Mammalia,Carnivora,Felidae,Lynx pardinus,Large Mammalia
+608,MAM060105002,M108,Mammalia,Rodentia,Sciuridae,Marmota bobak,Small Mammalia
+609,MAM060105001,M109,Mammalia,Rodentia,Sciuridae,Marmota marmota,Small Mammalia
+610,MAM040502001,M11,Mammalia,Carnivora,Canidae,Alopex lagopus,Large Mammalia
+611,MAM040703001,M110,Mammalia,Carnivora,Mustelidae,Martes foina,Large Mammalia
+612,MAM040703002,M111,Mammalia,Carnivora,Mustelidae,Martes martes,Large Mammalia
+613,MAM040703003,M112,Mammalia,Carnivora,Mustelidae,Martes zibellina,Large Mammalia
+614,MAM040701001,M113,Mammalia,Carnivora,Mustelidae,Meles leucurus,Large Mammalia
+615,MAM040701002,M114,Mammalia,Carnivora,Mustelidae,Meles meles,Large Mammalia
+616,MAM060904001,M115,Mammalia,Rodentia,Muridae,Meriones crassus,Small Mammalia
+617,MAM060904004,M116,Mammalia,Rodentia,Muridae,Meriones dahli,Small Mammalia
+618,MAM060904002,M117,Mammalia,Rodentia,Muridae,Meriones libycus,Small Mammalia
+619,MAM060904007,M118,Mammalia,Rodentia,Muridae,Meriones meridianus,Small Mammalia
+620,MAM060904006,M119,Mammalia,Rodentia,Muridae,Meriones persicus,Small Mammalia
+621,MAM060905003,M12,Mammalia,Rodentia,Muridae,Apodemus agrarius,Small Mammalia
+622,MAM060904008,M120,Mammalia,Rodentia,Muridae,Meriones tamariscinus,Small Mammalia
+623,MAM060904003,M121,Mammalia,Rodentia,Muridae,Meriones tristrami,Small Mammalia
+624,MAM060904005,M122,Mammalia,Rodentia,Muridae,Meriones vinogradovi,Small Mammalia
+625,MAM060801001,M123,Mammalia,Rodentia,Cricetidae,Mesocricetus auratus,Small Mammalia
+626,MAM060801003,M124,Mammalia,Rodentia,Cricetidae,Mesocricetus brandti,Small Mammalia
+627,MAM060801004,M125,Mammalia,Rodentia,Cricetidae,Mesocricetus newtoni,Small Mammalia
+628,MAM060801002,M126,Mammalia,Rodentia,Cricetidae,Mesocricetus raddei,Small Mammalia
+629,MAM060907001,M127,Mammalia,Rodentia,Muridae,Micromys minutus,Small Mammalia
+630,MAM060818001,M128,Mammalia,Rodentia,Cricetidae,Microtus agrestis,Small Mammalia
+631,MAM060818024,M129,Mammalia,Rodentia,Cricetidae,Microtus anatolicus,Small Mammalia
+632,MAM060905001,M13,Mammalia,Rodentia,Muridae,Apodemus alpicola,Small Mammalia
+633,MAM060818026,M130,Mammalia,Rodentia,Cricetidae,Microtus arvalis,Small Mammalia
+634,MAM060818015,M132,Mammalia,Rodentia,Cricetidae,Microtus brachycercus,Small Mammalia
+635,MAM060818004,M133,Mammalia,Rodentia,Cricetidae,Microtus cabrerae,Small Mammalia
+636,MAM060818007,M134,Mammalia,Rodentia,Cricetidae,Microtus daghestanicus,Small Mammalia
+637,MAM060818022,M135,Mammalia,Rodentia,Cricetidae,Microtus dogramacii,Small Mammalia
+638,MAM060818011,M136,Mammalia,Rodentia,Cricetidae,Microtus duodecimcostatus,Small Mammalia
+639,MAM060818019,M137,Mammalia,Rodentia,Cricetidae,Microtus felteni,Small Mammalia
+640,MAM060818013,M138,Mammalia,Rodentia,Cricetidae,Microtus gerbei,Small Mammalia
+641,MAM060816001,M139,Mammalia,Rodentia,Cricetidae,Lasiopodomys gregalis,Small Mammalia
+642,MAM060905004,M14,Mammalia,Rodentia,Muridae,Apodemus epimelas,Small Mammalia
+643,MAM060818021,M140,Mammalia,Rodentia,Cricetidae,Microtus guentheri,Small Mammalia
+644,MAM060818009,M142,Mammalia,Rodentia,Cricetidae,Microtus liechtensteini,Small Mammalia
+645,MAM060818012,M143,Mammalia,Rodentia,Cricetidae,Microtus lusitanicus,Small Mammalia
+646,MAM060818005,M144,Mammalia,Rodentia,Cricetidae,Microtus majori,Small Mammalia
+647,MAM060817001,M145,Mammalia,Rodentia,Cricetidae,Alexandromys middendorffii,Small Mammalia
+648,MAM060818008,M146,Mammalia,Rodentia,Cricetidae,Microtus multiplex,Small Mammalia
+649,MAM060817002,M148,Mammalia,Rodentia,Cricetidae,Alexandromys oeconomus,Small Mammalia
+650,MAM060818014,M149,Mammalia,Rodentia,Cricetidae,Microtus savii,Small Mammalia
+651,MAM060905008,M15,Mammalia,Rodentia,Muridae,Apodemus flavicollis,Small Mammalia
+652,MAM060818023,M151,Mammalia,Rodentia,Cricetidae,Microtus socialis,Small Mammalia
+653,MAM060818006,M152,Mammalia,Rodentia,Cricetidae,Microtus subterraneus,Small Mammalia
+654,MAM060818010,M153,Mammalia,Rodentia,Cricetidae,Microtus tatricus,Small Mammalia
+655,MAM060818017,M154,Mammalia,Rodentia,Cricetidae,Microtus thomasi,Small Mammalia
+656,MAM030601002,M156,Mammalia,Chiroptera,Miniopteridae,Miniopterus schreibersii,Chiroptera
+657,MAM060906005,M157,Mammalia,Rodentia,Muridae,Mus cypriacus,Small Mammalia
+658,MAM060906003,M158,Mammalia,Rodentia,Muridae,Mus macedonicus,Small Mammalia
+659,MAM060906001,M159,Mammalia,Rodentia,Muridae,Mus musculus,Small Mammalia
+660,MAM060905005,M16,Mammalia,Rodentia,Muridae,Apodemus hyrcanicus,Small Mammalia
+661,MAM060906004,M160,Mammalia,Rodentia,Muridae,Mus spicilegus,Small Mammalia
+662,MAM060906002,M161,Mammalia,Rodentia,Muridae,Mus spretus,Small Mammalia
+663,MAM060202001,M162,Mammalia,Rodentia,Gliridae,Muscardinus avellanarius,Small Mammalia
+664,MAM040706001,M163,Mammalia,Carnivora,Mustelidae,Mustela erminea,Large Mammalia
+665,MAM040706002,M164,Mammalia,Carnivora,Mustelidae,Mustela eversmanii,Large Mammalia
+666,MAM040706003,M165,Mammalia,Carnivora,Mustelidae,Mustela lutreola,Large Mammalia
+667,MAM040706004,M166,Mammalia,Carnivora,Mustelidae,Mustela nivalis,Large Mammalia
+668,MAM040706005,M167,Mammalia,Carnivora,Mustelidae,Mustela putorius,Large Mammalia
+669,MAM040706006,M168,Mammalia,Carnivora,Mustelidae,Mustela sibirica,Large Mammalia
+670,MAM060810001,M169,Mammalia,Rodentia,Cricetidae,Myodes glareolus,Small Mammalia
+671,MAM060905009,M17,Mammalia,Rodentia,Muridae,Apodemus mystacinus,Small Mammalia
+672,MAM060809001,M170,Mammalia,Rodentia,Cricetidae,Craseomys rufocanus,Small Mammalia
+673,MAM060810002,M171,Mammalia,Rodentia,Cricetidae,Myodes rutilus,Small Mammalia
+674,MAM060203001,M172,Mammalia,Rodentia,Gliridae,Myomimus roachi,Small Mammalia
+675,MAM060203002,M173,Mammalia,Rodentia,Gliridae,Myomimus setzeri,Small Mammalia
+676,MAM060806001,M174,Mammalia,Rodentia,Cricetidae,Myopus schisticolor,Small Mammalia
+677,MAM030509003,M175,Mammalia,Chiroptera,Vespertilionidae,Myotis alcathoe,Chiroptera
+678,MAM030509008,M177,Mammalia,Chiroptera,Vespertilionidae,Myotis bechsteinii,Chiroptera
+679,MAM030509010,M178,Mammalia,Chiroptera,Vespertilionidae,Myotis blythii,Chiroptera
+680,MAM030509001,M179,Mammalia,Chiroptera,Vespertilionidae,Myotis brandtii,Chiroptera
+681,MAM060905006,M18,Mammalia,Rodentia,Muridae,Apodemus ponticus,Small Mammalia
+682,MAM030509007,M180,Mammalia,Chiroptera,Vespertilionidae,Myotis capaccinii,Chiroptera
+683,MAM030509004,M181,Mammalia,Chiroptera,Vespertilionidae,Myotis dasycneme,Chiroptera
+684,MAM030509009,M182,Mammalia,Chiroptera,Vespertilionidae,Myotis daubentonii,Chiroptera
+685,MAM030509002,M183,Mammalia,Chiroptera,Vespertilionidae,Myotis emarginatus,Chiroptera
+686,MAM030509011,M185,Mammalia,Chiroptera,Vespertilionidae,Myotis myotis,Chiroptera
+687,MAM030509005,M186,Mammalia,Chiroptera,Vespertilionidae,Myotis mystacinus,Chiroptera
+688,MAM030509013,M187,Mammalia,Chiroptera,Vespertilionidae,Myotis nattereri,Chiroptera
+689,MAM030509012,M189,Mammalia,Chiroptera,Vespertilionidae,Myotis punicus,Chiroptera
+690,MAM060905002,M19,Mammalia,Rodentia,Muridae,Apodemus sylvaticus,Small Mammalia
+691,MAM030509015,M190,Mammalia,Chiroptera,Vespertilionidae,Myotis schaubi,Chiroptera
+692,MAM020202001,M191,Mammalia,Eulipotyphla,Soricidae,Neomys anomalus,Small Mammalia
+693,MAM020202004,M192,Mammalia,Eulipotyphla,Soricidae,Neomys fodiens,Small Mammalia
+694,MAM020202003,M193,Mammalia,Eulipotyphla,Soricidae,Neomys teres,Small Mammalia
+695,MAM030501004,M195,Mammalia,Chiroptera,Vespertilionidae,Nyctalus azoreum,Chiroptera
+696,MAM030501001,M196,Mammalia,Chiroptera,Vespertilionidae,Nyctalus lasiopterus,Chiroptera
+697,MAM030501003,M197,Mammalia,Chiroptera,Vespertilionidae,Nyctalus leisleri,Chiroptera
+698,MAM030501002,M198,Mammalia,Chiroptera,Vespertilionidae,Nyctalus noctula,Chiroptera
+699,MAM010101001,M199,Mammalia,Lagomorpha,Ochotonidae,Ochotona hyperborea,Small Mammalia
+700,MAM060901001,M2,Mammalia,Rodentia,Muridae,Acomys minous,Small Mammalia
+701,MAM060905007,M20,Mammalia,Rodentia,Muridae,Apodemus uralensis,Small Mammalia
+702,MAM010101002,M200,Mammalia,Lagomorpha,Ochotonidae,Ochotona pusilla,Small Mammalia
+703,MAM010201001,M201,Mammalia,Lagomorpha,Leporidae,Oryctolagus cuniculus,Small Mammalia
+704,MAM050305001,M204,Mammalia,Artiodactyla,Bovidae,Ovis gmelini,Large Mammalia
+705,MAM040101001,M205,Mammalia,Carnivora,Felidae,Panthera pardus,Large Mammalia
+706,MAM030502006,M206,Mammalia,Chiroptera,Vespertilionidae,Pipistrellus kuhlii,Chiroptera
+707,MAM030502005,M207,Mammalia,Chiroptera,Vespertilionidae,Pipistrellus maderensis,Chiroptera
+708,MAM030502004,M208,Mammalia,Chiroptera,Vespertilionidae,Pipistrellus nathusii,Chiroptera
+709,MAM030502001,M209,Mammalia,Chiroptera,Vespertilionidae,Pipistrellus pipistrellus,Chiroptera
+710,MAM060905010,M21,Mammalia,Rodentia,Muridae,Apodemus witherbyi,Small Mammalia
+711,MAM030502002,M210,Mammalia,Chiroptera,Vespertilionidae,Pipistrellus pygmaeus,Chiroptera
+712,MAM030507007,M211,Mammalia,Chiroptera,Vespertilionidae,Plecotus auritus,Chiroptera
+713,MAM030507001,M212,Mammalia,Chiroptera,Vespertilionidae,Plecotus austriacus,Chiroptera
+714,MAM030507004,M213,Mammalia,Chiroptera,Vespertilionidae,Plecotus kolombatovici,Chiroptera
+715,MAM030507005,M214,Mammalia,Chiroptera,Vespertilionidae,Plecotus macrobullaris,Chiroptera
+716,MAM030507006,M215,Mammalia,Chiroptera,Vespertilionidae,Plecotus sardus,Chiroptera
+717,MAM030507002,M216,Mammalia,Chiroptera,Vespertilionidae,Plecotus teneriffae,Chiroptera
+718,MAM060805001,M217,Mammalia,Rodentia,Cricetidae,Prometheomys schaposchnikowi,Small Mammalia
+719,MAM060102001,M218,Mammalia,Rodentia,Sciuridae,Pteromys volans,Small Mammalia
+720,MAM060814002,M22,Mammalia,Rodentia,Cricetidae,Arvicola amphibius,Small Mammalia
+721,MAM060503001,M220,Mammalia,Rodentia,Dipodidae,Pygeretmus pumilio,Small Mammalia
+722,MAM050205001,M221,Mammalia,Artiodactyla,Cervidae,Rangifer tarandus,Large Mammalia
+723,MAM030201001,M224,Mammalia,Chiroptera,Rhinolophidae,Rhinolophus blasii,Chiroptera
+724,MAM030201003,M225,Mammalia,Chiroptera,Rhinolophidae,Rhinolophus euryale,Chiroptera
+725,MAM030201004,M226,Mammalia,Chiroptera,Rhinolophidae,Rhinolophus ferrumequinum,Chiroptera
+726,MAM030201005,M227,Mammalia,Chiroptera,Rhinolophidae,Rhinolophus hipposideros,Chiroptera
+727,MAM030201002,M228,Mammalia,Chiroptera,Rhinolophidae,Rhinolophus mehelyi,Chiroptera
+728,MAM060814001,M23,Mammalia,Rodentia,Cricetidae,Arvicola sapidus,Small Mammalia
+729,MAM030101001,M230,Mammalia,Chiroptera,Pteropodidae,Rousettus aegyptiacus,Chiroptera
+730,MAM050306001,M231,Mammalia,Artiodactyla,Bovidae,Rupicapra pyrenaica,Large Mammalia
+731,MAM050306004,M232,Mammalia,Artiodactyla,Bovidae,Rupicapra rupicapra,Large Mammalia
+732,MAM050302001,M233,Mammalia,Artiodactyla,Bovidae,Saiga tatarica,Large Mammalia
+733,MAM060101003,M234,Mammalia,Rodentia,Sciuridae,Sciurus anomalus,Small Mammalia
+734,MAM060101001,M235,Mammalia,Rodentia,Sciuridae,Sciurus vulgaris,Small Mammalia
+735,MAM060401004,M236,Mammalia,Rodentia,Sminthidae,Sicista armenica,Small Mammalia
+736,MAM060401005,M237,Mammalia,Rodentia,Sminthidae,Sicista betulina,Small Mammalia
+737,MAM060401001,M238,Mammalia,Rodentia,Sminthidae,Sicista caucasica,Small Mammalia
+738,MAM060401003,M239,Mammalia,Rodentia,Sminthidae,Sicista kazbegica,Small Mammalia
+739,MAM060814003,M24,Mammalia,Rodentia,Cricetidae,Arvicola monticola,Small Mammalia
+740,MAM060401002,M240,Mammalia,Rodentia,Sminthidae,Sicista kluchorica,Small Mammalia
+741,MAM060401006,M242,Mammalia,Rodentia,Sminthidae,Sicista strandi,Small Mammalia
+742,MAM060401007,M243,Mammalia,Rodentia,Sminthidae,Sicista subtilis,Small Mammalia
+743,MAM020201001,M244,Mammalia,Eulipotyphla,Soricidae,Sorex alpinus,Small Mammalia
+744,MAM020201008,M245,Mammalia,Eulipotyphla,Soricidae,Sorex antinorii,Small Mammalia
+745,MAM020201006,M246,Mammalia,Eulipotyphla,Soricidae,Sorex araneus,Small Mammalia
+746,MAM020201004,M248,Mammalia,Eulipotyphla,Soricidae,Sorex caecutiens,Small Mammalia
+747,MAM020201009,M249,Mammalia,Eulipotyphla,Soricidae,Sorex coronatus,Small Mammalia
+748,MAM020102001,M25,Mammalia,Eulipotyphla,Erinaceidae,Atelerix algirus,Small Mammalia
+749,MAM020201007,M250,Mammalia,Eulipotyphla,Soricidae,Sorex granarius,Small Mammalia
+750,MAM020201005,M251,Mammalia,Eulipotyphla,Soricidae,Sorex isodon,Small Mammalia
+751,MAM020201003,M252,Mammalia,Eulipotyphla,Soricidae,Sorex minutissimus,Small Mammalia
+752,MAM020201014,M253,Mammalia,Eulipotyphla,Soricidae,Sorex minutus,Small Mammalia
+753,MAM020201002,M254,Mammalia,Eulipotyphla,Soricidae,Sorex raddei,Small Mammalia
+754,MAM020201013,M255,Mammalia,Eulipotyphla,Soricidae,Sorex samniticus,Small Mammalia
+755,MAM020201010,M256,Mammalia,Eulipotyphla,Soricidae,Sorex satunini,Small Mammalia
+756,MAM020201012,M257,Mammalia,Eulipotyphla,Soricidae,Sorex tundrensis,Small Mammalia
+757,MAM020201015,M258,Mammalia,Eulipotyphla,Soricidae,Sorex volnuchini,Small Mammalia
+758,MAM060601005,M259,Mammalia,Rodentia,Spalacidae,Spalax arenarius,Small Mammalia
+759,MAM030506001,M26,Mammalia,Chiroptera,Vespertilionidae,Barbastella barbastellus,Chiroptera
+760,MAM060602003,M260,Mammalia,Rodentia,Spalacidae,Nannospalax ehrenbergi,Small Mammalia
+761,MAM060601007,M261,Mammalia,Rodentia,Spalacidae,Spalax giganteus,Small Mammalia
+762,MAM060601003,M262,Mammalia,Rodentia,Spalacidae,Spalax graecus,Small Mammalia
+763,MAM060602001,M263,Mammalia,Rodentia,Spalacidae,Nannospalax leucodon,Small Mammalia
+764,MAM060601004,M267,Mammalia,Rodentia,Spalacidae,Spalax zemni,Small Mammalia
+765,MAM060104001,M268,Mammalia,Rodentia,Sciuridae,Spermophilus citellus,Small Mammalia
+766,MAM060104004,M269,Mammalia,Rodentia,Sciuridae,Spermophilus fulvus,Small Mammalia
+767,MAM030506002,M27,Mammalia,Chiroptera,Vespertilionidae,Barbastella caspica,Chiroptera
+768,MAM060104002,M270,Mammalia,Rodentia,Sciuridae,Spermophilus major,Small Mammalia
+769,MAM060104006,M271,Mammalia,Rodentia,Sciuridae,Spermophilus musicus,Small Mammalia
+770,MAM060104005,M272,Mammalia,Rodentia,Sciuridae,Spermophilus pygmaeus,Small Mammalia
+771,MAM060104003,M273,Mammalia,Rodentia,Sciuridae,Spermophilus suslicus,Small Mammalia
+772,MAM060104008,M274,Mammalia,Rodentia,Sciuridae,Spermophilus taurensis,Small Mammalia
+773,MAM060104007,M275,Mammalia,Rodentia,Sciuridae,Spermophilus xanthoprymnus,Small Mammalia
+774,MAM060505001,M276,Mammalia,Rodentia,Dipodidae,Stylodipus telum,Small Mammalia
+775,MAM020203001,M277,Mammalia,Eulipotyphla,Soricidae,Suncus etruscus,Small Mammalia
+776,MAM050101001,M278,Mammalia,Artiodactyla,Suidae,Sus scrofa,Large Mammalia
+777,MAM030401001,M279,Mammalia,Chiroptera,Molossidae,Tadarida teniotis,Chiroptera
+778,MAM050301001,M28,Mammalia,Artiodactyla,Bovidae,Bison bonasus,Large Mammalia
+779,MAM020303006,M280,Mammalia,Eulipotyphla,Talpidae,Talpa caeca,Small Mammalia
+780,MAM020303003,M281,Mammalia,Eulipotyphla,Talpidae,Talpa caucasica,Small Mammalia
+781,MAM020303001,M282,Mammalia,Eulipotyphla,Talpidae,Talpa davidiana,Small Mammalia
+782,MAM020303010,M283,Mammalia,Eulipotyphla,Talpidae,Talpa europaea,Small Mammalia
+783,MAM020303004,M284,Mammalia,Eulipotyphla,Talpidae,Talpa levantis,Small Mammalia
+784,MAM020303009,M285,Mammalia,Eulipotyphla,Talpidae,Talpa occidentalis,Small Mammalia
+785,MAM020303008,M286,Mammalia,Eulipotyphla,Talpidae,Talpa romana,Small Mammalia
+786,MAM020303005,M287,Mammalia,Eulipotyphla,Talpidae,Talpa stankovici,Small Mammalia
+787,MAM060103001,M288,Mammalia,Rodentia,Sciuridae,Tamias sibiricus,Small Mammalia
+788,MAM060902001,M289,Mammalia,Rodentia,Muridae,Tatera indica,Small Mammalia
+789,MAM060701001,M29,Mammalia,Rodentia,Calomyscidae,Calomyscus urartensis,Small Mammalia
+790,MAM040601001,M290,Mammalia,Carnivora,Ursidae,Ursus arctos,Large Mammalia
+791,MAM040601002,M291,Mammalia,Carnivora,Ursidae,Ursus maritimus,Large Mammalia
+792,MAM030503001,M292,Mammalia,Chiroptera,Vespertilionidae,Vespertilio murinus,Chiroptera
+793,MAM040704001,M293,Mammalia,Carnivora,Mustelidae,Vormela peregusna,Large Mammalia
+794,MAM040503002,M294,Mammalia,Carnivora,Canidae,Vulpes corsac,Large Mammalia
+795,MAM040503001,M295,Mammalia,Carnivora,Canidae,Vulpes vulpes,Large Mammalia
+796,MAM060901003,M3,Mammalia,Rodentia,Muridae,Acomys nesiotes,Small Mammalia
+797,MAM040501002,M30,Mammalia,Carnivora,Canidae,Canis aureus,Large Mammalia
+798,MAM040501001,M31,Mammalia,Carnivora,Canidae,Canis lupus,Large Mammalia
+799,MAM050304001,M32,Mammalia,Artiodactyla,Bovidae,Capra aegagrus,Large Mammalia
+800,MAM050304004,M33,Mammalia,Artiodactyla,Bovidae,Capra caucasica,Large Mammalia
+801,MAM050304005,M34,Mammalia,Artiodactyla,Bovidae,Capra cylindricornis,Large Mammalia
+802,MAM050304003,M36,Mammalia,Artiodactyla,Bovidae,Capra ibex,Large Mammalia
+803,MAM050304002,M37,Mammalia,Artiodactyla,Bovidae,Capra pyrenaica,Large Mammalia
+804,MAM050203001,M38,Mammalia,Artiodactyla,Cervidae,Capreolus capreolus,Large Mammalia
+805,MAM050203002,M39,Mammalia,Artiodactyla,Cervidae,Capreolus pygargus,Large Mammalia
+806,MAM050204001,M4,Mammalia,Artiodactyla,Cervidae,Alces alces,Large Mammalia
+807,MAM060301001,M40,Mammalia,Rodentia,Castoridae,Castor fiber,Small Mammalia
+808,MAM050202001,M41,Mammalia,Artiodactyla,Cervidae,Cervus elaphus,Large Mammalia
+809,MAM060815003,M42,Mammalia,Rodentia,Cricetidae,Chionomys gud,Small Mammalia
+810,MAM060815001,M43,Mammalia,Rodentia,Cricetidae,Chionomys nivalis,Small Mammalia
+811,MAM060815002,M44,Mammalia,Rodentia,Cricetidae,Chionomys roberti,Small Mammalia
+812,MAM060802001,M45,Mammalia,Rodentia,Cricetidae,Cricetulus migratorius,Small Mammalia
+813,MAM060804001,M46,Mammalia,Rodentia,Cricetidae,Cricetus cricetus,Small Mammalia
+814,MAM020205006,M47,Mammalia,Eulipotyphla,Soricidae,Crocidura arispa,Small Mammalia
+815,MAM020205010,M49,Mammalia,Eulipotyphla,Soricidae,Crocidura canariensis,Small Mammalia
+816,MAM060502004,M5,Mammalia,Rodentia,Dipodidae,Scarturus elater,Small Mammalia
+817,MAM020205007,M50,Mammalia,Eulipotyphla,Soricidae,Crocidura caspica,Small Mammalia
+818,MAM020205005,M52,Mammalia,Eulipotyphla,Soricidae,Crocidura leucodon,Small Mammalia
+819,MAM020205003,M53,Mammalia,Eulipotyphla,Soricidae,Crocidura pachyura,Small Mammalia
+820,MAM020205004,M54,Mammalia,Eulipotyphla,Soricidae,Crocidura russula,Small Mammalia
+821,MAM020205009,M56,Mammalia,Eulipotyphla,Soricidae,Crocidura sicula,Small Mammalia
+822,MAM020205002,M57,Mammalia,Eulipotyphla,Soricidae,Crocidura suaveolens,Small Mammalia
+823,MAM020205008,M58,Mammalia,Eulipotyphla,Soricidae,Crocidura zimmermanni,Small Mammalia
+824,MAM050201001,M59,Mammalia,Artiodactyla,Cervidae,Dama dama,Large Mammalia
+825,MAM060502003,M6,Mammalia,Rodentia,Dipodidae,Scarturus euphraticus,Small Mammalia
+826,MAM020301001,M60,Mammalia,Eulipotyphla,Talpidae,Desmana moschata,Small Mammalia
+827,MAM060808001,M61,Mammalia,Rodentia,Cricetidae,Dicrostonyx torquatus,Small Mammalia
+828,MAM060811001,M62,Mammalia,Rodentia,Cricetidae,Dinaromys bogdanovi,Small Mammalia
+829,MAM020204001,M63,Mammalia,Eulipotyphla,Soricidae,Diplomesodon pulchellus,Small Mammalia
+830,MAM060504001,M64,Mammalia,Rodentia,Dipodidae,Dipus sagitta,Small Mammalia
+831,MAM060204003,M65,Mammalia,Rodentia,Gliridae,Dryomys laniger,Small Mammalia
+832,MAM060204001,M66,Mammalia,Rodentia,Gliridae,Dryomys nitedula,Small Mammalia
+833,MAM060205001,M67,Mammalia,Rodentia,Gliridae,Eliomys melanurus,Small Mammalia
+834,MAM060205002,M68,Mammalia,Rodentia,Gliridae,Eliomys quercinus,Small Mammalia
+835,MAM060812002,M69,Mammalia,Rodentia,Cricetidae,Ellobius lutescens,Small Mammalia
+836,MAM060501001,M7,Mammalia,Rodentia,Dipodidae,Allactaga major,Small Mammalia
+837,MAM060812001,M70,Mammalia,Rodentia,Cricetidae,Ellobius talpinus,Small Mammalia
+838,MAM030505005,M73,Mammalia,Chiroptera,Vespertilionidae,Eptesicus nilssonii,Chiroptera
+839,MAM030505004,M74,Mammalia,Chiroptera,Vespertilionidae,Eptesicus serotinus,Chiroptera
+840,MAM020101003,M75,Mammalia,Eulipotyphla,Erinaceidae,Erinaceus concolor,Small Mammalia
+841,MAM020101001,M76,Mammalia,Eulipotyphla,Erinaceidae,Erinaceus europaeus,Small Mammalia
+842,MAM020101002,M77,Mammalia,Eulipotyphla,Erinaceidae,Erinaceus roumanicus,Small Mammalia
+843,MAM040105001,M78,Mammalia,Carnivora,Felidae,Felis chaus,Large Mammalia
+844,MAM040105002,M80,Mammalia,Carnivora,Felidae,Felis silvestris,Large Mammalia
+845,MAM020302001,M81,Mammalia,Eulipotyphla,Talpidae,Galemys pyrenaicus,Small Mammalia
+846,MAM050303001,M82,Mammalia,Artiodactyla,Bovidae,Gazella subgutturosa,Large Mammalia
+847,MAM040201001,M83,Mammalia,Carnivora,Viverridae,Genetta genetta,Large Mammalia
+848,MAM060903001,M84,Mammalia,Rodentia,Muridae,Gerbillus dasyurus,Small Mammalia
+849,MAM060201001,M85,Mammalia,Rodentia,Gliridae,Glis glis,Small Mammalia
+850,MAM040702001,M86,Mammalia,Carnivora,Mustelidae,Gulo gulo,Large Mammalia
+851,MAM020103001,M87,Mammalia,Eulipotyphla,Erinaceidae,Hemiechinus auritus,Small Mammalia
+852,MAM040301001,M88,Mammalia,Carnivora,Herpestidae,Herpestes ichneumon,Large Mammalia
+853,MAM040401001,M89,Mammalia,Carnivora,Hyaenidae,Hyaena hyaena,Large Mammalia
+854,MAM060502001,M9,Mammalia,Rodentia,Dipodidae,Scarturus williamsi,Small Mammalia
+855,MAM030504001,M90,Mammalia,Chiroptera,Vespertilionidae,Hypsugo savii,Chiroptera
+856,MAM061001001,M91,Mammalia,Rodentia,Hystricidae,Hystrix cristata,Small Mammalia
+857,MAM061001002,M92,Mammalia,Rodentia,Hystricidae,Hystrix indica,Small Mammalia
+858,MAM060813001,M93,Mammalia,Rodentia,Cricetidae,Lagurus lagurus,Small Mammalia
+859,MAM060807001,M94,Mammalia,Rodentia,Cricetidae,Lemmus lemmus,Small Mammalia
+860,MAM060807002,M95,Mammalia,Rodentia,Cricetidae,Lemmus sibiricus,Small Mammalia
+861,MAM010202001,M96,Mammalia,Lagomorpha,Leporidae,Lepus capensis,Small Mammalia
+862,MAM010202005,M97,Mammalia,Lagomorpha,Leporidae,Lepus castroviejoi,Small Mammalia
+863,MAM010202006,M98,Mammalia,Lagomorpha,Leporidae,Lepus corsicanus,Small Mammalia
+864,MAM010202004,M99,Mammalia,Lagomorpha,Leporidae,Lepus europaeus,Small Mammalia
+865,AMP010205002,,Amphibia,Caudata,Salamandridae,Lissotriton graecus,Amphibia
+866,AMP010205005,,Amphibia,Caudata,Salamandridae,Lissotriton kosswigi,Amphibia
+867,AMP010205006,,Amphibia,Caudata,Salamandridae,Lissotriton lantzi,Amphibia
+868,AMP010205007,,Amphibia,Caudata,Salamandridae,Lissotriton maltzani,Amphibia
+869,AMP010205009,,Amphibia,Caudata,Salamandridae,Lissotriton schmidtleri,Amphibia
+870,AMP010206002,,Amphibia,Caudata,Salamandridae,Lyciasalamandra arikani,Amphibia
+871,AMP010206008,,Amphibia,Caudata,Salamandridae,Lyciasalamandra irfani,Amphibia
+872,AMP010206010,,Amphibia,Caudata,Salamandridae,Lyciasalamandra yehudahi,Amphibia
+873,AMP010208001,,Amphibia,Caudata,Salamandridae,Neurergus barani,Amphibia
+874,AMP010209001,,Amphibia,Caudata,Salamandridae,Ommatotriton nesterovi,Amphibia
+875,AMP010213001,,Amphibia,Caudata,Salamandridae,Triturus anatolicus,Amphibia
+876,AMP010213005,,Amphibia,Caudata,Salamandridae,Triturus ivanbureschi,Amphibia
+877,AMP020101001,,Amphibia,Anura,Alytidae,Alytes almogavarii,Amphibia
+878,AMP020301001,,Amphibia,Anura,Pelobatidae,Pelobates balcanicus,Amphibia
+879,AMP020301005,,Amphibia,Anura,Pelobatidae,Pelobates vespertinus,Amphibia
+880,AMP020401001,,Amphibia,Anura,Pelodytidae,Pelodytes atlanticus,Amphibia
+881,AMP020401003,,Amphibia,Anura,Pelodytidae,Pelodytes hespericus,Amphibia
+882,AMP020501002,,Amphibia,Anura,Bufonidae,Bufo spinosus,Amphibia
+883,AMP020503003,,Amphibia,Anura,Bufonidae,Bufotes cypriensis,Amphibia
+884,AMP020503004,,Amphibia,Anura,Bufonidae,Bufotes sitibundus,Amphibia
+885,AMP020601004,,Amphibia,Anura,Hylidae,Hyla molleri,Amphibia
+886,AMP020601005,,Amphibia,Anura,Hylidae,Hyla orientalis,Amphibia
+887,AMP020601006,,Amphibia,Anura,Hylidae,Hyla perrini,Amphibia
+888,AMP020701006,,Amphibia,Anura,Ranidae,Pelophylax cypriensis,Amphibia
+889,AMP020702004,A98,Amphibia,Anura,Ranidae,Rana holtzi,Amphibia
+890,AMP020702009,,Amphibia,Anura,Ranidae,Rana parvipalmata,Amphibia
+891,AVE060101001,,Aves,Pterocliformes,Pteroclidae,Syrrhaptes paradoxus,Aves
+892,AVE070102002,,Aves,Otidiformes,Otididae,Chlamydotis macqueenii,Aves
+893,AVE111007003,,Aves,Charadriformes,Laridae,Larus michahellis,Aves
+894,AVE140202003,,Aves,Procellariformes,Hydrobatidae,Oceanodroma monteiroi,Aves
+895,AVE140305004,,Aves,Procellariformes,Procellariidae,Puffinus lherminieri,Aves
+896,AVE180214002,,Aves,Accipitriformes,Accipitridae,Haliaeetus leucoryphus,Aves
+897,AVE190203001,,Aves,Strigiformes,Strigidae,Ketupa zeylonensis,Aves
+898,AVE210201001,,Aves,Coraciiformes,Meropidae,Merops persicus,Aves
+899,AVE220104001,B286,Aves,Piciformes,Picidae,Dendrocopos leucotos,Aves
+900,AVE220106003,,Aves,Piciformes,Picidae,Picus sharpei,Aves
+901,AVE240303001,,Aves,Passeriformes,Corvidae,Cyanopica cooki,Aves
+902,AVE240307004,B524,Aves,Passeriformes,Corvidae,Corvus cornix,Aves
+903,AVE240404002,,Aves,Passeriformes,Paridae,Cyanistes teneriffae,Aves
+904,AVE240604003,,Aves,Passeriformes,Alaudidae,Melanocorypha yeltoniensis,Aves
+905,AVE240901002,,Aves,Passeriformes,Acrocephalidae,Iduna rama,Aves
+906,AVE240901004,,Aves,Passeriformes,Acrocephalidae,Iduna opaca,Aves
+907,AVE241201001,,Aves,Passeriformes,Pycnonotidae,Pycnonotus barbatus,Aves
+908,AVE241301003,,Aves,Passeriformes,Phylloscopidae,Phylloscopus orientalis,Aves
+909,AVE241301006,B366,Aves,Passeriformes,Phylloscopidae,Phylloscopus sindianus,Aves
+910,AVE241301007,B526,Aves,Passeriformes,Phylloscopidae,Phylloscopus canariensis,Aves
+911,AVE241301009,B517,Aves,Passeriformes,Phylloscopidae,Phylloscopus ibericus,Aves
+912,AVE241301010,,Aves,Passeriformes,Phylloscopidae,Phylloscopus nitidus,Aves
+913,AVE241601006,,Aves,Passeriformes,Sylviidae,Sylvia crassirostris,Aves
+914,AVE241601011,B519,Aves,Passeriformes,Sylviidae,Sylvia subalpina,Aves
+915,AVE241601017,,Aves,Passeriformes,Sylviidae,Sylvia balearica,Aves
+916,AVE241701001,,Aves,Passeriformes,Leiotrichidae,Argya altirostris,Aves
+917,AVE241801002,B522,Aves,Passeriformes,Regulidae,Regulus madeirensis,Aves
+918,AVE242502007,,Aves,Passeriformes,Turdidae,Turdus atrogularis,Aves
+919,AVE242608001,,Aves,Passeriformes,Muscicapidae,Ficedula albicilla,Aves
+920,AVE242611004,,Aves,Passeriformes,Muscicapidae,Saxicola maurus,Aves
+921,AVE242612009,,Aves,Passeriformes,Muscicapidae,Oenanthe xanthoprymna,Aves
+922,AVE243002006,,Aves,Passeriformes,Motacillidae,Anthus gustavi,Aves
+923,AVE243113003,B523,Aves,Passeriformes,Fringillidae,Carduelis corsicana,Aves
+924,MAM020201011,,Mammalia,Eulipotyphla,Soricidae,Sorex daphaenodon,Small Mammalia
+925,MAM020202002,,Mammalia,Eulipotyphla,Soricidae,Neomys milleri,Small Mammalia
+926,MAM020205001,,Mammalia,Eulipotyphla,Soricidae,Crocidura gueldenstaedtii,Small Mammalia
+927,MAM020303002,,Mammalia,Eulipotyphla,Talpidae,Talpa ognevi,Small Mammalia
+928,MAM020303007,,Mammalia,Eulipotyphla,Talpidae,Talpa martinorum,Small Mammalia
+929,MAM020303011,,Mammalia,Eulipotyphla,Talpidae,Talpa aquitania,Small Mammalia
+930,MAM030301001,,Mammalia,Chiroptera,Emballonuridae,Taphozous nudiventris,Chiroptera
+931,MAM030502003,,Mammalia,Chiroptera,Vespertilionidae,Pipistrellus creticus,Chiroptera
+932,MAM030505001,,Mammalia,Chiroptera,Vespertilionidae,Eptesicus ognevi,Chiroptera
+933,MAM030505002,,Mammalia,Chiroptera,Vespertilionidae,Eptesicus anatolicus,Chiroptera
+934,MAM030505003,,Mammalia,Chiroptera,Vespertilionidae,Eptesicus isabellinus,Chiroptera
+935,MAM030505006,,Mammalia,Chiroptera,Vespertilionidae,Eptesicus gobiensis,Chiroptera
+936,MAM030507003,,Mammalia,Chiroptera,Vespertilionidae,Plecotus gaisleri,Chiroptera
+937,MAM030508001,,Mammalia,Chiroptera,Vespertilionidae,Otonycteris hemprichii,Chiroptera
+938,MAM030509006,,Mammalia,Chiroptera,Vespertilionidae,Myotis davidii,Chiroptera
+939,MAM030509014,,Mammalia,Chiroptera,Vespertilionidae,Myotis crypticus,Chiroptera
+940,MAM030509016,,Mammalia,Chiroptera,Vespertilionidae,Myotis escalerai,Chiroptera
+941,MAM030601001,,Mammalia,Chiroptera,Miniopteridae,Miniopterus pallidus,Chiroptera
+942,MAM040102001,,Mammalia,Carnivora,Felidae,Caracal caracal,Large Mammalia
+943,MAM040104001,M202,Mammalia,Carnivora,Felidae,Otocolobus manul,Large Mammalia
+944,MAM050303002,,Mammalia,Artiodactyla,Bovidae,Gazella gazella,Large Mammalia
+945,MAM050306002,,Mammalia,Artiodactyla,Bovidae,Rupicapra ornata,Large Mammalia
+946,MAM050306003,,Mammalia,Artiodactyla,Bovidae,Rupicapra parva,Large Mammalia
+947,MAM050306005,,Mammalia,Artiodactyla,Bovidae,Rupicapra carpatica,Large Mammalia
+948,MAM050306006,,Mammalia,Artiodactyla,Bovidae,Rupicapra asiatica,Large Mammalia
+949,MAM060101002,,Mammalia,Rodentia,Sciuridae,Sciurus meridionalis,Small Mammalia
+950,MAM060204002,,Mammalia,Rodentia,Gliridae,Dryomys aspromontis,Small Mammalia
+951,MAM060401008,,Mammalia,Rodentia,Sminthidae,Sicista trizona,Small Mammalia
+952,MAM060401009,,Mammalia,Rodentia,Sminthidae,Sicista loriger,Small Mammalia
+953,MAM060502002,,Mammalia,Rodentia,Dipodidae,Scarturus aulacotis,Small Mammalia
+954,MAM060601001,,Mammalia,Rodentia,Spalacidae,Spalax istricus,Small Mammalia
+955,MAM060601002,,Mammalia,Rodentia,Spalacidae,Spalax antiquus,Small Mammalia
+956,MAM060601006,M264,Mammalia,Rodentia,Spalacidae,Spalax microphtalmus,Small Mammalia
+957,MAM060602002,,Mammalia,Rodentia,Spalacidae,Nannospalax xanthodon,Small Mammalia
+958,MAM060814004,,Mammalia,Rodentia,Cricetidae,Arvicola italicus,Small Mammalia
+959,MAM060815004,,Mammalia,Rodentia,Cricetidae,Chionomys lasistanius,Small Mammalia
+960,MAM060818002,,Mammalia,Rodentia,Cricetidae,Microtus lavernedii,Small Mammalia
+961,MAM060818003,,Mammalia,Rodentia,Cricetidae,Microtus rozianus,Small Mammalia
+962,MAM060818016,,Mammalia,Rodentia,Cricetidae,Microtus nebrodensis,Small Mammalia
+963,MAM060818018,,Mammalia,Rodentia,Cricetidae,Microtus atticus,Small Mammalia
+964,MAM060818020,,Mammalia,Rodentia,Cricetidae,Microtus hartingi,Small Mammalia
+965,MAM060818025,,Mammalia,Rodentia,Cricetidae,Microtus irani,Small Mammalia
+966,MAM060818027,,Mammalia,Rodentia,Cricetidae,Microtus obscurus,Small Mammalia
+967,MAM060818028,,Mammalia,Rodentia,Cricetidae,Microtus mystacinus,Small Mammalia
+968,MAM060908001,,Mammalia,Rodentia,Muridae,Nesokia indica,Small Mammalia
+969,REP010201003,,Reptilia,Testudines,Testudinidae,Testudo horsfieldii,Reptilia
+970,REP020302001,,Reptilia,Squamata,Gekkonidae,Asaccus barani,Reptilia
+971,REP020305001,,Reptilia,Squamata,Gekkonidae,Mediodactylus bartoni,Reptilia
+972,REP020305002,,Reptilia,Squamata,Gekkonidae,Mediodactylus danilewskii,Reptilia
+973,REP020305005,,Reptilia,Squamata,Gekkonidae,Mediodactylus oertzeni,Reptilia
+974,REP020305006,,Reptilia,Squamata,Gekkonidae,Mediodactylus orientalis,Reptilia
+975,REP020703002,,Reptilia,Squamata,Lacertidae,Anatololacerta budaki,Reptilia
+976,REP020703004,,Reptilia,Squamata,Lacertidae,Anatololacerta pelasgiana,Reptilia
+977,REP020707001,,Reptilia,Squamata,Lacertidae,Darevskia aghasyani,Reptilia
+978,REP020707005,,Reptilia,Squamata,Lacertidae,Darevskia bithynica,Reptilia
+979,REP020707016,R47,Reptilia,Squamata,Lacertidae,Darevskia nairensis,Reptilia
+980,REP020707018,,Reptilia,Squamata,Lacertidae,Darevskia pontica,Reptilia
+981,REP020714003,,Reptilia,Squamata,Lacertidae,Lacerta citrovittata,Reptilia
+982,REP020714004,,Reptilia,Squamata,Lacertidae,Lacerta diplochondrodes,Reptilia
+983,REP020719003,R254,Reptilia,Squamata,Lacertidae,Podarcis cretensis,Reptilia
+984,REP020719007,,Reptilia,Squamata,Lacertidae,Podarcis guadarramae,Reptilia
+985,REP020719009,,Reptilia,Squamata,Lacertidae,Podarcis ionicus,Reptilia
+986,REP020719010,,Reptilia,Squamata,Lacertidae,Podarcis levendis,Reptilia
+987,REP020719023,,Reptilia,Squamata,Lacertidae,Podarcis virescens,Reptilia
+988,REP020720001,,Reptilia,Squamata,Lacertidae,Psammodromus algirus,Reptilia
+989,REP020720002,,Reptilia,Squamata,Lacertidae,Psammodromus edwardsianus,Reptilia
+990,REP020720004,,Reptilia,Squamata,Lacertidae,Psammodromus occidentalis,Reptilia
+991,REP020722001,,Reptilia,Squamata,Lacertidae,Timon kurdistanicus,Reptilia
+992,REP020722003,,Reptilia,Squamata,Lacertidae,Timon nevadensis,Reptilia
+993,REP020722004,,Reptilia,Squamata,Lacertidae,Timon tangitanus,Reptilia
+994,REP020724002,,Reptilia,Squamata,Lacertidae,Zootoca carniolica,Reptilia
+995,REP020802003,,Reptilia,Squamata,Scincidae,Chalcides coeruleopunctatus,Reptilia
+996,REP020805001,,Reptilia,Squamata,Scincidae,Ophiomorus kardesi,Reptilia
+997,REP020901002,,Reptilia,Squamata,Anguidae,Anguis colchica,Reptilia
+998,REP020901004,,Reptilia,Squamata,Anguidae,Anguis graeca,Reptilia
+999,REP020901005,,Reptilia,Squamata,Anguidae,Anguis veronensis,Reptilia
+1000,REP021101001,,Reptilia,Squamata,Blanidae,Blanus alexandri,Reptilia
+1001,REP021101002,,Reptilia,Squamata,Blanidae,Blanus aporus,Reptilia
+1002,REP021101004,,Reptilia,Squamata,Blanidae,Blanus mariae,Reptilia
+1003,REP021101006,,Reptilia,Squamata,Blanidae,Blanus vandellii,Reptilia
+1004,REP021201003,,Reptilia,Squamata,Erycidae,Eryx tataricus,Reptilia
+1005,REP021303003,,Reptilia,Squamata,Colubridae,Eirenis collaris,Reptilia
+1006,REP021303012,,Reptilia,Squamata,Colubridae,Eirenis occidentalis,Reptilia
+1007,REP021304004,,Reptilia,Squamata,Colubridae,Elaphe urartica,Reptilia
+1008,REP021310002,,Reptilia,Squamata,Colubridae,Rhynchocalamus satunini,Reptilia
+1009,REP021401001,,Reptilia,Squamata,Natricidae,Natrix astreptophora,Reptilia
+1010,REP021401002,,Reptilia,Squamata,Natricidae,Natrix helvetica,Reptilia
+1011,REP021501001,,Reptilia,Squamata,Lamprophiidae,Malpolon insignitus,Reptilia
+1012,REP021801001,,Reptilia,Squamata,Viperidae,Gloydius caucasicus,Reptilia
+1013,REP021804001,,Reptilia,Squamata,Viperidae,Vipera anatolica,Reptilia
+1014,REP021804004,,Reptilia,Squamata,Viperidae,Vipera barani,Reptilia
+1015,REP021804009,,Reptilia,Squamata,Viperidae,Vipera graeca,Reptilia
+1016,REP021804013,,Reptilia,Squamata,Viperidae,Vipera magnifica,Reptilia
+1017,REP021804014,R214,Reptilia,Squamata,Viperidae,Vipera nikolskii,Reptilia
+1018,REP021804015,,Reptilia,Squamata,Viperidae,Vipera olguni,Reptilia
+1019,REP021804016,,Reptilia,Squamata,Viperidae,Vipera orlovi,Reptilia
+1020,REP021804019,,Reptilia,Squamata,Viperidae,Vipera sakoi,Reptilia
+1021,REP021804021,,Reptilia,Squamata,Viperidae,Vipera shemakhensis,Reptilia
+1022,REP021804024,,Reptilia,Squamata,Viperidae,Vipera walser,Reptilia
+1023,REP020801001,R1,Reptilia,Squamata,Scincidae,Ablepharus bivittatus,Reptilia
+1024,REP020702003,R10,Reptilia,Squamata,Lacertidae,Algyroides moreoticus,Reptilia
+1025,REP020711001,R101,Reptilia,Squamata,Lacertidae,Hellenolacerta graeca,Reptilia
+1026,REP020304001,R102,Reptilia,Squamata,Gekkonidae,Hemidactylus turcicus,Reptilia
+1027,REP021305001,R103,Reptilia,Squamata,Colubridae,Hemorrhois hippocrepis,Reptilia
+1028,REP021302002,R104,Reptilia,Squamata,Colubridae,Dolichophis cypriensis,Reptilia
+1029,REP021306001,R105,Reptilia,Squamata,Colubridae,Hierophis gemonensis,Reptilia
+1030,REP021306002,R106,Reptilia,Squamata,Colubridae,Hierophis viridiflavus,Reptilia
+1031,REP020712001,R107,Reptilia,Squamata,Lacertidae,Iberolacerta aranica,Reptilia
+1032,REP020712002,R108,Reptilia,Squamata,Lacertidae,Iberolacerta aurelioi,Reptilia
+1033,REP020712003,R109,Reptilia,Squamata,Lacertidae,Iberolacerta bonnali,Reptilia
+1034,REP020702004,R11,Reptilia,Squamata,Lacertidae,Algyroides nigropunctatus,Reptilia
+1035,REP020712004,R110,Reptilia,Squamata,Lacertidae,Iberolacerta cyreni,Reptilia
+1036,REP020712005,R111,Reptilia,Squamata,Lacertidae,Iberolacerta galani,Reptilia
+1037,REP020712006,R112,Reptilia,Squamata,Lacertidae,Iberolacerta horvathi,Reptilia
+1038,REP020712007,R113,Reptilia,Squamata,Lacertidae,Iberolacerta martinezricai,Reptilia
+1039,REP020712008,R114,Reptilia,Squamata,Lacertidae,Iberolacerta monticola,Reptilia
+1040,REP020714001,R115,Reptilia,Squamata,Lacertidae,Lacerta agilis,Reptilia
+1041,REP020703001,R116,Reptilia,Squamata,Lacertidae,Anatololacerta anatolica,Reptilia
+1042,REP020714002,R117,Reptilia,Squamata,Lacertidae,Lacerta bilineata,Reptilia
+1043,REP020704001,R118,Reptilia,Squamata,Lacertidae,Apathya cappadocica,Reptilia
+1044,REP020718001,R119,Reptilia,Squamata,Lacertidae,Phoenicolacerta cyanisparsa,Reptilia
+1045,REP020301001,R12,Reptilia,Squamata,Gekkonidae,Alsophylax pipiens,Reptilia
+1046,REP020703003,R120,Reptilia,Squamata,Lacertidae,Anatololacerta danfordi,Reptilia
+1047,REP020721001,R121,Reptilia,Squamata,Lacertidae,Teira dugesii,Reptilia
+1048,REP020718002,R122,Reptilia,Squamata,Lacertidae,Phoenicolacerta laevis,Reptilia
+1049,REP020722002,R123,Reptilia,Squamata,Lacertidae,Timon lepidus,Reptilia
+1050,REP020714005,R124,Reptilia,Squamata,Lacertidae,Lacerta media,Reptilia
+1051,REP020708002,R125,Reptilia,Squamata,Lacertidae,Dinarolacerta mosorensis,Reptilia
+1052,REP020708001,R126,Reptilia,Squamata,Lacertidae,Dinarolacerta montenegrina,Reptilia
+1053,REP020706001,R128,Reptilia,Squamata,Lacertidae,Dalmatolacerta oxycephala,Reptilia
+1054,REP020714006,R129,Reptilia,Squamata,Lacertidae,Lacerta pamphylica,Reptilia
+1055,REP020901001,R13,Reptilia,Squamata,Anguidae,Anguis cephallonica,Reptilia
+1056,REP020717001,R130,Reptilia,Squamata,Lacertidae,Parvilacerta parva,Reptilia
+1057,REP020714007,R132,Reptilia,Squamata,Lacertidae,Lacerta schreiberi,Reptilia
+1058,REP020714008,R133,Reptilia,Squamata,Lacertidae,Lacerta strigata,Reptilia
+1059,REP020714009,R134,Reptilia,Squamata,Lacertidae,Lacerta trilineata,Reptilia
+1060,REP020718003,R135,Reptilia,Squamata,Lacertidae,Phoenicolacerta troodica,Reptilia
+1061,REP020714010,R136,Reptilia,Squamata,Lacertidae,Lacerta viridis,Reptilia
+1062,REP020723001,R137,Reptilia,Squamata,Lacertidae,Zootoca vivipara,Reptilia
+1063,REP020101001,R138,Reptilia,Squamata,Agamidae,Paralaudakia caucasia,Reptilia
+1064,REP020102001,R139,Reptilia,Squamata,Agamidae,Stellagama stellio,Reptilia
+1065,REP020901003,R14,Reptilia,Squamata,Anguidae,Anguis fragilis,Reptilia
+1066,REP021701001,R140,Reptilia,Squamata,Leptotyphlopidae,Myriopholis macrorhyncha,Reptilia
+1067,REP020804001,R141,Reptilia,Squamata,Scincidae,Heremites auratus,Reptilia
+1068,REP020804003,R142,Reptilia,Squamata,Scincidae,Heremites vittatus,Reptilia
+1069,REP021307001,R143,Reptilia,Squamata,Colubridae,Macroprotodon brevis,Reptilia
+1070,REP021307002,R144,Reptilia,Squamata,Colubridae,Macroprotodon cucullatus,Reptilia
+1071,REP021802001,R145,Reptilia,Squamata,Viperidae,Macrovipera lebetina,Reptilia
+1072,REP021802002,R146,Reptilia,Squamata,Viperidae,Macrovipera schweizeri,Reptilia
+1073,REP021501002,R147,Reptilia,Squamata,Lamprophiidae,Malpolon monspessulanus,Reptilia
+1074,REP010301001,R148,Reptilia,Testudines,Geoemydidae,Mauremys caspica,Reptilia
+1075,REP010301002,R149,Reptilia,Testudines,Geoemydidae,Mauremys leprosa,Reptilia
+1076,REP020705001,R15,Reptilia,Squamata,Lacertidae,Archaeolacerta bedriagae,Reptilia
+1077,REP010301003,R150,Reptilia,Testudines,Geoemydidae,Mauremys rivulata,Reptilia
+1078,REP021803003,R151,Reptilia,Squamata,Viperidae,Montivipera raddei,Reptilia
+1079,REP021803004,R152,Reptilia,Squamata,Viperidae,Montivipera wagneri,Reptilia
+1080,REP021803005,R153,Reptilia,Squamata,Viperidae,Montivipera xanthina,Reptilia
+1081,REP021401003,R154,Reptilia,Squamata,Natricidae,Natrix maura,Reptilia
+1082,REP021401004,R155,Reptilia,Squamata,Natricidae,Natrix natrix,Reptilia
+1083,REP021401005,R156,Reptilia,Squamata,Natricidae,Natrix tessellata,Reptilia
+1084,REP020805002,R157,Reptilia,Squamata,Scincidae,Ophiomorus punctatissimus,Reptilia
+1085,REP020716001,R158,Reptilia,Squamata,Lacertidae,Ophisops elegans,Reptilia
+1086,REP020103001,R159,Reptilia,Squamata,Agamidae,Phrynocephalus guttatus,Reptilia
+1087,REP020302002,R16,Reptilia,Squamata,Gekkonidae,Asaccus elisae,Reptilia
+1088,REP020103002,R160,Reptilia,Squamata,Agamidae,Phrynocephalus helioscopus,Reptilia
+1089,REP020103003,R161,Reptilia,Squamata,Agamidae,Phrynocephalus mystaceus,Reptilia
+1090,REP020103004,R162,Reptilia,Squamata,Agamidae,Phrynocephalus persicus,Reptilia
+1091,REP021309002,R163,Reptilia,Squamata,Colubridae,Platyceps najadum,Reptilia
+1092,REP020713001,R164,Reptilia,Squamata,Lacertidae,Iranolacerta brandtii,Reptilia
+1093,REP020719012,R165,Reptilia,Squamata,Lacertidae,Podarcis liolepis,Reptilia
+1094,REP020719001,R166,Reptilia,Squamata,Lacertidae,Podarcis bocagei,Reptilia
+1095,REP020719002,R167,Reptilia,Squamata,Lacertidae,Podarcis carbonelli,Reptilia
+1096,REP020719004,R168,Reptilia,Squamata,Lacertidae,Podarcis erhardii,Reptilia
+1097,REP020719005,R169,Reptilia,Squamata,Lacertidae,Podarcis filfolensis,Reptilia
+1098,REP021101003,R17,Reptilia,Squamata,Blanidae,Blanus cinereus,Reptilia
+1099,REP020719006,R170,Reptilia,Squamata,Lacertidae,Podarcis gaigeae,Reptilia
+1100,REP020719008,R171,Reptilia,Squamata,Lacertidae,Podarcis hispanicus,Reptilia
+1101,REP020719011,R172,Reptilia,Squamata,Lacertidae,Podarcis lilfordi,Reptilia
+1102,REP020719013,R173,Reptilia,Squamata,Lacertidae,Podarcis melisellensis,Reptilia
+1103,REP020719014,R174,Reptilia,Squamata,Lacertidae,Podarcis milensis,Reptilia
+1104,REP020719015,R175,Reptilia,Squamata,Lacertidae,Podarcis muralis,Reptilia
+1105,REP020719016,R176,Reptilia,Squamata,Lacertidae,Podarcis peloponnesiacus,Reptilia
+1106,REP020719017,R177,Reptilia,Squamata,Lacertidae,Podarcis pityusensis,Reptilia
+1107,REP020719018,R178,Reptilia,Squamata,Lacertidae,Podarcis raffonei,Reptilia
+1108,REP020719019,R179,Reptilia,Squamata,Lacertidae,Podarcis siculus,Reptilia
+1109,REP021101005,R18,Reptilia,Squamata,Blanidae,Blanus strauchi,Reptilia
+1110,REP020719020,R180,Reptilia,Squamata,Lacertidae,Podarcis tauricus,Reptilia
+1111,REP020719021,R181,Reptilia,Squamata,Lacertidae,Podarcis tiliguerta,Reptilia
+1112,REP020719022,R182,Reptilia,Squamata,Lacertidae,Podarcis vaucheri,Reptilia
+1113,REP020719024,R183,Reptilia,Squamata,Lacertidae,Podarcis waglerianus,Reptilia
+1114,REP020720003,R185,Reptilia,Squamata,Lacertidae,Psammodromus hispanicus,Reptilia
+1115,REP020902001,R186,Reptilia,Squamata,Anguidae,Pseudopus apodus,Reptilia
+1116,REP010401001,R187,Reptilia,Testudines,Trionychidae,Rafetus euphraticus,Reptilia
+1117,REP020707008,R188,Reptilia,Squamata,Lacertidae,Darevskia chlorogaster,Reptilia
+1118,REP020501001,R189,Reptilia,Squamata,Phyllodactylidae,Tarentola angustimentalis,Reptilia
+1119,REP020802001,R19,Reptilia,Squamata,Scincidae,Chalcides bedriagai,Reptilia
+1120,REP020501002,R190,Reptilia,Squamata,Phyllodactylidae,Tarentola bischoffi,Reptilia
+1121,REP020501003,R191,Reptilia,Squamata,Phyllodactylidae,Tarentola boettgeri,Reptilia
+1122,REP020501004,R192,Reptilia,Squamata,Phyllodactylidae,Tarentola delalandii,Reptilia
+1123,REP020501005,R193,Reptilia,Squamata,Phyllodactylidae,Tarentola gomerensis,Reptilia
+1124,REP020501006,R194,Reptilia,Squamata,Phyllodactylidae,Tarentola mauritanica,Reptilia
+1125,REP021312001,R195,Reptilia,Squamata,Colubridae,Telescopus fallax,Reptilia
+1126,REP010201001,R196,Reptilia,Testudines,Testudinidae,Testudo graeca,Reptilia
+1127,REP010201002,R197,Reptilia,Testudines,Testudinidae,Testudo hermanni,Reptilia
+1128,REP010101002,R198,Reptilia,Testudines,Emydidae,Emys trinacris,Reptilia
+1129,REP010201004,R199,Reptilia,Testudines,Testudinidae,Testudo marginata,Reptilia
+1130,REP020801002,R2,Reptilia,Squamata,Scincidae,Ablepharus budaki,Reptilia
+1131,REP020104001,R200,Reptilia,Squamata,Agamidae,Trapelus agilis,Reptilia
+1132,REP020104002,R201,Reptilia,Squamata,Agamidae,Trapelus ruderatus,Reptilia
+1133,REP010402001,R202,Reptilia,Testudines,Trionychidae,Trionyx triunguis,Reptilia
+1134,REP021602001,R203,Reptilia,Squamata,Typhlopidae,Xerotyphlops vermicularis,Reptilia
+1135,REP021001001,R204,Reptilia,Squamata,Varanidae,Varanus griseus,Reptilia
+1136,REP021803001,R205,Reptilia,Squamata,Viperidae,Montivipera albizona,Reptilia
+1137,REP021804002,R206,Reptilia,Squamata,Viperidae,Vipera ammodytes,Reptilia
+1138,REP021804003,R207,Reptilia,Squamata,Viperidae,Vipera aspis,Reptilia
+1139,REP021804005,R208,Reptilia,Squamata,Viperidae,Vipera berus,Reptilia
+1140,REP021803002,R209,Reptilia,Squamata,Viperidae,Montivipera bulgardaghica,Reptilia
+1141,REP020802002,R21,Reptilia,Squamata,Scincidae,Chalcides chalcides,Reptilia
+1142,REP021804006,R210,Reptilia,Squamata,Viperidae,Vipera darevskii,Reptilia
+1143,REP021804007,R211,Reptilia,Squamata,Viperidae,Vipera dinniki,Reptilia
+1144,REP021804010,R212,Reptilia,Squamata,Viperidae,Vipera kaznakovi,Reptilia
+1145,REP021804011,R213,Reptilia,Squamata,Viperidae,Vipera latastei,Reptilia
+1146,REP021804017,R215,Reptilia,Squamata,Viperidae,Vipera pontica,Reptilia
+1147,REP021804022,R216,Reptilia,Squamata,Viperidae,Vipera transcaucasiana,Reptilia
+1148,REP021804020,R217,Reptilia,Squamata,Viperidae,Vipera seoanei,Reptilia
+1149,REP021804023,R218,Reptilia,Squamata,Viperidae,Vipera ursinii,Reptilia
+1150,REP021302001,R219,Reptilia,Squamata,Colubridae,Dolichophis caspius,Reptilia
+1151,REP020802004,R22,Reptilia,Squamata,Scincidae,Chalcides ocellatus,Reptilia
+1152,REP020201001,R220,Reptilia,Squamata,Chamaeleonidae,Chamaeleo africanus,Reptilia
+1153,REP021302003,R221,Reptilia,Squamata,Colubridae,Dolichophis jugularis,Reptilia
+1154,REP021305002,R222,Reptilia,Squamata,Colubridae,Hemorrhois nummifer,Reptilia
+1155,REP021302004,R225,Reptilia,Squamata,Colubridae,Dolichophis schmidti,Reptilia
+1156,REP021304003,R226,Reptilia,Squamata,Colubridae,Elaphe sauromates,Reptilia
+1157,REP021804018,R227,Reptilia,Squamata,Viperidae,Vipera renardi,Reptilia
+1158,REP020306001,R228,Reptilia,Squamata,Gekkonidae,Stenodactylus grandiceps,Reptilia
+1159,REP020701001,R229,Reptilia,Squamata,Lacertidae,Acanthodactylus boskianus,Reptilia
+1160,REP020802005,R23,Reptilia,Squamata,Scincidae,Chalcides sexlineatus,Reptilia
+1161,REP021305003,R230,Reptilia,Squamata,Colubridae,Hemorrhois ravergieri,Reptilia
+1162,REP021309003,R231,Reptilia,Squamata,Colubridae,Platyceps ventromaculatus,Reptilia
+1163,REP021303013,R232,Reptilia,Squamata,Colubridae,Eirenis persicus,Reptilia
+1164,REP021310001,R233,Reptilia,Squamata,Colubridae,Rhynchocalamus melanocephalus,Reptilia
+1165,REP021311001,R234,Reptilia,Squamata,Colubridae,Spalerosophis diadema,Reptilia
+1166,REP020401001,R235,Reptilia,Squamata,Eublepharidae,Eublepharis angramainyu,Reptilia
+1167,REP020804002,R236,Reptilia,Squamata,Scincidae,Heremites septemtaeniata,Reptilia
+1168,REP020701004,R237,Reptilia,Squamata,Lacertidae,Acanthodactylus harranensis,Reptilia
+1169,REP020701003,R238,Reptilia,Squamata,Lacertidae,Acanthodactylus grandis,Reptilia
+1170,REP020709002,R239,Reptilia,Squamata,Lacertidae,Eremias persica,Reptilia
+1171,REP020802006,R24,Reptilia,Squamata,Scincidae,Chalcides simonyi,Reptilia
+1172,REP021804008,R240,Reptilia,Squamata,Viperidae,Vipera eriwanensis,Reptilia
+1173,REP021313004,R241,Reptilia,Squamata,Colubridae,Zamenis persicus,Reptilia
+1174,REP021804012,R242,Reptilia,Squamata,Viperidae,Vipera lotievi,Reptilia
+1175,REP020715001,R245,Reptilia,Squamata,Lacertidae,Mesalina brevirostris,Reptilia
+1176,REP021312002,R246,Reptilia,Squamata,Colubridae,Telescopus nigriceps,Reptilia
+1177,REP021601001,R248,Reptilia,Squamata,Typhlopidae,Letheobia episcopus,Reptilia
+1178,REP021308001,R249,Reptilia,Squamata,Colubridae,Muhtarophis barani,Reptilia
+1179,REP020802007,R25,Reptilia,Squamata,Scincidae,Chalcides striatus,Reptilia
+1180,REP021307003,R251,Reptilia,Squamata,Colubridae,Macroprotodon mauritanicus,Reptilia
+1181,REP021303005,R252,Reptilia,Squamata,Colubridae,Eirenis coronelloides,Reptilia
+1182,REP020802008,R26,Reptilia,Squamata,Scincidae,Chalcides viridanus,Reptilia
+1183,REP020201002,R27,Reptilia,Squamata,Chamaeleonidae,Chamaeleo chamaeleon,Reptilia
+1184,REP021301001,R28,Reptilia,Squamata,Colubridae,Coronella austriaca,Reptilia
+1185,REP021301002,R29,Reptilia,Squamata,Colubridae,Coronella girondica,Reptilia
+1186,REP020801003,R3,Reptilia,Squamata,Scincidae,Ablepharus chernovi,Reptilia
+1187,REP020307001,R30,Reptilia,Squamata,Gekkonidae,Tenuidactylus caspius,Reptilia
+1188,REP020305003,R31,Reptilia,Squamata,Gekkonidae,Mediodactylus heterocercus,Reptilia
+1189,REP020305004,R32,Reptilia,Squamata,Gekkonidae,Mediodactylus kotschyi,Reptilia
+1190,REP020305007,R33,Reptilia,Squamata,Gekkonidae,Mediodactylus russowii,Reptilia
+1191,REP020303001,R34,Reptilia,Squamata,Gekkonidae,Cyrtopodion scabrum,Reptilia
+1192,REP020707002,R35,Reptilia,Squamata,Lacertidae,Darevskia alpina,Reptilia
+1193,REP020707003,R36,Reptilia,Squamata,Lacertidae,Darevskia armeniaca,Reptilia
+1194,REP020707004,R37,Reptilia,Squamata,Lacertidae,Darevskia bendimahiensis,Reptilia
+1195,REP020707006,R38,Reptilia,Squamata,Lacertidae,Darevskia brauneri,Reptilia
+1196,REP020707007,R39,Reptilia,Squamata,Lacertidae,Darevskia caucasica,Reptilia
+1197,REP020801004,R4,Reptilia,Squamata,Scincidae,Ablepharus kitaibelii,Reptilia
+1198,REP020707009,R40,Reptilia,Squamata,Lacertidae,Darevskia clarkorum,Reptilia
+1199,REP020707010,R41,Reptilia,Squamata,Lacertidae,Darevskia daghestanica,Reptilia
+1200,REP020707011,R42,Reptilia,Squamata,Lacertidae,Darevskia dahli,Reptilia
+1201,REP020707012,R43,Reptilia,Squamata,Lacertidae,Darevskia derjugini,Reptilia
+1202,REP020707013,R44,Reptilia,Squamata,Lacertidae,Darevskia dryada,Reptilia
+1203,REP020707014,R45,Reptilia,Squamata,Lacertidae,Darevskia lindholmi,Reptilia
+1204,REP020707015,R46,Reptilia,Squamata,Lacertidae,Darevskia mixta,Reptilia
+1205,REP020707017,R48,Reptilia,Squamata,Lacertidae,Darevskia parvula,Reptilia
+1206,REP020707019,R49,Reptilia,Squamata,Lacertidae,Darevskia portschinskii,Reptilia
+1207,REP020801005,R5,Reptilia,Squamata,Scincidae,Ablepharus pannonicus,Reptilia
+1208,REP020707020,R50,Reptilia,Squamata,Lacertidae,Darevskia praticola,Reptilia
+1209,REP020707021,R51,Reptilia,Squamata,Lacertidae,Darevskia raddei,Reptilia
+1210,REP020707022,R52,Reptilia,Squamata,Lacertidae,Darevskia rostombekowi,Reptilia
+1211,REP020707023,R53,Reptilia,Squamata,Lacertidae,Darevskia rudis,Reptilia
+1212,REP020707024,R54,Reptilia,Squamata,Lacertidae,Darevskia sapphirina,Reptilia
+1213,REP020707025,R55,Reptilia,Squamata,Lacertidae,Darevskia saxicola,Reptilia
+1214,REP020707026,R56,Reptilia,Squamata,Lacertidae,Darevskia unisexualis,Reptilia
+1215,REP020707027,R57,Reptilia,Squamata,Lacertidae,Darevskia uzzelli,Reptilia
+1216,REP020707028,R58,Reptilia,Squamata,Lacertidae,Darevskia valentini,Reptilia
+1217,REP021303001,R59,Reptilia,Squamata,Colubridae,Eirenis aurolineatus,Reptilia
+1218,REP020701002,R6,Reptilia,Squamata,Lacertidae,Acanthodactylus erythrurus,Reptilia
+1219,REP021303002,R60,Reptilia,Squamata,Colubridae,Eirenis barani,Reptilia
+1220,REP021309001,R61,Reptilia,Squamata,Colubridae,Platyceps collaris,Reptilia
+1221,REP021303004,R62,Reptilia,Squamata,Colubridae,Eirenis coronella,Reptilia
+1222,REP021303006,R63,Reptilia,Squamata,Colubridae,Eirenis decemlineatus,Reptilia
+1223,REP021303007,R64,Reptilia,Squamata,Colubridae,Eirenis eiselti,Reptilia
+1224,REP021303008,R65,Reptilia,Squamata,Colubridae,Eirenis hakkariensis,Reptilia
+1225,REP021303009,R66,Reptilia,Squamata,Colubridae,Eirenis levantinus,Reptilia
+1226,REP021303010,R67,Reptilia,Squamata,Colubridae,Eirenis lineomaculatus,Reptilia
+1227,REP021303011,R68,Reptilia,Squamata,Colubridae,Eirenis modestus,Reptilia
+1228,REP021303014,R69,Reptilia,Squamata,Colubridae,Eirenis punctatolineatus,Reptilia
+1229,REP020701005,R7,Reptilia,Squamata,Lacertidae,Acanthodactylus schreiberi,Reptilia
+1230,REP021303015,R70,Reptilia,Squamata,Colubridae,Eirenis rothii,Reptilia
+1231,REP021303016,R71,Reptilia,Squamata,Colubridae,Eirenis thospitis,Reptilia
+1232,REP021304001,R72,Reptilia,Squamata,Colubridae,Elaphe dione,Reptilia
+1233,REP021313001,R74,Reptilia,Squamata,Colubridae,Zamenis hohenackeri,Reptilia
+1234,REP021313002,R75,Reptilia,Squamata,Colubridae,Zamenis lineatus,Reptilia
+1235,REP021313003,R76,Reptilia,Squamata,Colubridae,Zamenis longissimus,Reptilia
+1236,REP021304002,R77,Reptilia,Squamata,Colubridae,Elaphe quatuorlineata,Reptilia
+1237,REP021313006,R78,Reptilia,Squamata,Colubridae,Zamenis scalaris,Reptilia
+1238,REP021313005,R79,Reptilia,Squamata,Colubridae,Zamenis situla,Reptilia
+1239,REP020702001,R8,Reptilia,Squamata,Lacertidae,Algyroides fitzingeri,Reptilia
+1240,REP010101001,R80,Reptilia,Testudines,Emydidae,Emys orbicularis,Reptilia
+1241,REP020709001,R81,Reptilia,Squamata,Lacertidae,Eremias arguta,Reptilia
+1242,REP020709003,R83,Reptilia,Squamata,Lacertidae,Eremias pleskei,Reptilia
+1243,REP020709004,R85,Reptilia,Squamata,Lacertidae,Eremias strauchi,Reptilia
+1244,REP020709005,R86,Reptilia,Squamata,Lacertidae,Eremias suphani,Reptilia
+1245,REP020709006,R87,Reptilia,Squamata,Lacertidae,Eremias velox,Reptilia
+1246,REP021201001,R88,Reptilia,Squamata,Erycidae,Eryx jaculus,Reptilia
+1247,REP021201002,R89,Reptilia,Squamata,Erycidae,Eryx miliaris,Reptilia
+1248,REP020702002,R9,Reptilia,Squamata,Lacertidae,Algyroides marchi,Reptilia
+1249,REP020601001,R90,Reptilia,Squamata,Sphaerodactylidae,Euleptes europaea,Reptilia
+1250,REP020803001,R91,Reptilia,Squamata,Scincidae,Eumeces schneiderii,Reptilia
+1251,REP020710001,R92,Reptilia,Squamata,Lacertidae,Gallotia atlantica,Reptilia
+1252,REP020710002,R93,Reptilia,Squamata,Lacertidae,Gallotia auaritae,Reptilia
+1253,REP020710003,R94,Reptilia,Squamata,Lacertidae,Gallotia bravoana,Reptilia
+1254,REP020710004,R95,Reptilia,Squamata,Lacertidae,Gallotia caesaris,Reptilia
+1255,REP020710005,R96,Reptilia,Squamata,Lacertidae,Gallotia galloti,Reptilia
+1256,REP020710006,R97,Reptilia,Squamata,Lacertidae,Gallotia intermedia,Reptilia
+1257,REP020710007,R98,Reptilia,Squamata,Lacertidae,Gallotia simonyi,Reptilia
+1258,REP020710008,R99,Reptilia,Squamata,Lacertidae,Gallotia stehlini,Reptilia

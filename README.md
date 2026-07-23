@@ -162,6 +162,15 @@ final = sim.run(n_steps=35, plot=True)
 
 ## Batch processing (multiple species)
 
+A runnable, self-contained example is provided in
+[`examples/quick_start_batch_learning.py`](examples/quick_start_batch_learning.py),
+using a bundled two-species dataset (*Canis lupus* + *Castor fiber*) under
+[`examples/data_batch/`](examples/data_batch/) so it works out of the box:
+
+```bash
+python examples/quick_start_batch_learning.py
+```
+
 ```python
 from paradis.learning import BatchLearner
 
@@ -172,9 +181,16 @@ bl = BatchLearner(
     path_taxa_ref="data/sampling_effort.tif",
     path_mdd_table="data/dispersal_distances.csv",
     output_folder="output/",
+    # Restrict to specific species (string or list of strings); omit to run
+    # the whole folder.
+    test_species=["Canis_lupus", "Castor_fiber"],
 )
 df = bl.run()
 ```
+
+Per-species diagnostic figures (presence threshold, carrying-capacity fit,
+calibration-site map, resampling grid, cost curve) are saved automatically
+under `<output_folder>/figs/`.
 
 ---
 

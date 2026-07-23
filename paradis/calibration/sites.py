@@ -259,6 +259,8 @@ def sample_calibration_sites(
     time_budget: float = 60.0,
     plot: bool = True,
     verbose: bool = False,
+    save_path: str | None = None,
+    species_name: str | None = None,
 ) -> "CalibrationSites":
     """Sample and select calibration sites from the study region.
 
@@ -372,21 +374,35 @@ def sample_calibration_sites(
     if verbose:
         print(f"Found {len(best[3])} calibration sites in {elapsed:.1f}s")
 
-    if plot and len(best[3]) > 0:
-        # ── Overview: location of all windows on the HS map ──────────────────
+    if (plot or save_path is not None) and len(best[3]) > 0:
+        # ── Overview: geographical location of all selected windows on the HS map ──
         plt.figure(figsize=(10, 10))
         plt.imshow(hs, cmap="viridis")
         plt.colorbar(label="Habitat suitability", shrink=0.8)
+
+        # Overlay species observation points as tiny orange dots.
+        # Orange contrasts well against both the dark-purple and bright-yellow
+        # ends of the viridis colormap.
+        x_obs_all, y_obs_all = np.where(obs >= 1)
+        plt.scatter(y_obs_all, x_obs_all, s=2, color="orange",
+                    alpha=0.6, linewidths=0, label="Observations")
+
         for iD, center in enumerate(best[3]):
             x0, y0 = center
+            # Draw a red rectangle around each selected calibration window
             plt.plot(
                 [y0 - half, y0 + half, y0 + half, y0 - half, y0 - half],
                 [x0 - half, x0 - half, x0 + half, x0 + half, x0 - half],
                 color="red",
             )
             plt.text(y0, x0, str(iD), color="white", fontsize=8)
-        plt.title(f"{len(best[3])} calibration sites selected")
-        plt.show()
+        plt.legend(loc="upper right", markerscale=3, fontsize=8)
+        plt.title(f"{len(best[3])} calibration sites selected – {species_name or ''}")
+        if save_path is not None:
+            plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        if plot:
+            plt.show()
+        plt.close()
 
         # ── Grid: each window with Otsu σ_B²/σ_T² ratio in title ────────────
         # Matches the original grid_plots2(…, plot=True) call.

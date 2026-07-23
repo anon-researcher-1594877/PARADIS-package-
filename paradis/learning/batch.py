@@ -22,7 +22,7 @@ from PIL import Image
 
 from paradis.calibration.sites import sample_calibration_sites
 from paradis.calibration.presence import calibrate_presence_threshold
-from paradis.calibration.carrying_capacity import estimate_carrying_capacity, plot_carrying_capacity
+from paradis.calibration.carrying_capacity import estimate_carrying_capacity, plot_carrying_capacity, logistic
 from paradis.calibration.ratios import compute_all_posteriors
 from paradis.learning.optimizer import learn_dispersal_parameters
 
@@ -357,11 +357,14 @@ def learn_over_folder(
                 return_bins=True,
             )
 
-            # Kmax is the asymptote L of the fitted logistic K=f(HS).
-            # If the presence threshold exceeds Kmax the threshold is
-            # unreliable (it would classify every pixel as absent), so we
-            # fall back to Kmax/2 and warn the user.
-            Kmax = L
+            # Kmax is the true maximum of the fitted logistic curve over the
+            # real HS domain [0, 1] — NOT the asymptote parameter L.
+            # logistic(x) = g(x) - g(0) is shifted so f(0)=0, so its actual
+            # max on [0,1] is g(1)-g(0), which is only ≈ L when x0 is close
+            # to 0. For species where x0 sits further from 0, using L instead
+            # of the true curve max underestimates the threshold-correction
+            # trigger and lets an unreliable pres_thresh slip through uncorrected.
+            Kmax = float(logistic(np.array([1.0]), L, k, x0)[0])
             if pres_thresh > Kmax:
                 print(
                     f"\033[93m  [{sp_name}] presence_threshold ({pres_thresh:.4f}) "
@@ -385,8 +388,10 @@ def learn_over_folder(
                 window_size=map_window,
                 distmin=80,
                 time_budget=time_budget,
-                plot=False,
+                plot=True,
                 verbose=False,
+                save_path=os.path.join(save_fig_folder, f"{sp_name}_calib_sites_map.png"),
+                species_name=sp_name,
             )
 
             # If the time budget expired without finding any site that passes
