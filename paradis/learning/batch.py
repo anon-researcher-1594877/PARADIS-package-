@@ -14,10 +14,12 @@ Classes
 from __future__ import annotations
 
 import os
+import random
 import traceback
 
 import numpy as np
 import pandas as pd
+import torch
 from PIL import Image
 
 from paradis.calibration.sites import sample_calibration_sites
@@ -133,6 +135,7 @@ def learn_over_folder(
     n_calibration_samples: int = 800,
     time_budget: float = 30.0,
     test_species: str | list[str] | None = None,
+    seed: int | None = None,
 ) -> pd.DataFrame:
     """Run the full PARADIS calibration pipeline for every species in *folder_hs*.
 
@@ -184,12 +187,24 @@ def learn_over_folder(
         Random candidate centres per iteration.
     time_budget:
         Time budget for site selection (seconds).
+    seed:
+        If given, seeds ``numpy``/``random``/``torch``(+CUDA) once at the
+        start, before any species' calibration-site sampling or SGD run —
+        for a reproducible folder-wide run (same calibration sites, same
+        Adam trajectory every time).
 
     Returns
     -------
     pandas.DataFrame
         Table with learned parameters (``Ew``, ``n``, ``r``, ``Tg``).
     """
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
     if name_formats is None:
         name_formats = ["XxX.tif", "XxX.tif", "XxX.tif"]
 
@@ -424,6 +439,7 @@ def learn_over_folder(
                 verbose=False,
                 save_fig_folder=save_fig_folder,
                 species_name=sp_name,
+                seed=seed,
             )
 
             record.update({"ew": Ew, "n": n, "r": r, "tg": Tg})

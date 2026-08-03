@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import math
 import os
+import random
 
 import numpy as np
 import torch
@@ -248,6 +249,7 @@ def learn_dispersal_parameters(
     verbose: bool = False,
     save_fig_folder: str | None = None,
     species_name: str | None = None,
+    seed: int | None = None,
 ) -> tuple:
     """Estimate dispersal parameters by Adam gradient descent.
 
@@ -278,6 +280,10 @@ def learn_dispersal_parameters(
         ``"same"`` | ``"size"`` | ``"Likelihood"`` | ``"BIC"``.
     plot, verbose:
         Diagnostic flags.
+    seed:
+        If given, seeds ``numpy``/``random``/``torch``(+CUDA) before any
+        stochastic step, for reproducible runs (mini-batch site sampling,
+        Adam initialisation/step order).
 
     Returns
     -------
@@ -290,6 +296,13 @@ def learn_dispersal_parameters(
     endpoints : list
         ``[r_vals, n_vals, Tg_vals]`` at convergence.
     """
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
     L, k, x0 = carrying_capacity_params
 
     # ------------------------------------------------------------------
@@ -464,6 +477,9 @@ def learn_dispersal_parameters(
                       f" | grads: n={grads[0]:+.4f}  r={grads[1]:+.4f}"
                       f"  Tg={grads[2]:+.4f}"
                       f" | batch={list(batch)}")
+                print(f"\033[93m  step {step:4d} | full-dataset cost="
+                      f"{full_loss.item():.5f}  (n={n_val:7.1f}  r={r_val:.6f}"
+                      f"  Tg={tg_val:.3f})\033[0m")
 
         step_bar.close()
         all_costs.append(losses)
