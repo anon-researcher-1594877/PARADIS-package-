@@ -1,4 +1,4 @@
-﻿"""Dispersal simulation engine.
+"""Dispersal simulation engine.
 
 The simulation alternates between:
 
@@ -57,6 +57,36 @@ if torch.cuda.is_available() and _triton_available():
     _compiled_lu_solve = torch.compile(torch.linalg.lu_solve)
 else:
     _compiled_lu_solve = torch.linalg.lu_solve
+
+
+# ---------------------------------------------------------------------------
+# Machine-tuned worker count for the `solver='sparse'` thread pool
+# ---------------------------------------------------------------------------
+
+def _sparse_solver_max_workers() -> int:
+    """Auto-tuned worker cap for the `solver='sparse'` per-window solve pool.
+
+    Uses PHYSICAL core count (not logical/hyperthreaded) when available —
+    SuperLU's back-substitution is compute- and memory-bandwidth-bound, so
+    hyperthreaded "extra" logical cores don't provide a second independent
+    ALU for this kind of work the way they would for I/O-bound tasks (see
+    the discussion this implements). Falls back to `os.cpu_count()`
+    (logical) if `psutil` isn't installed, since physical count isn't
+    otherwise available from the standard library. Computed once and
+    cached at import time — the machine's core count doesn't change
+    mid-run.
+    """
+    try:
+        import psutil
+        physical = psutil.cpu_count(logical=False)
+        if physical:
+            return physical
+    except ImportError:
+        pass
+    return os.cpu_count() or 1
+
+
+_SPARSE_SOLVER_MAX_WORKERS = _sparse_solver_max_workers()
 
 
 # ---------------------------------------------------------------------------
@@ -426,6 +456,7 @@ def dispersal_step(
     _out_borders: torch.Tensor | None = None,
     solver: str = 'lu',
     gmres_tol: float = 1e-5,
+    gpu_batch_mem_fraction: float = 0.8,
 ) -> tuple:
     """Apply one dispersal step via sliding evaluation windows.
 
@@ -443,6 +474,29 @@ def dispersal_step(
     :func:`run_simulation` (or store it on the :class:`PopulationSimulator`
     object) to benefit from this caching.
 
+    **Overdispersion loop (NOT recursion)** – any mass that lands on a
+    window's BORDER pixels this pass ("border overflow") hasn't actually
+    settled yet; it needs to be re-dispersed from wherever it landed,
+    potentially requiring several more passes before it decays below
+    ``presence_threshold / overdispersion_cap``. This used to be implemented
+    as `dispersal_step` calling ITSELF recursively on the leftover border
+    mass. That has a real memory cost: a recursive call's `new_distrib`/
+    `borders_accum` buffers (each a full-map-sized tensor) can't be freed
+    until ALL deeper recursive calls return, because the parent frame is
+    still waiting to do `new_distrib + borders_accum` — so with a slow-
+    decaying border (e.g. an initial density set too high relative to
+    `presence_threshold`, causing very deep "recursion"), memory usage grew
+    roughly linearly with depth, with dozens of full-map tensors and
+    per-window kernels alive simultaneously. Rewritten here as an explicit
+    loop: one working set of buffers is reused every iteration (the
+    previous iteration's are simply overwritten, so Python can garbage-
+    collect them immediately, independent of how many iterations it takes
+    to converge), while a SEPARATE running total accumulates each
+    iteration's resolved (interior) contribution. Mathematically identical
+    to the old recursive version — same per-iteration computation, same
+    convergence check — just without holding every iteration's memory
+    alive at once.
+
     Parameters
     ----------
     hs:
@@ -458,19 +512,35 @@ def dispersal_step(
     presence_threshold:
         Relative-abundance value for presence.
     overdispersion_cap:
-        Stop recursive overdispersion when density < threshold/cap.
+        Stop the overdispersion loop when border density <
+        ``presence_threshold / overdispersion_cap``.
     stochastic:
-        If ``True``, accumulate sub-threshold border density separately.
+        If ``True``, accumulate sub-threshold border density separately
+        (from the FIRST iteration only — matching the old recursive
+        version's behaviour, which likewise only ever returned the
+        outermost call's `stoch_density`).
     kernel_cache:
         Mutable dict ``{(x0, y0): (LU, pivots)}`` shared across calls.
         Modified in-place; pass ``{}`` on first use and keep the same object.
+    gpu_batch_mem_fraction:
+        ``solver='lu'``-only. Every active window's linear solve is
+        independent of every other's, so they're solved together in one
+        batched GPU call rather than one at a time — this is the fraction
+        of currently FREE VRAM that batch is allowed to occupy (default
+        0.8 = 80%), directly setting how many windows get solved in
+        parallel per batch (`batch_sz = free_VRAM * gpu_batch_mem_fraction
+        / bytes_per_window`, uncapped — previously hard-limited to a
+        conservative 25%/64-window ceiling regardless of how much memory
+        was actually free, leaving real parallelism on the table). Lower
+        this if you're running other GPU work alongside the simulation.
 
     Returns
     -------
     new_distrib : torch.Tensor
         Updated density map (CPU).
     tested_xs, tested_ys : list
-        Centres of active windows this step.
+        Centres of active windows this step (first overdispersion
+        iteration only — see `stochastic`'s note above).
     stoch_density : numpy.ndarray
         Sub-threshold border density (only meaningful when *stochastic=True*).
     """
@@ -492,7 +562,8 @@ def dispersal_step(
     y_divs = _make_divs(ys_map)
     xg, yg = np.meshgrid(x_divs, y_divs)
 
-    # ── Border structures (computed once, shared across windows) ─────────────
+    # ── Border structures (computed once, shared across windows AND across
+    # every overdispersion iteration below) ─────────────────────────────────
     # _border_2d : 2-D mask on device — used for masking Dsub after solve
     # border_flat: 1-D flat indices of border pixels — used in _build_window_lu
     if border_flat is None:
@@ -518,154 +589,132 @@ def dispersal_step(
             if hs[cx_lo:cx_hi, cy_lo:cy_hi].any():
                 valid_centres.append((x0, y0))
 
-    # ── #6: Accumulation tensors on GPU ─────────────────────────────────────
-    # Reuse caller-supplied buffers (zero them in-place) to avoid repeated
-    # VRAM allocation; fall back to fresh allocation when not provided.
+    # ── #6: Running total across all overdispersion iterations ─────────────
+    # Reuse caller-supplied buffer (zeroed in-place) to avoid repeated VRAM
+    # allocation across simulation YEARS; fall back to fresh allocation when
+    # not provided. This is the ONLY buffer that persists across iterations
+    # — each iteration's own `new_distrib`/`borders_accum` working buffers
+    # (below) are freshly allocated and immediately eligible for garbage
+    # collection once the next iteration overwrites the local variable, so
+    # memory use no longer grows with the number of iterations needed.
     if _out_distrib is not None and _out_distrib.shape == (xs_map, ys_map):
-        new_distrib = _out_distrib.zero_()
+        total_new_distrib = _out_distrib.zero_()
     else:
-        new_distrib = torch.zeros((xs_map, ys_map), device=device)
-    if _out_borders is not None and _out_borders.shape == (xs_map, ys_map):
-        borders_accum = _out_borders.zero_()
-    else:
-        borders_accum = torch.zeros((xs_map, ys_map), device=device)
-    stoch_density = np.zeros((xs_map, ys_map), dtype=np.float32)
+        total_new_distrib = torch.zeros((xs_map, ys_map), device=device)
+
+    threshold_recurse = presence_threshold / max(overdispersion_cap, 1)
+    current_distrib = distrib
     tested_xs: list = []
     tested_ys: list = []
+    stoch_density = np.zeros((xs_map, ys_map), dtype=np.float32)
+    depth = 0
 
-    # ── #3: Collect all active windows, then batch-solve on GPU ─────────────
-    # "Active" = HS-valid AND has density in its sub-window this step.
-    active_keys:  list = []
-    b_vecs:       list = []
-    write_infos:  list = []
+    while True:
+        # ── #6: This iteration's working tensors ────────────────────────────
+        if depth == 0 and _out_borders is not None and _out_borders.shape == (xs_map, ys_map):
+            borders_accum = _out_borders.zero_()
+        else:
+            borders_accum = torch.zeros((xs_map, ys_map), device=device)
+        new_distrib = torch.zeros((xs_map, ys_map), device=device)
 
-    with torch.no_grad():
-        for x0, y0 in valid_centres:
-            sx_lo = max(0, x0 - shalf);  sx_hi = min(xs_map, x0 + shalf + 1)
-            sy_lo = max(0, y0 - shalf);  sy_hi = min(ys_map, y0 + shalf + 1)
-            sub = distrib[sx_lo:sx_hi, sy_lo:sy_hi]
-            if not sub.any():
-                continue
+        # ── #3: Collect all active windows, then batch-solve on GPU ─────────
+        # "Active" = HS-valid AND has density in its sub-window this iteration.
+        active_keys:  list = []
+        b_vecs:       list = []
+        write_infos:  list = []
+        # Local STRONG references to this iteration's kernels, parallel to
+        # `active_keys` — used by the solve loops below INSTEAD OF re-reading
+        # `kernel_cache[key]`. With a bounded `MemoryKernelCache`, collecting
+        # many distinct active windows in this same loop can evict an
+        # EARLIER window's kernel before the solve loop gets to read it back
+        # — a real `KeyError`, not just a theoretical one. Holding a local
+        # reference here keeps every kernel needed THIS iteration alive
+        # regardless of what the shared cache evicts in the meantime;
+        # `kernel_cache[(x0, y0)] = ...` below still populates the shared
+        # cache for cross-call/cross-iteration reuse as before.
+        active_kernels: list = []
 
-            mx_lo = x0 - mhalf;  mx_hi = x0 + mhalf + 1
-            my_lo = y0 - mhalf;  my_hi = y0 + mhalf + 1
-            cx_lo = max(0, mx_lo);  cx_hi = min(xs_map, mx_hi)
-            cy_lo = max(0, my_lo);  cy_hi = min(ys_map, my_hi)
-            wx_lo = cx_lo - mx_lo;  wx_hi = wx_lo + (cx_hi - cx_lo)
-            wy_lo = cy_lo - my_lo;  wy_hi = wy_lo + (cy_hi - cy_lo)
-            dsx_lo = sx_lo - mx_lo;  dsx_hi = dsx_lo + (sx_hi - sx_lo)
-            dsy_lo = sy_lo - my_lo;  dsy_hi = dsy_lo + (sy_hi - sy_lo)
+        with torch.no_grad():
+            for x0, y0 in valid_centres:
+                sx_lo = max(0, x0 - shalf);  sx_hi = min(xs_map, x0 + shalf + 1)
+                sy_lo = max(0, y0 - shalf);  sy_hi = min(ys_map, y0 + shalf + 1)
+                sub = current_distrib[sx_lo:sx_hi, sy_lo:sy_hi]
+                if not sub.any():
+                    continue
 
-            # Lazily build missing kernels (should be empty after _prebuild_kernels)
-            if (x0, y0) not in kernel_cache:
-                hs_win = torch.zeros((win_pixels, win_pixels), device=device)
-                hs_win[wx_lo:wx_hi, wy_lo:wy_hi] = hs[cx_lo:cx_hi, cy_lo:cy_hi]
-                if solver == 'gmres':
-                    kernel_cache[(x0, y0)] = _build_wstar_edges(
-                        hs_win, r, n, border_flat, win_pixels ** 2)
-                elif solver == 'sparse':
-                    kernel_cache[(x0, y0)] = _build_sparse_lu(
-                        hs_win, r, n, ewalk, border_flat, win_pixels ** 2)
-                else:
-                    kernel_cache[(x0, y0)] = _build_window_lu(
-                        hs_win, r, n, ewalk, border_flat)
-                del hs_win
+                mx_lo = x0 - mhalf;  mx_hi = x0 + mhalf + 1
+                my_lo = y0 - mhalf;  my_hi = y0 + mhalf + 1
+                cx_lo = max(0, mx_lo);  cx_hi = min(xs_map, mx_hi)
+                cy_lo = max(0, my_lo);  cy_hi = min(ys_map, my_hi)
+                wx_lo = cx_lo - mx_lo;  wx_hi = wx_lo + (cx_hi - cx_lo)
+                wy_lo = cy_lo - my_lo;  wy_hi = wy_lo + (cy_hi - cy_lo)
+                dsx_lo = sx_lo - mx_lo;  dsx_hi = dsx_lo + (sx_hi - sx_lo)
+                dsy_lo = sy_lo - my_lo;  dsy_hi = dsy_lo + (sy_hi - sy_lo)
 
-            D0e = torch.zeros((win_pixels, win_pixels), device=device)
-            D0e[dsx_lo:dsx_hi, dsy_lo:dsy_hi] = sub.to(device)
-
-            active_keys.append((x0, y0))
-            b_vecs.append(D0e.reshape(-1))
-            write_infos.append((cx_lo, cx_hi, cy_lo, cy_hi, wx_lo, wx_hi, wy_lo, wy_hi))
-            tested_xs.append(x0)
-            tested_ys.append(y0)
-
-        # ── Solve each active window ─────────────────────────────────────────
-        if active_keys:
-            if solver == 'sparse':
-                # Sparse LU: scipy SuperLU back-substitution — O(N^1.5) per window,
-                # full float32 precision, no GPU memory required for the factors.
-                for i, key in enumerate(active_keys):
-                    sp_lu   = kernel_cache[key]
-                    b_np    = b_vecs[i].cpu().numpy()
-                    x_np    = sp_lu.solve(b_np)
-                    Dt_flat = torch.from_numpy(x_np).to(device)
-                    wi = write_infos[i]
-                    cx_lo, cx_hi, cy_lo, cy_hi, wx_lo, wx_hi, wy_lo, wy_hi = wi
-                    Dsub     = Dt_flat.reshape(win_pixels, win_pixels)
-                    local_od = Dsub * _border_2d
-                    interior = 1.0 - _border_2d[wx_lo:wx_hi, wy_lo:wy_hi]
-                    new_distrib[cx_lo:cx_hi, cy_lo:cy_hi]   += (
-                        Dsub[wx_lo:wx_hi, wy_lo:wy_hi] * interior)
-                    borders_accum[cx_lo:cx_hi, cy_lo:cy_hi] += (
-                        local_od[wx_lo:wx_hi, wy_lo:wy_hi])
-
-            elif solver == 'gmres':
-                # GMRES: one iterative solve per window using sparse mat-vec.
-                # No LU factorisation — just edge-list mat-vec O(4N) per iter.
-                p_f      = ewalk / (1.0 + ewalk)
-                constant = 1.0 / (1.0 - p_f)
-                n_flat_w = win_pixels ** 2
-                for i, key in enumerate(active_keys):
-                    src_e, dst_e, vals_e = kernel_cache[key]
-                    src_d  = src_e.to(device)
-                    dst_d  = dst_e.to(device)
-                    vals_d = vals_e.to(device)
-
-                    # Me.T @ x = constant * (x - p * Wstar.T @ x)
-                    # Wstar.T @ x: for edge (src->dst, val), scatter val*x[src] to dst
-                    def _mv(x, _s=src_d, _d=dst_d, _v=vals_d,
-                             _nf=n_flat_w, _p=p_f, _c=constant):
-                        out = torch.zeros(_nf, device=x.device, dtype=x.dtype)
-                        out.scatter_add_(0, _d, _v * x[_s])
-                        return _c * (x - _p * out)
-
-                    Dt_flat = _gmres(_mv, b_vecs[i], tol=gmres_tol)
-                    del src_d, dst_d, vals_d
-
-                    wi = write_infos[i]
-                    cx_lo, cx_hi, cy_lo, cy_hi, wx_lo, wx_hi, wy_lo, wy_hi = wi
-                    Dsub     = Dt_flat.reshape(win_pixels, win_pixels)
-                    local_od = Dsub * _border_2d
-                    interior = 1.0 - _border_2d[wx_lo:wx_hi, wy_lo:wy_hi]
-                    new_distrib[cx_lo:cx_hi, cy_lo:cy_hi]   += (
-                        Dsub[wx_lo:wx_hi, wy_lo:wy_hi] * interior)
-                    borders_accum[cx_lo:cx_hi, cy_lo:cy_hi] += (
-                        local_od[wx_lo:wx_hi, wy_lo:wy_hi])
-
-            else:
-                # LU: batched back-substitution — O(N²) per window, O(N³) pre-built.
-                # Kernels are stored on CPU; only one batch lives on device at a time,
-                # so VRAM usage is batch_sz × N² × 4 bytes (float32 during solve).
-                if device.type == "cuda":
-                    free_mb  = torch.cuda.mem_get_info()[0] // (1024 ** 2)
-                    lu_mb    = max(1, (win_pixels ** 4) * 4 // (1024 ** 2))
-                    batch_sz = max(1, min(64, int(free_mb * 0.25 / lu_mb)))
-                else:
-                    batch_sz = 1
-
-                for start in range(0, len(active_keys), batch_sz):
-                    keys  = active_keys[start:start + batch_sz]
-                    b_bat = torch.stack(b_vecs[start:start + batch_sz]).unsqueeze(-1)
-
-                    if len(keys) == 1:
-                        LU, pivots = kernel_cache[keys[0]]
-                        LU_dev  = LU.float().to(device)
-                        piv_dev = pivots.to(device)
-                        res = _compiled_lu_solve(
-                            LU_dev, piv_dev, b_bat.squeeze(0)
-                        ).squeeze(-1).unsqueeze(0)
-                        del LU_dev, piv_dev
+                # Lazily build missing kernels (should be empty after _prebuild_kernels)
+                if (x0, y0) not in kernel_cache:
+                    hs_win = torch.zeros((win_pixels, win_pixels), device=device)
+                    hs_win[wx_lo:wx_hi, wy_lo:wy_hi] = hs[cx_lo:cx_hi, cy_lo:cy_hi]
+                    if solver == 'gmres':
+                        kernel_cache[(x0, y0)] = _build_wstar_edges(
+                            hs_win, r, n, border_flat, win_pixels ** 2)
+                    elif solver == 'sparse':
+                        kernel_cache[(x0, y0)] = _build_sparse_lu(
+                            hs_win, r, n, ewalk, border_flat, win_pixels ** 2)
                     else:
-                        LU_bat  = torch.stack([kernel_cache[k][0].float() for k in keys]).to(device)
-                        piv_bat = torch.stack([kernel_cache[k][1] for k in keys]).to(device)
-                        res = _compiled_lu_solve(LU_bat, piv_bat, b_bat).squeeze(-1)
-                        del LU_bat, piv_bat
+                        kernel_cache[(x0, y0)] = _build_window_lu(
+                            hs_win, r, n, ewalk, border_flat)
+                    del hs_win
 
-                    for i, key in enumerate(keys):
-                        wi = write_infos[start + i]
+                D0e = torch.zeros((win_pixels, win_pixels), device=device)
+                D0e[dsx_lo:dsx_hi, dsy_lo:dsy_hi] = sub.to(device)
+
+                active_keys.append((x0, y0))
+                active_kernels.append(kernel_cache[(x0, y0)])
+                b_vecs.append(D0e.reshape(-1))
+                write_infos.append((cx_lo, cx_hi, cy_lo, cy_hi, wx_lo, wx_hi, wy_lo, wy_hi))
+                if depth == 0:
+                    tested_xs.append(x0)
+                    tested_ys.append(y0)
+
+            # ── Solve each active window ─────────────────────────────────────
+            if active_keys:
+                if solver == 'sparse':
+                    # Sparse LU: scipy SuperLU back-substitution — O(N^1.5) per window,
+                    # full float32 precision, no GPU memory required for the factors.
+                    # This is ALWAYS CPU work regardless of `device` — SciPy's SuperLU
+                    # has no CUDA backend at all (that's exactly why `solver='lu'`
+                    # exists as the GPU-capable alternative). Every window's solve is
+                    # independent of every other's, so — same pattern already used by
+                    # `_prebuild_kernels` for the factorisation step — the `.solve()`
+                    # calls themselves (the actual CPU-bound cost; SuperLU's C
+                    # computation releases the GIL, so this is genuine multi-core
+                    # parallelism, not just concurrency) run in a thread pool. The
+                    # GPU tensor writes below stay sequential afterwards, since
+                    # in-place accumulation into shared `new_distrib`/`borders_accum`
+                    # tensors is not itself thread-safe.
+                    # `.cpu().numpy()` conversion happens INSIDE the worker, one
+                    # window at a time, not pre-materialised into a list up front
+                    # — so peak memory for these input vectors is bounded by
+                    # `n_workers` (however many solves are actually in flight at
+                    # once), not by the total number of active windows this step
+                    # (which, on a large map, can be far bigger than n_workers).
+                    def _solve_one(i, _kerns=active_kernels, _bv=b_vecs):
+                        return i, _kerns[i].solve(_bv[i].cpu().numpy())
+
+                    n_workers = min(_SPARSE_SOLVER_MAX_WORKERS, len(active_keys))
+                    if n_workers > 1:
+                        with ThreadPoolExecutor(max_workers=n_workers) as pool:
+                            solved = dict(pool.map(_solve_one, range(len(active_keys))))
+                    else:
+                        solved = dict(_solve_one(i) for i in range(len(active_keys)))
+
+                    for i, key in enumerate(active_keys):
+                        x_np    = solved[i]
+                        Dt_flat = torch.from_numpy(x_np).to(device)
+                        wi = write_infos[i]
                         cx_lo, cx_hi, cy_lo, cy_hi, wx_lo, wx_hi, wy_lo, wy_hi = wi
-                        Dsub     = res[i].reshape(win_pixels, win_pixels)
+                        Dsub     = Dt_flat.reshape(win_pixels, win_pixels)
                         local_od = Dsub * _border_2d
                         interior = 1.0 - _border_2d[wx_lo:wx_hi, wy_lo:wy_hi]
                         new_distrib[cx_lo:cx_hi, cy_lo:cy_hi]   += (
@@ -673,28 +722,127 @@ def dispersal_step(
                         borders_accum[cx_lo:cx_hi, cy_lo:cy_hi] += (
                             local_od[wx_lo:wx_hi, wy_lo:wy_hi])
 
-    # Overdispersion: recursively disperse border mass
-    if stochastic:
-        stoch_density += ((borders_accum < presence_threshold) * borders_accum).cpu().numpy()
-        borders_accum  = borders_accum * (borders_accum >= presence_threshold)
+                elif solver == 'gmres':
+                    # GMRES: one iterative solve per window using sparse mat-vec.
+                    # No LU factorisation — just edge-list mat-vec O(4N) per iter.
+                    p_f      = ewalk / (1.0 + ewalk)
+                    constant = 1.0 / (1.0 - p_f)
+                    n_flat_w = win_pixels ** 2
+                    for i, key in enumerate(active_keys):
+                        src_e, dst_e, vals_e = active_kernels[i]
+                        src_d  = src_e.to(device)
+                        dst_d  = dst_e.to(device)
+                        vals_d = vals_e.to(device)
 
-    max_border = float(borders_accum.max().item())
-    threshold_recurse = presence_threshold / max(overdispersion_cap, 1)
-    if max_border > threshold_recurse:
-        borders_next, *_ = dispersal_step(
-            hs, borders_accum.cpu(), ewalk, n, r,
-            window_size=window_size, sub_window=sub_window,
-            overdispersion_cap=overdispersion_cap,
-            presence_threshold=presence_threshold,
-            kernel_cache=kernel_cache,
-            valid_centres=valid_centres,
-            border_flat=border_flat,
-            solver=solver, gmres_tol=gmres_tol,
-        )
-        borders_accum = borders_next.to(device)
+                        # Me.T @ x = constant * (x - p * Wstar.T @ x)
+                        # Wstar.T @ x: for edge (src->dst, val), scatter val*x[src] to dst
+                        def _mv(x, _s=src_d, _d=dst_d, _v=vals_d,
+                                 _nf=n_flat_w, _p=p_f, _c=constant):
+                            out = torch.zeros(_nf, device=x.device, dtype=x.dtype)
+                            out.scatter_add_(0, _d, _v * x[_s])
+                            return _c * (x - _p * out)
 
-    new_distrib = (new_distrib + borders_accum).cpu()   # #6: single CPU transfer
-    return new_distrib, tested_xs, tested_ys, stoch_density
+                        Dt_flat = _gmres(_mv, b_vecs[i], tol=gmres_tol)
+                        del src_d, dst_d, vals_d
+
+                        wi = write_infos[i]
+                        cx_lo, cx_hi, cy_lo, cy_hi, wx_lo, wx_hi, wy_lo, wy_hi = wi
+                        Dsub     = Dt_flat.reshape(win_pixels, win_pixels)
+                        local_od = Dsub * _border_2d
+                        interior = 1.0 - _border_2d[wx_lo:wx_hi, wy_lo:wy_hi]
+                        new_distrib[cx_lo:cx_hi, cy_lo:cy_hi]   += (
+                            Dsub[wx_lo:wx_hi, wy_lo:wy_hi] * interior)
+                        borders_accum[cx_lo:cx_hi, cy_lo:cy_hi] += (
+                            local_od[wx_lo:wx_hi, wy_lo:wy_hi])
+
+                else:
+                    # LU: batched back-substitution — O(N²) per window, O(N³) pre-built.
+                    # Kernels are stored on CPU; only one batch lives on device at a time,
+                    # so VRAM usage is batch_sz × N² × 4 bytes (float32 during solve).
+                    # All windows in `active_keys` are mathematically independent (each
+                    # is its own local linear solve) — the batch dimension IS the
+                    # parallelism, bounded only by how many windows' worth of solve
+                    # memory fit in `gpu_batch_mem_fraction` of currently free VRAM.
+                    # The old hardcoded 25%/64-window cap left real GPU parallelism on
+                    # the table whenever more memory was actually free. Computed once
+                    # per step (not re-measured per batch within the loop below) —
+                    # simple and sufficient, since successive batches release their
+                    # memory before the next one starts anyway.
+                    if device.type == "cuda":
+                        free_mb  = torch.cuda.mem_get_info()[0] // (1024 ** 2)
+                        lu_mb    = max(1, (win_pixels ** 4) * 4 // (1024 ** 2))
+                        batch_sz = max(1, int(free_mb * gpu_batch_mem_fraction / lu_mb))
+                    else:
+                        batch_sz = 1
+
+                    for start in range(0, len(active_keys), batch_sz):
+                        keys    = active_keys[start:start + batch_sz]
+                        kerns   = active_kernels[start:start + batch_sz]
+                        b_bat = torch.stack(b_vecs[start:start + batch_sz]).unsqueeze(-1)
+
+                        if len(keys) == 1:
+                            LU, pivots = kerns[0]
+                            LU_dev  = LU.float().to(device)
+                            piv_dev = pivots.to(device)
+                            res = _compiled_lu_solve(
+                                LU_dev, piv_dev, b_bat.squeeze(0)
+                            ).squeeze(-1).unsqueeze(0)
+                            del LU_dev, piv_dev
+                        else:
+                            LU_bat  = torch.stack([k[0].float() for k in kerns]).to(device)
+                            piv_bat = torch.stack([k[1] for k in kerns]).to(device)
+                            res = _compiled_lu_solve(LU_bat, piv_bat, b_bat).squeeze(-1)
+                            del LU_bat, piv_bat
+
+                        for i, key in enumerate(keys):
+                            wi = write_infos[start + i]
+                            cx_lo, cx_hi, cy_lo, cy_hi, wx_lo, wx_hi, wy_lo, wy_hi = wi
+                            Dsub     = res[i].reshape(win_pixels, win_pixels)
+                            local_od = Dsub * _border_2d
+                            interior = 1.0 - _border_2d[wx_lo:wx_hi, wy_lo:wy_hi]
+                            new_distrib[cx_lo:cx_hi, cy_lo:cy_hi]   += (
+                                Dsub[wx_lo:wx_hi, wy_lo:wy_hi] * interior)
+                            borders_accum[cx_lo:cx_hi, cy_lo:cy_hi] += (
+                                local_od[wx_lo:wx_hi, wy_lo:wy_hi])
+
+        # Overdispersion: this iteration's resolved (interior) contribution is
+        # merged into the running total right away — it does NOT wait for the
+        # border mass to finish re-dispersing, unlike the old recursive
+        # version where every ancestor frame's `new_distrib` stayed pinned in
+        # memory until the deepest call returned.
+        total_new_distrib += new_distrib
+
+        if stochastic and depth == 0:
+            stoch_density = ((borders_accum < presence_threshold) * borders_accum).cpu().numpy()
+            borders_accum = borders_accum * (borders_accum >= presence_threshold)
+        elif stochastic:
+            borders_accum = borders_accum * (borders_accum >= presence_threshold)
+
+        max_border = float(borders_accum.max().item())
+        # Single, continuously-updated status line (carriage return, no
+        # newline) — NOT a new print per iteration, so this stays legible
+        # even across many overdispersion iterations — showing exactly how
+        # close the border mass is to the threshold this loop has to clear
+        # before it stops. A border that decays slowly relative to
+        # `threshold_recurse` (= presence_threshold / overdispersion_cap —
+        # e.g. ~1.7e-6 for presence_threshold=0.17, overdispersion_cap=1e5)
+        # needs many iterations — no longer a memory problem (see the
+        # docstring above), but still a real compute-time cost worth seeing
+        # live.
+        print(f"\r[dispersal_step] depth={depth}  border max density="
+              f"{max_border:.4g}  vs threshold={threshold_recurse:.4g}  "
+              f"{'-> converged' if max_border <= threshold_recurse else '-> recursing...'}"
+              + " " * 10, end="", flush=True)
+
+        if max_border <= threshold_recurse:
+            total_new_distrib += borders_accum
+            break
+
+        current_distrib = borders_accum.cpu()
+        depth += 1
+
+    result = total_new_distrib.cpu()   # #6: single CPU transfer
+    return result, tested_xs, tested_ys, stoch_density
 
 
 # ---------------------------------------------------------------------------
@@ -703,7 +851,7 @@ def dispersal_step(
 
 def run_simulation(
     hs: np.ndarray,
-    init_distrib: np.ndarray,
+    init_distrib: "np.ndarray | str | pathlib.Path",
     ewalk: float,
     n: float,
     r: float,
@@ -722,6 +870,7 @@ def run_simulation(
     kernel_cache: dict | None = None,
     solver: str = 'lu',
     gmres_tol: float = 1e-5,
+    gpu_batch_mem_fraction: float = 0.8,
     _snapshot_store: list | None = None,
 ) -> np.ndarray:
     """Run the PARADIS population simulation.
@@ -731,7 +880,8 @@ def run_simulation(
     hs:
         2-D habitat-suitability map.
     init_distrib:
-        2-D initial abundance map.
+        2-D initial abundance map, or a path (``str``/``pathlib.Path``) to
+        a ``.npy`` file holding one (loaded via ``numpy.load``).
     ewalk, n, r:
         Dispersal parameters.
     tgrowth:
@@ -764,16 +914,29 @@ def run_simulation(
         :class:`PopulationSimulator`) so that factorisations computed in
         earlier years are reused.  If ``None`` a local (call-scoped) dict is
         created and discarded on return.
+    gpu_batch_mem_fraction:
+        Forwarded to `dispersal_step` — see its docstring. Fraction of
+        currently free VRAM the batched ``solver='lu'`` solve is allowed
+        to use per batch (default 0.8); all active windows in a batch are
+        solved together since they're independent, so this directly
+        controls how much of that independence gets exploited in
+        parallel.
 
     Returns
     -------
     numpy.ndarray
         Final 2-D abundance map.
     """
+    if not isinstance(init_distrib, np.ndarray):
+        init_distrib = np.load(init_distrib)
+
     L, k, x0 = carrying_capacity_params
     hs_t = torch.tensor(hs, dtype=torch.float32, device=device)
-    Dt = torch.tensor(init_distrib, dtype=torch.float32)
-    SP = torch.zeros_like(Dt, device="cpu")
+    # Whole-population dispersal model (deliberate simplification, matching
+    # paradis.core.growth.equilibrium_distribution): every pixel's entire
+    # density disperses every year, not just newly-produced individuals —
+    # no Dt/SP (disperser/settled) split, a single state `SP` covers both.
+    SP = torch.tensor(init_distrib, dtype=torch.float32)
 
     a, K_is, _ = carrying_capacity_from_hs(hs_t.cpu(), tgrowth, L, k, x0)
     K_is_gpu = K_is.to(device)
@@ -820,12 +983,30 @@ def run_simulation(
     sim_border_2d[0:win_pixels,     win_pixels - 1]   = 1
     sim_border_flat = torch.where(sim_border_2d.reshape(-1) == 1)[0]
 
-    # #4: pre-build all kernels before the time loop
-    _prebuild_kernels(
-        sim_valid_centres, hs_t, r, n, ewalk,
-        win_pixels, mhalf, xs_map, ys_map, sim_border_flat, kernel_cache,
-        solver=solver,
-    )
+    # #4: pre-build all kernels before the time loop — SKIPPED for the
+    # bounded in-memory `MemoryKernelCache` (the default when `cache_dir`
+    # isn't set on `PopulationSimulator`). With a bounded cache, eagerly
+    # building every valid window (there can be far more of these than fit
+    # in the cache — e.g. tens of thousands on a large map) means later
+    # prebuilt windows evict earlier ones BEFORE the step loop even starts,
+    # in an arbitrary traversal order unrelated to which windows the
+    # simulation will actually touch first (population spreads gradually
+    # from the seed, so most of the map's windows may go untouched for many
+    # steps, or the whole run). Confirmed to add no real speedup in
+    # practice — the on-demand lazy build already in `dispersal_step`'s
+    # "collect active windows" loop builds exactly what's actually used,
+    # when it's actually used, which plays correctly with LRU eviction
+    # instead of fighting it. Kept for `DiskKernelCache` (persists to disk
+    # across separate runs — the whole point of prebuilding there) and for
+    # a plain/unbounded dict (nothing gets evicted, so prebuild's
+    # thread-parallel build cost is pure upside).
+    from paradis.simulation.kernel_cache import MemoryKernelCache
+    if not isinstance(kernel_cache, MemoryKernelCache):
+        _prebuild_kernels(
+            sim_valid_centres, hs_t, r, n, ewalk,
+            win_pixels, mhalf, xs_map, ys_map, sim_border_flat, kernel_cache,
+            solver=solver,
+        )
 
     # Pre-allocate output buffers — zeroed in-place each step, no repeated VRAM alloc
     _buf_distrib = torch.zeros((xs_map, ys_map), device=device)
@@ -842,11 +1023,11 @@ def run_simulation(
 
         if additional_events and year in additional_events:
             for xe, ye in additional_events[year]:
-                Dt[xe - 5: xe + 5, ye - 5: ye + 5] = presence_threshold
+                SP[xe - 5: xe + 5, ye - 5: ye + 5] = presence_threshold
 
         for _ in range(time_division):
-            Dt, xs, ys, _ = dispersal_step(
-                hs_t, Dt, ewalk, n, r,
+            SP, xs, ys, _ = dispersal_step(
+                hs_t, SP, ewalk, n, r,
                 window_size=window_size,
                 sub_window=sub_window,
                 presence_threshold=presence_threshold,
@@ -856,9 +1037,15 @@ def run_simulation(
                 _out_distrib=_buf_distrib,
                 _out_borders=_buf_borders,
                 solver=solver, gmres_tol=gmres_tol,
+                gpu_batch_mem_fraction=gpu_batch_mem_fraction,
             )
 
-        SP = SP + Dt
+        # Logistic growth applied to the WHOLE post-dispersal density — no
+        # residents/newcomers distinction left to make (see `dispersal_step`
+        # above: everyone already dispersed this year). `growth_step` itself
+        # zeroes growth outside `bg` (breeding_ground) internally; no
+        # separate forced-evacuation step is needed here since every pixel,
+        # breeding or not, already disperses every year regardless.
         new_dens, growth_bl = growth_step(
             SP,
             a_tensor,
@@ -870,12 +1057,7 @@ def run_simulation(
             breeding_ground=bg,
             plot=False,
         )
-        new_dens = new_dens.cpu()
-        mask_pos = (new_dens - SP) > 0
-        Dt = (new_dens - SP) * mask_pos
-        SP[~mask_pos] = new_dens[~mask_pos]
-        Dt[bg == 0] += SP[bg == 0]
-        SP[bg == 0] = 0
+        SP = new_dens.cpu()
 
         snapshots.append((year + 1, SP.cpu().numpy().copy()))
 
@@ -1156,13 +1338,27 @@ class PopulationSimulator:
         When set, LU factorisations are written to ``.npz`` files on first
         use and reloaded on subsequent runs — avoiding both RAM overflow on
         large maps and the O(N^3) refactorisation cost on repeated runs.
-        If ``None`` (default), an in-memory dict is used (fast, but may
-        overflow RAM for large maps with big window sizes).
-        See :class:`~paradis.simulation.DiskKernelCache` for details.
+        If ``None`` (default), a bounded in-memory LRU
+        (:class:`~paradis.simulation.kernel_cache.MemoryKernelCache`,
+        auto-sized from *ram_fraction*) is used instead — evicted entries
+        are silently recomputed, RAM never overflows regardless of map
+        size. See :class:`~paradis.simulation.DiskKernelCache` for the
+        disk-backed alternative.
     max_mem_windows:
-        Maximum LU factorisations held in RAM when *cache_dir* is set.
-        Each entry for ``window_size=70`` costs ~97 MB; the default of 16
-        caps RAM at roughly 1.6 GB.  Ignored when *cache_dir* is ``None``.
+        Maximum LU factorisations held in RAM when *cache_dir* IS set
+        (disk-backed cache). Each entry for ``window_size=70`` costs
+        ~97 MB; the default of 16 caps RAM at roughly 1.6 GB. Ignored when
+        *cache_dir* is ``None`` — see *ram_fraction* instead.
+    ram_fraction:
+        Only used when *cache_dir* is ``None`` (the default, in-memory
+        cache). Fraction of currently FREE RAM the auto-sized
+        `MemoryKernelCache` is allowed to occupy (default 0.9 = 90%) —
+        computed once at the start of `run()` via
+        `kernel_cache._compute_max_mem_windows`, so it adapts to however
+        many windows a given map/`window_size` actually needs, unlike
+        `max_mem_windows` (a fixed count, only relevant for the disk
+        cache). Lower this if you're running other memory-heavy work
+        alongside the simulation.
 
     Examples
     --------
@@ -1188,6 +1384,7 @@ class PopulationSimulator:
         presence_threshold: float,
         cache_dir: str | pathlib.Path | None = None,
         max_mem_windows: int = 16,
+        ram_fraction: float = 0.9,
         solver: str = 'lu',
         gmres_tol: float = 1e-5,
     ) -> None:
@@ -1208,6 +1405,7 @@ class PopulationSimulator:
             pathlib.Path(cache_dir).expanduser() if cache_dir is not None else None
         )
         self._max_mem_windows = max_mem_windows
+        self._ram_fraction = ram_fraction
         self._solver    = solver
         self._gmres_tol = gmres_tol
 
@@ -1275,7 +1473,7 @@ class PopulationSimulator:
     def run(
         self,
         n_steps: int = 35,
-        init_distrib: np.ndarray | None = None,
+        init_distrib: "np.ndarray | str | pathlib.Path | None" = None,
         **kwargs,
     ) -> np.ndarray:
         """Run the simulation.
@@ -1285,7 +1483,11 @@ class PopulationSimulator:
         n_steps:
             Number of time steps.
         init_distrib:
-            Initial abundance map.  If ``None``, a small central patch at
+            Initial abundance map — a 2-D array, OR a path (``str``/
+            ``pathlib.Path``) to a ``.npy`` file holding one (loaded via
+            ``numpy.load``, same convenience `hs` already gets via
+            `load_hs` in ``__init__``), e.g. a founder-patch map exported
+            from another tool/run. If ``None``, a small central patch at
             the presence threshold is used.
         **kwargs:
             Forwarded to :func:`run_simulation`.
@@ -1301,6 +1503,8 @@ class PopulationSimulator:
             init_distrib[h // 2 - 5: h // 2 + 5, w // 2 - 5: w // 2 + 5] = (
                 self.presence_threshold
             )
+        elif not isinstance(init_distrib, np.ndarray):
+            init_distrib = np.load(init_distrib)
 
         # Build the kernel cache for this run.
         #
@@ -1324,11 +1528,22 @@ class PopulationSimulator:
                 max_mem_windows=self._max_mem_windows,
             )
         else:
-            # Plain dict: pre-build stores ALL kernels; LRU eviction would cause
-            # KeyError when dispersal_step accesses a pre-built kernel that was
-            # later evicted.  RAM is bounded by the number of valid window centres,
-            # which is much smaller than the theoretical max after HS-zero filtering.
-            kernel_cache = {}
+            # Bounded in-memory LRU, auto-sized from `ram_fraction` of
+            # currently free RAM — NOT a plain dict (which would hold every
+            # window's factorisation simultaneously with no cap: fine for a
+            # small map, but silently unbounded RAM growth — potentially
+            # gigabytes on a large map with many evaluation windows — on a
+            # large one, easily enough to have the process killed by the OS
+            # with no Python-level error at all). Evicted entries are safe:
+            # `dispersal_step` (see its "#3: Collect all active windows"
+            # section) already lazily rebuilds any cache miss on demand
+            # (`if (x0, y0) not in kernel_cache: ... kernel_cache[...] = ...`),
+            # so eviction only costs a recompute, never a KeyError.
+            from paradis.simulation.kernel_cache import (
+                MemoryKernelCache, _compute_max_mem_windows,
+            )
+            n_mem = _compute_max_mem_windows(ws, ram_fraction=self._ram_fraction)
+            kernel_cache = MemoryKernelCache(max_mem_windows=n_mem)
 
         self._last_init_distrib = init_distrib.copy()
         result = run_simulation(

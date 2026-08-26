@@ -50,6 +50,9 @@ geo = [
     "geopandas>=0.14",
     "tifffile>=2023.1",
 ]
+bayes = [
+    "pyro-ppl>=1.9",
+]
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",

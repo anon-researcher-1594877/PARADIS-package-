@@ -18,10 +18,13 @@ from __future__ import annotations
 
 import math
 
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial import KDTree
 from tqdm import tqdm
+
+from paradis.calibration.sites import _overlay_breeding_range
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +225,9 @@ def compute_all_posteriors(
         ax = axes[i]
         ax.set_title(f"Site {site_idx}")
         ax.imshow(hs_win, cmap="viridis")
+        breeding_maps = calibration_sites.breeding_maps
+        if site_idx < len(breeding_maps):
+            _overlay_breeding_range(ax, breeding_maps[site_idx])
 
         # Recover 2-D coordinates of all taxa pixels and the selection mask
         x_all, y_all = np.where(taxa_win > 0)
@@ -244,7 +250,10 @@ def compute_all_posteriors(
     # subplot's handles (all subplots use the same marker/color scheme),
     # instead of repeating a legend on every tiny panel.
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=3,
+    if any(bm is not None for bm in calibration_sites.breeding_maps):
+        handles = handles + [mpatches.Patch(color="red", alpha=0.7, label="Breeding range")]
+        labels = labels + ["Breeding range"]
+    fig.legend(handles, labels, loc="lower center", ncol=len(labels),
                bbox_to_anchor=(0.5, -0.02), fontsize=9, markerscale=2)
 
     fig.suptitle(f"Calibration sites – {species_name or ''}", fontsize=12)

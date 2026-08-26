@@ -321,6 +321,9 @@ def plot_carrying_capacity(
     show:
         If True, call plt.show().
     """
+    print(f"\033[92m[{species_name or 'species'}] carrying capacity: "
+          f"L={L:.6g}  k={k:.6g}  x0={x0:.6g}\033[0m")
+
     hs_vals = bin_data["hs_vals"]
     ab_vals = bin_data["ab_vals"]
     ci_lo   = bin_data["ci_lo"]

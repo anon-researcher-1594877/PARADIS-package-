@@ -36,6 +36,8 @@ import numpy as np
 from scipy.spatial import distance
 from skimage import filters
 
+from paradis.core.growth import seed_mask
+
 
 # ---------------------------------------------------------------------------
 # Spatial thinning
@@ -80,6 +82,22 @@ def spatial_min_distance_filter(
 # ---------------------------------------------------------------------------
 # Site quality assessment
 # ---------------------------------------------------------------------------
+
+def _overlay_breeding_range(ax, breeding_map, alpha: float = 0.7) -> None:
+    """Overlay a red, breeding-range-proportional-alpha layer on *ax* —
+    fully transparent where `breeding_map == 0` (colormap underneath
+    stays fully visible), red at `alpha` where `breeding_map == 1`
+    (intermediate values scale linearly in between). No-op if
+    `breeding_map` is `None`.
+    """
+    if breeding_map is None:
+        return
+    bm = np.clip(np.asarray(breeding_map, dtype=float), 0.0, 1.0)
+    rgba = np.zeros((*bm.shape, 4))
+    rgba[..., 0] = 1.0          # red channel
+    rgba[..., 3] = bm * alpha   # alpha proportional to breeding_map
+    ax.imshow(rgba)
+
 
 def assess_site_quality(
     hs_maps: list,
@@ -241,6 +259,40 @@ def assess_site_quality(
         plt.tight_layout()
         plt.show()
 
+        # Illustrative example of the 25%-random-pixel density seeding used
+        # by `equilibrium_distribution` (see `paradis.core.growth.seed_mask`)
+        # — one FIXED draw per accepted calibration site (in this package's
+        # actual training/grid-scan runs, this same mask is drawn once per
+        # site at the start of the run and then kept fixed for the whole
+        # run — see `learn_dispersal_parameters`/`refine_from_point`/
+        # `run_mala`/`_run_grid`'s `seed_masks_list` precompute step; this
+        # plot shows an independent example draw purely for a visual sanity
+        # check of the seeding scheme's coverage, not the exact mask that
+        # will actually be used in a subsequent learning call). Shown right
+        # after the presence(+)/absence(^) grid above so both aspects of
+        # each accepted site — where the species was observed, and where
+        # the simulated density initially starts — are visible together.
+        n_sel = len(selected[0])
+        if n_sel > 0:
+            cols_sel = math.ceil(math.sqrt(n_sel))
+            rows_sel = math.ceil(n_sel / cols_sel)
+            fig, axes = plt.subplots(rows_sel, cols_sel, figsize=(3 * cols_sel, 3 * rows_sel))
+            axes = np.array(axes).reshape(-1)
+            for i, ax in enumerate(axes):
+                if i >= n_sel:
+                    ax.axis("off")
+                    continue
+                mask = seed_mask(selected[0][i].shape, seed_fraction=0.25).cpu().numpy()
+                ax.imshow(mask, cmap="Greys", vmin=0, vmax=1)
+                realized_frac = mask.mean() * 100
+                ax.set_title(f"ID{i}  seeded={realized_frac:.1f}%", fontsize=9)
+                ax.set_xticks([])
+                ax.set_yticks([])
+            fig.suptitle("Example initial-density seeding (25% of pixels start at K_i, "
+                          "rest at 0) — one illustrative draw per accepted site")
+            plt.tight_layout()
+            plt.show()
+
     return selected, rejection_counts
 
 
@@ -261,6 +313,7 @@ def sample_calibration_sites(
     verbose: bool = False,
     save_path: str | None = None,
     species_name: str | None = None,
+    breeding_range: np.ndarray | None = None,
 ) -> "CalibrationSites":
     """Sample and select calibration sites from the study region.
 
@@ -277,6 +330,18 @@ def sample_calibration_sites(
         Species observation count map.
     taxa_ref:
         Reference-taxa observation count map.
+    breeding_range:
+        Optional full-extent breeding-range mask (same shape as `hs`,
+        values in ``[0, 1]``). If given, cropped at each FINALLY-accepted
+        site's window (same bounds as `hs`/`obs`/`taxa_ref`) and stored on
+        the returned `CalibrationSites.breeding_maps`, for constraining
+        growth to breeding areas during calibration (see
+        `equilibrium_distribution`'s `breeding_ground` parameter). Does
+        NOT affect site selection/quality criteria — only cropped for the
+        sites already chosen based on `hs`/`obs`/`taxa_ref`. If ``None``
+        (default), `breeding_maps` is filled with ``None`` per site,
+        meaning unconstrained growth (identical to the pre-existing
+        behaviour for every site, unchanged).
     n_samples:
         Number of random candidate centres drawn each iteration.
     window_size:
@@ -374,42 +439,59 @@ def sample_calibration_sites(
     if verbose:
         print(f"Found {len(best[3])} calibration sites in {elapsed:.1f}s")
 
+    # Crop the breeding-range mask (if given) at each ACCEPTED site's exact
+    # window — done here, once, on the final centre list, rather than in
+    # the candidate loop above, since breeding range doesn't affect site
+    # selection/quality at all, only what gets stored for later use during
+    # calibration.
+    breeding_maps: list = []
+    for x0, y0 in best[3]:
+        if breeding_range is not None:
+            breeding_maps.append(breeding_range[x0 - half:x0 + half, y0 - half:y0 + half])
+        else:
+            breeding_maps.append(None)
+
     if (plot or save_path is not None) and len(best[3]) > 0:
         # ── Overview: geographical location of all selected windows on the HS map ──
-        plt.figure(figsize=(10, 10))
-        plt.imshow(hs, cmap="viridis")
-        plt.colorbar(label="Habitat suitability", shrink=0.8)
+        # A second panel showing the breeding range on its own is added
+        # whenever a breeding range was supplied.
+        if breeding_range is not None:
+            fig_overview, (ax_overview, ax_breeding) = plt.subplots(1, 2, figsize=(20, 10))
+        else:
+            fig_overview, ax_overview = plt.subplots(figsize=(10, 10))
+
+        im_overview = ax_overview.imshow(hs, cmap="viridis")
+        fig_overview.colorbar(im_overview, ax=ax_overview, label="Habitat suitability", shrink=0.8)
 
         # Overlay species observation points as tiny orange dots.
         # Orange contrasts well against both the dark-purple and bright-yellow
         # ends of the viridis colormap.
         x_obs_all, y_obs_all = np.where(obs >= 1)
-        plt.scatter(y_obs_all, x_obs_all, s=2, color="orange",
-                    alpha=0.6, linewidths=0, label="Observations")
+        ax_overview.scatter(y_obs_all, x_obs_all, s=2, color="orange",
+                             alpha=0.6, linewidths=0, label="Observations")
 
         for iD, center in enumerate(best[3]):
             x0, y0 = center
             # Draw a red rectangle around each selected calibration window
-            plt.plot(
+            ax_overview.plot(
                 [y0 - half, y0 + half, y0 + half, y0 - half, y0 - half],
                 [x0 - half, x0 - half, x0 + half, x0 + half, x0 - half],
                 color="red",
             )
-            plt.text(y0, x0, str(iD), color="white", fontsize=8)
-        plt.legend(loc="upper right", markerscale=3, fontsize=8)
-        plt.title(f"{len(best[3])} calibration sites selected – {species_name or ''}")
+            ax_overview.text(y0, x0, str(iD), color="white", fontsize=8)
+        ax_overview.legend(loc="upper right", markerscale=3, fontsize=8)
+        ax_overview.set_title(f"{len(best[3])} calibration sites selected – {species_name or ''}")
+
+        if breeding_range is not None:
+            im_breeding = ax_breeding.imshow(breeding_range, cmap="viridis")
+            fig_overview.colorbar(im_breeding, ax=ax_breeding, label="Breeding range", shrink=0.8)
+            ax_breeding.set_title(f"Breeding range – {species_name or ''}")
+
         if save_path is not None:
             plt.savefig(save_path, dpi=150, bbox_inches="tight")
         if plot:
             plt.show()
         plt.close()
-
-        # ── Grid: each window with Otsu σ_B²/σ_T² ratio in title ────────────
-        # Matches the original grid_plots2(…, plot=True) call.
-        assess_site_quality(
-            best[0], best[1], best[2], best[3],
-            criteria=criteria, plot=True, verbose=False,
-        )
 
     return CalibrationSites(
         hs_maps=best[0],
@@ -418,6 +500,7 @@ def sample_calibration_sites(
         centers=best[3],
         rejected_centers=all_rejected_centers,
         window_size=window_size,
+        breeding_maps=breeding_maps,
     )
 
 
@@ -441,6 +524,12 @@ class CalibrationSites:
         List of ``(row, col)`` centre coordinates in the full map.
     window_size:
         Side length of each window (pixels).
+    breeding_maps:
+        List of 2-D breeding-range windows, one per site, parallel to
+        `hs_maps` — or ``None`` at a given index if no breeding range was
+        supplied for that site (unconstrained growth there, matching the
+        behaviour before this attribute existed). See
+        `sample_calibration_sites`'s `breeding_range` parameter.
     """
 
     hs_maps: List[np.ndarray] = field(default_factory=list)
@@ -449,6 +538,7 @@ class CalibrationSites:
     centers: List[Tuple[int, int]] = field(default_factory=list)
     rejected_centers: List[Tuple[int, int]] = field(default_factory=list)
     window_size: int = 50
+    breeding_maps: List[np.ndarray | None] = field(default_factory=list)
 
     def __len__(self) -> int:
         return len(self.hs_maps)
