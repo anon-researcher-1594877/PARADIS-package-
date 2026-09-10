@@ -102,8 +102,60 @@ def align_folders(
 # Sampling effort helpers
 # ---------------------------------------------------------------------------
 
-def _build_breeding_range_map(folder_breeding_range: str, name_format: str) -> dict[str, str]:
-    """Scan *folder_breeding_range* and return a dict mapping normalised
+_DEFAULT_NAME_FORMAT_KEYS = (
+    "hs", "obs", "range", "breeding_mask", "init_range",
+    "introductions", "region_mask",
+)
+
+
+def _resolve_name_formats(
+    name_formats: "list[str] | dict[str, str] | None",
+) -> dict[str, str]:
+    """Normalise `name_formats` into a full dict covering every folder this
+    module can align species files across — ``"hs"``, ``"obs"``,
+    ``"range"`` (the three mandatory, `align_folders`-matched folders) plus
+    ``"breeding_mask"``, ``"init_range"``, ``"introductions"``,
+    ``"region_mask"`` (the optional, per-species ones -- unused unless the
+    matching `folder_*` argument is also given). Every key defaults to
+    ``"XxX.tif"`` unless overridden.
+
+    Accepts three forms, so existing calls keep working unchanged:
+    - ``None`` (default): every key gets ``"XxX.tif"``.
+    - A 3-element list (the ORIGINAL convention, hs/obs/range only, in that
+      order) -- optional folders still default to ``"XxX.tif"``.
+    - A dict with any subset of the keys above -- this is the recommended
+      form now that there are more than 3 alignable folders: put EVERY
+      format in one place, e.g. ``{"hs": "XxX.tif", "breeding_mask":
+      "breeding_XxX.tif", "init_range": "XxX.tif", "introductions":
+      "XxX.tif", "region_mask": "XxX.tif"}``, instead of a separate
+      ``*_name_format`` parameter per optional folder.
+    """
+    resolved = {k: "XxX.tif" for k in _DEFAULT_NAME_FORMAT_KEYS}
+    if name_formats is None:
+        return resolved
+    if isinstance(name_formats, dict):
+        unknown = set(name_formats) - set(_DEFAULT_NAME_FORMAT_KEYS)
+        if unknown:
+            raise ValueError(
+                f"Unknown name_formats key(s) {sorted(unknown)} -- valid "
+                f"keys are {list(_DEFAULT_NAME_FORMAT_KEYS)}."
+            )
+        resolved.update(name_formats)
+        return resolved
+    # Legacy list form: hs/obs/range only, positional.
+    if len(name_formats) != 3:
+        raise ValueError(
+            f"name_formats as a list must have exactly 3 entries "
+            f"(hs, obs, range) -- got {len(name_formats)}. Use a dict "
+            f"instead to also set breeding_mask/init_range/"
+            f"introductions/region_mask formats."
+        )
+    resolved["hs"], resolved["obs"], resolved["range"] = name_formats
+    return resolved
+
+
+def _build_breeding_mask_map(folder_breeding_mask: str, name_format: str) -> dict[str, str]:
+    """Scan *folder_breeding_mask* and return a dict mapping normalised
     species name -> full file path, using the SAME ``XxX`` name-format
     convention as :func:`align_folders` (spaces/underscores both mapped to
     underscore, matching `sp_name`'s own convention exactly). Unlike
@@ -116,9 +168,9 @@ def _build_breeding_range_map(folder_breeding_range: str, name_format: str) -> d
     suffix = name_format[pre_len + 3:]
     suf_len = len(suffix)
     breeding_map: dict[str, str] = {}
-    for fname in sorted(os.listdir(folder_breeding_range)):
+    for fname in sorted(os.listdir(folder_breeding_mask)):
         vpart = fname[pre_len: -suf_len if suf_len else None].replace(" ", "_")
-        breeding_map[vpart] = os.path.join(folder_breeding_range, fname)
+        breeding_map[vpart] = os.path.join(folder_breeding_mask, fname)
     return breeding_map
 
 
@@ -152,10 +204,9 @@ def learn_over_folder(
     folder_sampling_effort: str | None = None,
     sampling_effort_species_col: str = "SpeciesName",
     sampling_effort_group_col: str = "SamplingEffortGroup",
-    folder_breeding_range: str | None = None,
-    breeding_range_name_format: str = "XxX.tif",
+    folder_breeding_mask: str | None = None,
     save_fig_folder: str | None = None,
-    name_formats: list[str] | None = None,
+    name_formats: "list[str] | dict[str, str] | None" = None,
     mdd_col: str = "Dispersal_km",
     species_col: str = "scientificName",
     map_window: int = 70,
@@ -210,7 +261,26 @@ def learn_over_folder(
     mala_pre_optimize_steps: int = 50,
     low_map_high_npz_folder: str | None = None,
     low_map_high_ci_mass: float = 0.68,
-    low_map_high_map_grid_size: int = 25,
+    low_map_high_density_frac_of_map: float | None = None,
+    low_map_high_map_grid_size: int = 40,
+    low_map_high_plot_3d: bool = True,
+    folder_region_mask: str | None = None,
+    folder_init_range: str | None = None,
+    folder_introductions: str | None = None,
+    sim_s: float | None = None,
+    sim_d: float | None = None,
+    sim_S_crit: float | None = None,
+    sim_ewalk: float | None = None,
+    sim_carrying_capacity_params: tuple | None = None,
+    sim_presence_threshold: float | None = None,
+    sim_init_year: int | None = None,
+    sim_end_year: int | None = None,
+    sim_window_size: int = 60,
+    sim_sub_window: int = 31,
+    sim_overdispersion_cap: float = 1e7,
+    sim_solver: str = "sparse",
+    sim_ram_fraction: float = 0.8,
+    sim_region_mask_padding: int = 500,
 ) -> pd.DataFrame:
     """Run the full PARADIS calibration pipeline for every species in *folder_hs*.
 
@@ -247,16 +317,16 @@ def learn_over_folder(
         Column name for species names in the sampling effort groups CSV.
     sampling_effort_group_col:
         Column name for group names in the sampling effort groups CSV.
-    folder_breeding_range:
+    folder_breeding_mask:
         Optional folder of per-species breeding-range rasters — when a
         species has a matching file here (matched by species name via
-        `breeding_range_name_format`, SEPARATELY from the mandatory hs/
-        obs/range alignment — a species without a match is NOT skipped or
-        treated as an error, it just gets unconstrained growth, identical
-        to the behaviour before this parameter existed), reproduction is
-        constrained to that mask for every simulation/calibration
-        involving that species — INCLUDING while estimating parameters
-        (threaded through as `breeding_masks_list` into every
+        ``name_formats["breeding_mask"]``, SEPARATELY from the mandatory
+        hs/obs/range alignment — a species without a match is NOT skipped
+        or treated as an error, it just gets unconstrained growth,
+        identical to the behaviour before this parameter existed),
+        reproduction is constrained to that mask for every simulation/
+        calibration involving that species — INCLUDING while estimating
+        parameters (threaded through as `breeding_masks_list` into every
         `cost_function`/`equilibrium_distribution` call for that
         species' calibration sites, not just the final production
         simulation). Only POSITIVE growth is restricted — decline is
@@ -266,14 +336,33 @@ def learn_over_folder(
         "N without") is shown once per batch run, mirroring
         `align_folders`'s own aligned/unaligned reporting for the
         mandatory folders.
-    breeding_range_name_format:
-        ``XxX``-placeholder file-name pattern for `folder_breeding_range`
-        (default ``"XxX.tif"``), same convention as `name_formats`.
     save_fig_folder:
         Optional directory for diagnostic figures.
     name_formats:
-        File-name patterns with ``XxX`` placeholder.
-        Default: ``["XxX.tif", "XxX.tif", "XxX.tif"]``.
+        ``XxX``-placeholder file-name pattern(s) for every folder this
+        function can align species files across — ONE place for all of
+        them, rather than a separate ``*_name_format`` parameter per
+        folder. Accepts:
+
+        - ``None`` (default): every folder uses ``"XxX.tif"``.
+        - A dict with any subset of the keys ``"hs"``, ``"obs"``,
+          ``"range"`` (the three mandatory, `align_folders`-matched
+          folders), and ``"breeding_mask"``, ``"init_range"``,
+          ``"introductions"``, ``"region_mask"`` (the optional, per-
+          species ones — each only used when its matching `folder_*`
+          argument is also given). Any key you don't set falls back to
+          ``"XxX.tif"``. This is the recommended form, e.g.
+          ``{"hs": "XxX.tif", "breeding_mask": "breeding_XxX.tif"}``.
+        - A plain 3-element list (legacy form, hs/obs/range only, in that
+          order) — optional folders still default to ``"XxX.tif"`` in
+          this form; use a dict instead if you need to set those too.
+
+        Every folder is then aligned the SAME way: species name = the
+        file name with the format's constant prefix/suffix stripped
+        (spaces/underscores treated as equivalent) — so as long as every
+        configured folder holds one consistently-named file per species,
+        everything lines up automatically, exactly like `folder_hs`/
+        `folder_obs`/`folder_range` already do.
     mdd_col, species_col:
         Column names in the MDD table.
     map_window:
@@ -361,6 +450,40 @@ def learn_over_folder(
         visualising the cost surface's shape rather than optimising it.
         Best paired with ``test_species`` restricted to one species, since
         each grid point costs ~1s (~15-20min per 1000-point stage).
+        ``"sim"`` — bypasses calibration ENTIRELY (no presence-threshold
+        calibration, no carrying-capacity fit, no calibration-site
+        sampling/posteriors) and instead runs a classic single-parameter-
+        set forward `PopulationSimulator` simulation for the species, using
+        the exact `sim_s`/`sim_d`/`sim_S_crit`/`sim_ewalk`/
+        `sim_carrying_capacity_params`/`sim_presence_threshold` you give —
+        equivalent to (and modelled directly on) hand-writing a
+        `Castor_fiber_sim.ipynb`-style script, just reusing the per-species
+        file resolution this function already does for HS/breeding-range.
+        Reads THREE additional per-species folders (`folder_region_mask`,
+        `folder_init_range`, `folder_introductions` below — each aligned
+        via its own `name_formats[...]` entry, the exact same way
+        `folder_breeding_mask` already is: a species missing a file in
+        `folder_init_range`/`folder_introductions` simply contributes no
+        events from that source, never an error, but a species missing its
+        `folder_region_mask` file IS skipped, since every simulation needs
+        one), builds ONE combined `additional_events` dict from the
+        reintroductions raster (pixel value = event YEAR) plus every
+        presence pixel of the founder/initial-range raster (injected as
+        `sim_init_year` events, skipping any pixel already a listed
+        reintroduction site), and runs continuously from one calendar year
+        before the EARLIEST event (across both sources) through
+        `sim_end_year`. Requires `folder_region_mask`, `sim_s`, `sim_d`,
+        `sim_S_crit`, `sim_ewalk`, `sim_carrying_capacity_params`,
+        `sim_presence_threshold`, `sim_init_year`, `sim_end_year`, and at
+        least one of `folder_init_range`/`folder_introductions` to resolve
+        to a real per-species file with nonzero pixels. Diagnostic/
+        production-run-only like ``"compare"``/``"low_MPA_high"`` — does
+        NOT touch `learned_parameters.csv`'s resume/skip bookkeeping. Saves
+        a georeferenced ``{species}_s{s}_d{d}_Scrit{S_crit}_{start}-{end}.tif``
+        (same CRS/grid as `folder_region_mask`'s raster, cropped to match)
+        to `output_folder` and (when `save_fig_folder` is set) the usual
+        `show_expansion`/`show_final`
+        plots.
         ``"compare"`` — instead calls
         :func:`~paradis.learning.optimizer.compare_equilibrium_distributions`:
         computes and plots the equilibrium distribution at EVERY
@@ -478,7 +601,8 @@ def learn_over_folder(
         with `method="NUTS"` before it, the recorded `n`/`r`/`Tg`/`Ew` in
         `learned_parameters.csv` are the POSTERIOR MEANS — use the saved
         samples for anything requiring the joint posterior.
-    low_map_high_npz_folder, low_map_high_ci_mass, low_map_high_map_grid_size:
+    low_map_high_npz_folder, low_map_high_ci_mass, low_map_high_density_frac_of_map,
+    low_map_high_map_grid_size:
         ``method="low_MPA_high"``-only. Requires a ``{species}_samples.npz``
         already saved by a prior ``method="MALA"`` run — searched for in
         ``low_map_high_npz_folder`` (default ``None`` -> falls back to
@@ -486,20 +610,69 @@ def learn_over_folder(
         them); a species without one is skipped with a warning, not a
         hard failure. Forwarded to
         :func:`~paradis.learning.optimizer.estimate_low_map_high_from_posterior`
-        (as ``ci_mass``, ``map_grid_size``) — ranks ALL raw posterior
-        samples by a closed-form, ANALYTIC colonisation-speed proxy
-        derived from Fisher-KPP travelling-front theory
+        (as ``ci_mass``, ``density_frac_of_map``, ``map_grid_size``,
+        ``plot_3d`` — see ``low_map_high_plot_3d`` below) — ranks ALL raw
+        posterior samples by a closed-form, ANALYTIC colonisation-speed
+        proxy derived from Fisher-KPP travelling-front theory
         (``c = sqrt(2*g*Ew(r))``, no simulation at all — see that
-        function's docstring for the full derivation), takes the
-        ``ci_mass`` equal-tailed CI of that proxy, and returns the LOW/
-        MAP/HIGH bounding ``(n, r, Tg)`` parameter sets. Diagnostic-only,
-        same as ``method="compare"``: does not touch
-        `learned_parameters.csv`.
+        function's docstring for the full derivation), restricts to a
+        region of the joint `(s, d, S_crit)` posterior, and returns the
+        LOW/MAP/HIGH bounding ``(n, r, Tg)`` parameter sets (min/max speed
+        WITHIN that region). Diagnostic-only, same as ``method="compare"``:
+        does not touch `learned_parameters.csv`.
+
+        Two mutually exclusive ways to define that region:
+        ``low_map_high_ci_mass`` (default 0.68) picks the smallest region
+        containing that fraction of the posterior PROBABILITY MASS (a
+        proper Bayesian credible region — the default, used whenever
+        ``low_map_high_density_frac_of_map`` is left at its default
+        ``None``). ``low_map_high_density_frac_of_map``, when given
+        instead (e.g. ``0.5``), overrides ``ci_mass`` and picks every
+        sample whose density is at least that FRACTION OF THE MAP's OWN
+        density — a fixed density-ratio/"relative likelihood" region
+        instead of a fixed-mass one. The two answer different questions
+        (see `estimate_low_map_high_from_posterior`'s own docstring for
+        the full caveat) — the mass actually captured by
+        ``density_frac_of_map`` is NOT fixed in advance and depends on how
+        sharply peaked this species' posterior is.
+    low_map_high_plot_3d:
+        ``method="low_MPA_high"``-only. If ``True`` (default), also builds
+        two interactive Plotly figures per species — both plain 3-D point
+        scatters (no surface fit) of every raw posterior sample over
+        `(s, d, S_crit)`: one with size+color mapped to the analytic speed
+        proxy, the other to the sample's own KDE density value — lets you
+        compare WHERE high/low speeds occur against where posterior
+        density actually concentrates. Saved as standalone HTML next to
+        the speed-proxy histogram (in `save_fig_folder`) if given, else
+        shown inline.
+    folder_region_mask, folder_init_range, folder_introductions:
+        ``method="sim"``-only. Optional per-species folders, each aligned
+        via its own `name_formats[...]` entry ("region_mask"/"init_range"/
+        "introductions" respectively) the same way `folder_breeding_mask`
+        already is — see `method`'s ``"sim"`` entry above for exactly how
+        each is used. `folder_region_mask` is required for every species
+        processed under `method="sim"`; the other two are each optional
+        but at least one must resolve to a real file per species.
+    sim_s, sim_d, sim_S_crit, sim_ewalk, sim_carrying_capacity_params,
+    sim_presence_threshold, sim_init_year, sim_end_year:
+        ``method="sim"``-only. Passed straight through to
+        `PopulationSimulator`/`sim.run` — same meaning as that class's own
+        constructor arguments, plus `sim_init_year` (the founder/initial-
+        range raster's OWN calendar year — see `method`'s ``"sim"`` entry
+        above for why the simulation's TECHNICAL start year can differ)
+        and `sim_end_year` (last calendar year simulated through). All
+        eight are required.
+    sim_window_size, sim_sub_window, sim_overdispersion_cap, sim_solver,
+    sim_ram_fraction, sim_region_mask_padding:
+        ``method="sim"``-only. Forwarded to `PopulationSimulator`/`sim.run`
+        as `window_size`/`sub_window`/`overdispersion_cap`/`solver`/
+        `ram_fraction`/`region_mask_padding`. Defaults match the Castor
+        fiber reference script.
 
     Returns
     -------
     pandas.DataFrame
-        Table with learned parameters (``Ew``, ``n``, ``r``, ``Tg``).
+        Table with learned parameters (``Ew``, ``n``, ``r``, ``S_crit``).
     """
     if seed is not None:
         random.seed(seed)
@@ -508,8 +681,7 @@ def learn_over_folder(
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(seed)
 
-    if name_formats is None:
-        name_formats = ["XxX.tif", "XxX.tif", "XxX.tif"]
+    nf = _resolve_name_formats(name_formats)
 
     # Validate sampling-effort arguments
     use_per_species_effort = path_sampling_effort_groups is not None
@@ -523,6 +695,10 @@ def learn_over_folder(
             "Provide either path_taxa_ref (single raster) or both "
             "path_sampling_effort_groups and folder_sampling_effort."
         )
+    if folder_sampling_effort is not None and not os.path.isdir(folder_sampling_effort):
+        os.makedirs(folder_sampling_effort, exist_ok=True)
+        print(f"[batch] Created missing folder_sampling_effort: "
+              f"{folder_sampling_effort}")
 
     os.makedirs(output_folder, exist_ok=True)
     if save_fig_folder is None:
@@ -530,7 +706,8 @@ def learn_over_folder(
     os.makedirs(save_fig_folder, exist_ok=True)
 
     ordered, var_parts, file_lists = align_folders(
-        [folder_hs, folder_obs, folder_range], name_formats
+        [folder_hs, folder_obs, folder_range],
+        [nf["hs"], nf["obs"], nf["range"]],
     )
     mdd_table = pd.read_csv(path_mdd_table)
 
@@ -576,20 +753,37 @@ def learn_over_folder(
         print(f"[batch] test_species mode — running only: {names}")
 
     # --- Breeding-range setup (optional, per-species, NOT aligned via
-    # align_folders — see `folder_breeding_range`'s docstring for why) ---
-    if folder_breeding_range is not None:
-        breeding_range_map = _build_breeding_range_map(
-            folder_breeding_range, breeding_range_name_format,
+    # align_folders — see `folder_breeding_mask`'s docstring for why) ---
+    if folder_breeding_mask is not None:
+        breeding_mask_map = _build_breeding_mask_map(
+            folder_breeding_mask, nf["breeding_mask"],
         )
         species_keys = [var_parts[0][ordered[0][i]] for i in indices]
-        n_with = sum(1 for k in species_keys if k in breeding_range_map)
+        n_with = sum(1 for k in species_keys if k in breeding_mask_map)
         n_without = len(species_keys) - n_with
-        print(f"[batch] Breeding-range mode — {len(breeding_range_map)} rasters "
-              f"found in '{folder_breeding_range}'.")
+        print(f"[batch] Breeding-range mode — {len(breeding_mask_map)} rasters "
+              f"found in '{folder_breeding_mask}'.")
         print(f"[batch] species with breeding range: {n_with}  "
               f"species without: {n_without}")
     else:
-        breeding_range_map = {}
+        breeding_mask_map = {}
+
+    # --- `method="sim"`-only per-species folders (region mask, founder/
+    # initial range, reintroduction events) -- SAME optional, non-aligned
+    # lookup pattern as breeding_mask_map above, just for three more
+    # layers, each species matched via its own `nf[...]` name format.
+    region_mask_map = (
+        _build_breeding_mask_map(folder_region_mask, nf["region_mask"])
+        if folder_region_mask is not None else {}
+    )
+    init_range_map = (
+        _build_breeding_mask_map(folder_init_range, nf["init_range"])
+        if folder_init_range is not None else {}
+    )
+    introductions_map = (
+        _build_breeding_mask_map(folder_introductions, nf["introductions"])
+        if folder_introductions is not None else {}
+    )
 
     for i in indices:
         sp_name = var_parts[0][ordered[0][i]]
@@ -651,22 +845,79 @@ def learn_over_folder(
 
             # Resolve breeding-range raster for this species (optional —
             # no match just means unconstrained growth, see
-            # `folder_breeding_range`'s docstring).
-            breeding_range_path = breeding_range_map.get(sp_name)
-            if breeding_range_path is not None:
-                breeding_range = np.array(Image.open(breeding_range_path)).astype(float)
-                breeding_range = np.nan_to_num(breeding_range, nan=0.0)
+            # `folder_breeding_mask`'s docstring).
+            breeding_mask_path = breeding_mask_map.get(sp_name)
+            if breeding_mask_path is not None:
+                breeding_mask = np.array(Image.open(breeding_mask_path)).astype(float)
+                breeding_mask = np.nan_to_num(breeding_mask, nan=0.0)
                 # Normalise to [0, 1] — same convention as `cr` above —
                 # a mask should already be 0/1, but this is defensive
                 # against e.g. a raster stored as 0/255.
-                max_val = np.nanmax(breeding_range)
+                max_val = np.nanmax(breeding_mask)
                 if max_val > 0:
-                    breeding_range = np.clip(breeding_range / max_val, 0.0, 1.0)
+                    breeding_mask = np.clip(breeding_mask / max_val, 0.0, 1.0)
                 print(f"\033[93m  [{sp_name}] Breeding range: "
-                      f"'{os.path.basename(breeding_range_path)}' "
-                      f"({(breeding_range > 0).sum()} px >0).\033[0m")
+                      f"'{os.path.basename(breeding_mask_path)}' "
+                      f"({(breeding_mask > 0).sum()} px >0).\033[0m")
             else:
-                breeding_range = None
+                breeding_mask = None
+
+            if method == "sim":
+                # Bypasses calibration entirely -- no presence-threshold
+                # fit, no carrying-capacity fit, no calibration-site
+                # sampling/posteriors, none of which `run_species_simulation`
+                # needs (the caller supplies s/d/S_crit/ewalk/K(HS)/
+                # presence_threshold directly). Diagnostic/production-run-
+                # only, same as "compare"/"low_MPA_high" below -- doesn't
+                # touch `learned_parameters.csv`'s resume/skip bookkeeping.
+                required = dict(
+                    sim_s=sim_s, sim_d=sim_d, sim_S_crit=sim_S_crit,
+                    sim_ewalk=sim_ewalk,
+                    sim_carrying_capacity_params=sim_carrying_capacity_params,
+                    sim_presence_threshold=sim_presence_threshold,
+                    sim_init_year=sim_init_year, sim_end_year=sim_end_year,
+                )
+                missing = [k for k, v in required.items() if v is None]
+                if missing:
+                    raise ValueError(
+                        f"method='sim' requires all of {list(required)} -- "
+                        f"missing: {missing}."
+                    )
+                region_mask_path = region_mask_map.get(sp_name)
+                if region_mask_path is None:
+                    print(f"\033[91m  [{sp_name}] No region-mask raster "
+                          f"found in '{folder_region_mask}' -- skipping "
+                          f"(method='sim' requires one per species, see "
+                          f"`folder_region_mask`).\033[0m")
+                    continue
+                init_range_path = init_range_map.get(sp_name)
+                introductions_path = introductions_map.get(sp_name)
+                if init_range_path is None and introductions_path is None:
+                    print(f"\033[91m  [{sp_name}] No initial-range or "
+                          f"introductions raster found in "
+                          f"'{folder_init_range}'/'{folder_introductions}' "
+                          f"-- nothing to seed the simulation with, "
+                          f"skipping.\033[0m")
+                    continue
+                run_species_simulation(
+                    species_name=sp_name,
+                    hs_path=os.path.join(folder_hs, file_lists[0][ordered[0][i]]),
+                    region_mask_path=region_mask_path,
+                    s=sim_s, d=sim_d, S_crit=sim_S_crit, ewalk=sim_ewalk,
+                    carrying_capacity_params=sim_carrying_capacity_params,
+                    presence_threshold=sim_presence_threshold,
+                    init_year=sim_init_year, end_year=sim_end_year,
+                    breeding_mask_path=breeding_mask_path,
+                    init_range_path=init_range_path,
+                    introductions_path=introductions_path,
+                    region_mask_padding=sim_region_mask_padding,
+                    window_size=sim_window_size, sub_window=sim_sub_window,
+                    overdispersion_cap=sim_overdispersion_cap, solver=sim_solver,
+                    ram_fraction=sim_ram_fraction,
+                    output_folder=output_folder,
+                    plot=save_fig_folder is not None,
+                )
+                continue
 
             # Resolve sampling-effort raster for this species
             if use_per_species_effort:
@@ -745,7 +996,7 @@ def learn_over_folder(
                 verbose=False,
                 save_path=os.path.join(save_fig_folder, f"{sp_name}_calib_sites_map.png"),
                 species_name=sp_name,
-                breeding_range=breeding_range,
+                breeding_mask=breeding_mask,
             )
 
             # If the time budget expired without finding any site that passes
@@ -804,15 +1055,17 @@ def learn_over_folder(
                 estimate_low_map_high_from_posterior(
                     npz_path, hmean, mdd_val,
                     ci_mass=low_map_high_ci_mass,
+                    density_frac_of_map=low_map_high_density_frac_of_map,
                     map_grid_size=low_map_high_map_grid_size,
                     save_fig_folder=save_fig_folder,
                     species_name=sp_name,
+                    plot_3d=low_map_high_plot_3d,
                 )
                 continue
             elif method == "refine":
                 # init_point=None is allowed — refine_from_point itself
                 # then starts exactly at the (s, d, S_crit) box centre.
-                Ew, n, r, Tg, *_ = refine_from_point(
+                Ew, n, r, S_crit, *_ = refine_from_point(
                     calib_sites, hmean, mdd_val, posts_masks, (L, k, x0),
                     init_point=init_point,
                     max_iter=refine_max_iter,
@@ -878,9 +1131,9 @@ def learn_over_folder(
                 )
                 C_mala = (2.0 * np.exp(-1.11 / mdd_val)) / (1.0 + np.exp(-2.0 * 1.11 / mdd_val))
                 Ew = float(np.mean(C_mala / (hmean ** samples["r"] - C_mala)))
-                n, r, Tg = (float(np.mean(samples[k])) for k in ("n", "r", "Tg"))
+                n, r, S_crit = (float(np.mean(samples[k])) for k in ("n", "r", "S_crit"))
             else:
-                Ew, n, r, Tg, *_ = learn_dispersal_parameters(
+                Ew, n, r, S_crit, *_ = learn_dispersal_parameters(
                     calib_sites, hmean, mdd_val, posts_masks, (L, k, x0),
                     max_iter=max_iter,
                     all_together=all_together,
@@ -915,8 +1168,8 @@ def learn_over_folder(
                     precise_gridscan_Scrit_window=precise_gridscan_Scrit_window,
                 )
 
-            record.update({"ew": Ew, "n": n, "r": r, "tg": Tg})
-            print(f"  {sp_name}: Ew={Ew:.1f}  n={n:.1f}  r={r:.5f}  Tg={Tg:.2f}")
+            record.update({"ew": Ew, "n": n, "r": r, "s_crit": S_crit})
+            print(f"  {sp_name}: Ew={Ew:.1f}  n={n:.1f}  r={r:.5f}  S_crit={S_crit:.3f}")
 
         except Exception as e:
             # Save only the error message (not the full traceback) in the CSV,
@@ -940,6 +1193,202 @@ def _append_csv(path: str, record: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Classic single-parameter-set forward simulation (used by `BatchLearner.sim`)
+# ---------------------------------------------------------------------------
+
+def run_species_simulation(
+    species_name: str,
+    hs_path: str,
+    region_mask_path: str,
+    s: float,
+    d: float,
+    S_crit: float,
+    ewalk: float,
+    carrying_capacity_params: tuple,
+    presence_threshold: float,
+    init_year: int,
+    end_year: int,
+    breeding_mask_path: str | None = None,
+    init_range_path: str | None = None,
+    introductions_path: str | None = None,
+    region_mask_padding: int = 500,
+    window_size: int = 60,
+    sub_window: int = 31,
+    overdispersion_cap: float = 1e7,
+    solver: str = "sparse",
+    ram_fraction: float = 0.8,
+    output_folder: str | None = None,
+    plot: bool = True,
+):
+    """Run a classic single-parameter-set `PopulationSimulator` forward
+    simulation, built directly from the manual Castor fiber reference
+    script (see the module-level notes and `BatchLearner.sim`'s docstring
+    for the full parameter meaning and the "one year before the earliest
+    event" convention this uses).
+
+    Standalone function (`BatchLearner.sim` is a thin path-resolving
+    wrapper around this) so it can also be called directly when you already
+    have explicit file paths and don't need `BatchLearner`'s per-species
+    folder lookup at all.
+
+    Returns
+    -------
+    final : numpy.ndarray
+    sim : paradis.simulation.PopulationSimulator
+    """
+    from paradis.simulation import PopulationSimulator, show_expansion, show_final
+    from paradis.io import load_hs, load_obs
+    import rasterio
+
+    print(f"\033[96m[sim] {species_name}: loading HS ({hs_path})\033[0m")
+    hs = load_hs(hs_path)
+
+    sim = PopulationSimulator(
+        hs=hs,
+        s=s, d=d, S_crit=S_crit, ewalk=ewalk,
+        carrying_capacity_params=carrying_capacity_params,
+        solver=solver,
+        presence_threshold=presence_threshold,
+        ram_fraction=ram_fraction,
+        region_mask=region_mask_path,
+        region_mask_padding=region_mask_padding,
+    )
+    print(f"[sim] {species_name}: cropped shape={sim.hs.shape}  origin={sim._crop_origin}")
+
+    breeding_mask = None
+    if breeding_mask_path is not None:
+        from paradis.io import load_mask
+        breeding_mask = load_mask(breeding_mask_path)
+        print(f"[sim] {species_name}: breeding range loaded "
+              f"({(breeding_mask > 0).sum()} px)")
+
+    row0, col0 = sim._crop_origin
+    crop_h, crop_w = sim.hs.shape
+    additional_events: dict[int, list[tuple[int, int]]] = {}
+    intro_site_mask_c = np.zeros(sim.hs.shape, dtype=bool)
+
+    if introductions_path is not None:
+        with rasterio.open(introductions_path) as _src:
+            intro_raw = _src.read(1)
+        intro_events_full = []
+        for year in np.unique(intro_raw):
+            if 1 <= year <= 9999:
+                rows, cols = np.where(intro_raw == year)
+                for r, c in zip(rows, cols):
+                    intro_events_full.append((int(year), int(r), int(c)))
+        intro_events_full.sort()
+        n_outside = 0
+        for year, r, c in intro_events_full:
+            lr, lc = r - row0, c - col0
+            if not (0 <= lr < crop_h and 0 <= lc < crop_w):
+                n_outside += 1
+                continue
+            intro_site_mask_c[lr, lc] = True
+            additional_events.setdefault(year, []).append((lr, lc))
+        print(f"[sim] {species_name}: {len(intro_events_full)} reintroduction "
+              f"site-year events loaded"
+              + (f" ({n_outside} outside the cropped domain, skipped)" if n_outside else ""))
+
+    if init_range_path is not None:
+        init_distrib_seed = load_obs(init_range_path)
+        with rasterio.open(init_range_path) as _src:
+            init_raw = _src.read(1)
+        init_rows, init_cols = np.where(init_raw > 0)
+        n_added = n_overlap = n_outside = 0
+        for r, c in zip(init_rows, init_cols):
+            lr, lc = r - row0, c - col0
+            if not (0 <= lr < crop_h and 0 <= lc < crop_w):
+                n_outside += 1
+                continue
+            if intro_site_mask_c[lr, lc]:
+                n_overlap += 1
+                continue
+            additional_events.setdefault(init_year, []).append((lr, lc))
+            n_added += 1
+        print(f"[sim] {species_name}: {len(init_rows)} px in the initial-range "
+              f"raster -> {n_added} added as {init_year} events, "
+              f"{n_overlap} already a reintroduction site, "
+              f"{n_outside} outside the cropped domain.")
+
+    n_events_total = sum(len(v) for v in additional_events.values())
+    if not additional_events:
+        raise ValueError(
+            f"sim(): no seed events at all for '{species_name}' -- at least "
+            f"one of `init_range_path`/`introductions_path` must resolve to "
+            f"a real file with nonzero pixels."
+        )
+    print(f"[sim] {species_name}: {n_events_total} total point events across "
+          f"{len(additional_events)} year(s): {sorted(additional_events)}")
+
+    # Technical simulation start: one year before the EARLIEST event across
+    # both sources (reintroductions and the initial-range raster), matching
+    # the manual reference script's `init_year=1956` for a first 1957 event
+    # -- NOT necessarily `init_year` itself (that's the initial-range
+    # raster's OWN calendar year, which can be later than the earliest
+    # reintroduction, as for Castor fiber: init_year=1981 but events from
+    # 1957).
+    sim_start_year = min(additional_events) - 1
+    n_steps = end_year - sim_start_year
+    if n_steps <= 0:
+        raise ValueError(
+            f"sim(): end_year={end_year} is not after the technical start "
+            f"year {sim_start_year} (= earliest event {min(additional_events)} - 1)."
+        )
+    print(f"\n[sim] {species_name}: running {sim_start_year} -> {end_year}  "
+          f"({n_steps} steps) ...")
+
+    final = sim.run(
+        n_steps=n_steps,
+        init_distrib=np.zeros_like(sim.hs),
+        window_size=window_size,
+        sub_window=sub_window,
+        breeding_ground=breeding_mask,
+        init_year=sim_start_year,
+        additional_events=additional_events,
+        overdispersion_cap=overdispersion_cap,
+    )
+
+    if output_folder is not None:
+        os.makedirs(output_folder, exist_ok=True)
+        # Georeferenced .tif, not a bare .npy -- reuses region_mask_path's
+        # own CRS, shifted/cropped to match `final`'s actual cropped extent
+        # via `sim._crop_origin` (same (row0, col0) offset already used
+        # above to place additional_events in the cropped local frame), so
+        # the saved raster lines up pixel-for-pixel with `region_mask_path`
+        # and every other raster in this pipeline -- not just an arbitrary
+        # array dump.
+        with rasterio.open(region_mask_path) as _ref:
+            ref_crs = _ref.crs
+            ref_transform = _ref.transform
+        cropped_transform = ref_transform * rasterio.Affine.translation(col0, row0)
+
+        # Explicit filename: species + the exact (s, d, S_crit) parameter
+        # set + the simulated year span -- instead of a bare
+        # "{species}_final_distrib" that silently overwrites the previous
+        # run's output the next time this is called with different
+        # parameters.
+        fname = (
+            f"{species_name}_s{s:.4g}_d{d:.4g}_Scrit{S_crit:.4g}"
+            f"_{sim_start_year}-{end_year}.tif"
+        )
+        out_path = os.path.join(output_folder, fname)
+        out_profile = dict(
+            driver="GTiff", height=final.shape[0], width=final.shape[1],
+            count=1, dtype="float32", crs=ref_crs, transform=cropped_transform,
+            nodata=0.0, compress="lzw",
+        )
+        with rasterio.open(out_path, "w", **out_profile) as dst:
+            dst.write(final.astype("float32"), 1)
+        print(f"[sim] {species_name}: saved {out_path}")
+
+    if plot:
+        show_expansion(sim)
+        show_final(sim)
+
+    return final, sim
+
+
+# ---------------------------------------------------------------------------
 # Object-oriented wrapper
 # ---------------------------------------------------------------------------
 
@@ -948,6 +1397,43 @@ class BatchLearner:
 
     Parameters
     ----------
+    data_root:
+        Root folder holding every input by a FIXED, standard layout --
+        pass just this instead of every individual path, and each piece
+        is auto-resolved to ``{data_root}/<name>`` (below), same-species
+        alignment happening automatically since it's all driven by
+        `learn_over_folder`'s own per-species matching:
+
+        - ``hs/``, ``obs/``, ``current_range/`` -- mandatory.
+        - ``mdd_table.csv`` -- mandatory.
+        - ``taxa_ref.tif`` -- optional (skip if using per-species
+          `folder_sampling_effort` instead).
+        - ``breeding_mask/``, ``region_mask/``, ``init_range/``,
+          ``introductions/`` -- all optional, used by
+          `folder_breeding_mask`/`folder_region_mask`/
+          `folder_init_range`/`folder_introductions` respectively (the
+          last three only matter for ``method="sim"``). A missing
+          subfolder here just leaves that feature unused -- unless
+          `auto_create_data_root_folders` is True (the default), in which
+          case it's simply created (empty) instead, exactly like the
+          mandatory ones.
+        - ``outputs/`` -- used as `output_folder` if not given explicitly
+          (created automatically).
+
+        Any explicit argument below (`folder_hs`, `path_mdd_table`, ...)
+        WINS over its `data_root`-derived counterpart, so you can mix:
+        e.g. pass `data_root` for the standard layout but override just
+        `folder_breeding_mask` to point somewhere else.
+    auto_create_data_root_folders:
+        Only relevant with `data_root`. If ``True`` (default), any of the
+        seven `data_root` subfolders above that doesn't exist yet is
+        created (empty) automatically -- printed as it happens -- so you
+        can point `data_root` at a fresh directory and just start dropping
+        files in, without pre-creating the layout by hand. If ``False``,
+        reverts to the stricter behaviour: a missing MANDATORY subfolder
+        (``hs``/``obs``/``current_range``) raises immediately, a missing
+        OPTIONAL one is silently left unresolved (that feature unused for
+        every species, same as never having set it).
     folder_hs:
         Directory with HS rasters.
     folder_obs:
@@ -966,31 +1452,145 @@ class BatchLearner:
     >>> from paradis.learning import BatchLearner
     >>> bl = BatchLearner("HS/", "Obs/", "CR/", "taxa.tif", "mdd.csv", "output/")
     >>> df = bl.run()
+
+    With a standard `data_root` layout instead (see above):
+
+    >>> bl = BatchLearner(data_root="data/", method="sim", test_species="Castor_fiber",
+    ...                   sim_s=0.83, sim_d=9.46, sim_S_crit=0.96, sim_ewalk=10.71,
+    ...                   sim_carrying_capacity_params=(0.72, -16.27, 0.41),
+    ...                   sim_presence_threshold=0.63, sim_init_year=1981, sim_end_year=2016)
+    >>> df = bl.run()
     """
+
+    # Standard subfolder/file names looked up under `data_root` -- see
+    # `data_root`'s own docstring below for the full expected layout.
+    _DATA_ROOT_FOLDERS = {
+        "folder_hs": "hs",
+        "folder_obs": "obs",
+        "folder_range": "current_range",
+        "folder_breeding_mask": "breeding_mask",
+        "folder_region_mask": "region_mask",
+        "folder_init_range": "init_range",
+        "folder_introductions": "introductions",
+    }
+    _DATA_ROOT_MANDATORY = {"folder_hs", "folder_obs", "folder_range"}
+    _DATA_ROOT_FILES = {
+        "path_mdd_table": "mdd_table.csv",
+        "path_taxa_ref": "taxa_ref.tif",
+    }
 
     def __init__(
         self,
-        folder_hs: str,
-        folder_obs: str,
-        folder_range: str,
-        path_mdd_table: str,
-        output_folder: str,
+        folder_hs: str | None = None,
+        folder_obs: str | None = None,
+        folder_range: str | None = None,
+        path_mdd_table: str | None = None,
+        output_folder: str | None = None,
         path_taxa_ref: str | None = None,
         path_sampling_effort_groups: str | None = None,
         folder_sampling_effort: str | None = None,
-        folder_breeding_range: str | None = None,
+        folder_breeding_mask: str | None = None,
+        folder_region_mask: str | None = None,
+        folder_init_range: str | None = None,
+        folder_introductions: str | None = None,
+        data_root: str | None = None,
+        auto_create_data_root_folders: bool = True,
         **kwargs,
     ) -> None:
-        self.folder_hs = folder_hs
-        self.folder_obs = folder_obs
-        self.folder_range = folder_range
-        self.path_mdd_table = path_mdd_table
+        explicit = dict(
+            folder_hs=folder_hs, folder_obs=folder_obs, folder_range=folder_range,
+            folder_breeding_mask=folder_breeding_mask,
+            folder_region_mask=folder_region_mask,
+            folder_init_range=folder_init_range,
+            folder_introductions=folder_introductions,
+        )
+        explicit_files = dict(path_mdd_table=path_mdd_table, path_taxa_ref=path_taxa_ref)
+
+        if data_root is not None:
+            # Explicit arguments (above) always win -- `data_root` only
+            # fills in whatever wasn't given directly, so you can still
+            # override e.g. just `folder_breeding_mask` while letting
+            # everything else auto-resolve.
+            for attr, subdir in self._DATA_ROOT_FOLDERS.items():
+                if explicit[attr] is not None:
+                    continue
+                candidate = os.path.join(data_root, subdir)
+                if not os.path.isdir(candidate):
+                    if not auto_create_data_root_folders:
+                        if attr in self._DATA_ROOT_MANDATORY:
+                            raise ValueError(
+                                f"data_root='{data_root}' has no '{subdir}' "
+                                f"subfolder (expected for mandatory {attr}) "
+                                f"-- either create it, pass {attr} "
+                                f"explicitly, or leave "
+                                f"auto_create_data_root_folders=True."
+                            )
+                        continue  # optional folder, left unresolved (None)
+                    os.makedirs(candidate, exist_ok=True)
+                    print(f"[BatchLearner] Created missing folder: {candidate}")
+                explicit[attr] = candidate
+            for attr, fname in self._DATA_ROOT_FILES.items():
+                if explicit_files[attr] is not None:
+                    continue
+                candidate = os.path.join(data_root, fname)
+                if os.path.isfile(candidate):
+                    explicit_files[attr] = candidate
+                # path_taxa_ref may legitimately stay unset (per-species
+                # sampling effort used instead); path_mdd_table's absence
+                # is caught below since it's always required.
+            if output_folder is None:
+                output_folder = os.path.join(data_root, "outputs")
+
+        if explicit["folder_hs"] is None or explicit["folder_obs"] is None \
+                or explicit["folder_range"] is None:
+            raise ValueError(
+                "folder_hs/folder_obs/folder_range are required -- pass "
+                "them explicitly, or pass data_root pointing at a folder "
+                "containing 'hs'/'obs'/'current_range' subfolders."
+            )
+        if explicit_files["path_mdd_table"] is None:
+            raise ValueError(
+                "path_mdd_table is required -- pass it explicitly, or pass "
+                "data_root pointing at a folder containing 'mdd_table.csv'."
+            )
+        if output_folder is None:
+            raise ValueError("output_folder is required (or pass data_root).")
+
+        self.folder_hs = explicit["folder_hs"]
+        self.folder_obs = explicit["folder_obs"]
+        self.folder_range = explicit["folder_range"]
+        self.path_mdd_table = explicit_files["path_mdd_table"]
         self.output_folder = output_folder
-        self.path_taxa_ref = path_taxa_ref
+        self.path_taxa_ref = explicit_files["path_taxa_ref"]
         self.path_sampling_effort_groups = path_sampling_effort_groups
         self.folder_sampling_effort = folder_sampling_effort
-        self.folder_breeding_range = folder_breeding_range
+        self.folder_breeding_mask = explicit["folder_breeding_mask"]
+        # Used only by `method="sim"` (a classic single-parameter-set
+        # forward run, e.g. to reproduce a manual `PopulationSimulator`
+        # script like the Castor fiber one) -- NOT by the other methods
+        # (the MALA/grid-scan calibration pipeline), which never need a
+        # region mask, a founder/initial range, or reintroduction events.
+        # All optional and independent of each other: a species with no
+        # reintroduction history simply gets an empty `additional_events`
+        # for that part (see `learn_over_folder`'s `method` docstring).
+        self.folder_region_mask = explicit["folder_region_mask"]
+        self.folder_init_range = explicit["folder_init_range"]
+        self.folder_introductions = explicit["folder_introductions"]
         self._kwargs = kwargs
+
+        # Explicit device print at BatchLearner construction time (on top of
+        # the one already printed once at `import paradis` time) -- useful
+        # on a cluster job where the import-time message can be far above
+        # in the log, or where you specifically want to confirm what THIS
+        # BatchLearner run will actually compute on.
+        from paradis._device import device as _device
+        if _device.type == "cuda":
+            import torch as _torch
+            _idx = _torch.cuda.current_device()
+            print(f"[BatchLearner] Using GPU: {_torch.cuda.get_device_name(_idx)} "
+                  f"(cuda:{_idx})")
+        else:
+            print("[BatchLearner] No GPU detected -- running on CPU.")
 
     def run(self) -> pd.DataFrame:
         """Execute the batch learning pipeline."""
@@ -1003,7 +1603,10 @@ class BatchLearner:
             path_taxa_ref=self.path_taxa_ref,
             path_sampling_effort_groups=self.path_sampling_effort_groups,
             folder_sampling_effort=self.folder_sampling_effort,
-            folder_breeding_range=self.folder_breeding_range,
+            folder_breeding_mask=self.folder_breeding_mask,
+            folder_region_mask=self.folder_region_mask,
+            folder_init_range=self.folder_init_range,
+            folder_introductions=self.folder_introductions,
             **self._kwargs,
         )
 

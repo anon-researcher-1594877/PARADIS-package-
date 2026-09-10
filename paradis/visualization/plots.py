@@ -294,7 +294,7 @@ def plot_parameter_space_3d(
         scene=dict(
             xaxis_title="r (risk scaling)",
             yaxis_title="n (risk avoidance)",
-            zaxis_title="Tg (growth time)",
+            zaxis_title="S_crit (survival threshold)",
         ),
         title="Dispersal parameter space",
         width=900, height=700,

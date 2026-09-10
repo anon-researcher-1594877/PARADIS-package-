@@ -16,7 +16,6 @@ from paradis.core.growth import (
     GrowthModel,
     carrying_capacity_from_hs,
     equilibrium_distribution,
-    growth_coefficient,
     growth_step,
 )
 
@@ -38,6 +37,5 @@ __all__ = [
     "GrowthModel",
     "carrying_capacity_from_hs",
     "equilibrium_distribution",
-    "growth_coefficient",
     "growth_step",
 ]

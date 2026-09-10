@@ -267,12 +267,15 @@ def estimate_carrying_capacity(
     params = fit_logistic(hs_vals, centers, sigmas, verbose=False)
     L, k, x0 = params["L"], params["k"], params["x0"]
 
+    ab_vals_arr = np.array(ab_vals)
     bin_data = dict(
         hs_vals = np.array(hs_vals),
-        ab_vals = np.array(ab_vals),
+        ab_vals = ab_vals_arr,
         ci_lo   = np.array(ci_lo),
         ci_hi   = np.array(ci_hi),
         n_pts   = list(n_pts),
+        min_maxposterior = float(np.min(ab_vals_arr)),
+        min_maxposterior_hs = float(np.array(hs_vals)[np.argmin(ab_vals_arr)]),
     )
 
     if plot or save_path is not None:
@@ -321,17 +324,30 @@ def plot_carrying_capacity(
     show:
         If True, call plt.show().
     """
-    print(f"\033[92m[{species_name or 'species'}] carrying capacity: "
-          f"L={L:.6g}  k={k:.6g}  x0={x0:.6g}\033[0m")
-
     hs_vals = bin_data["hs_vals"]
     ab_vals = bin_data["ab_vals"]
     ci_lo   = bin_data["ci_lo"]
     ci_hi   = bin_data["ci_hi"]
     n_pts   = bin_data["n_pts"]
 
+    # Lowest per-HS-bin posterior mode ("max a posteriori") across all HS
+    # chunks -- a candidate lower bound for K, independent of the logistic
+    # fit itself (unlike L, which is the fitted asymptote).
+    min_maxposterior = float(np.min(ab_vals))
+    min_maxposterior_hs = float(hs_vals[np.argmin(ab_vals)])
+
+    print(f"\033[92m[{species_name or 'species'}] carrying capacity: "
+          f"L={L:.6g}  k={k:.6g}  x0={x0:.6g}  "
+          f"min_maxposterior={min_maxposterior:.6g} (at HS={min_maxposterior_hs:.3g})\033[0m")
+
     X = np.linspace(0, 1, 100)
     Y = logistic(X, L, k, x0)
+
+    # Computed here (BEFORE plotting the per-bin `n_pts` labels below) so
+    # those labels can be skipped when they'd land outside the y-range --
+    # see the full rationale in the ylim block further down.
+    K1 = float(logistic(np.array([1.0]), L, k, x0)[0])
+    y_top = 1.5 * K1 if np.isfinite(K1) and K1 > 0 else float(np.max(ab_vals))
 
     plt.figure()
     plt.scatter(hs_vals, ab_vals, label="Mode", color="steelblue")
@@ -339,12 +355,20 @@ def plot_carrying_capacity(
         plt.plot([hs_vals[i], hs_vals[i]], [ci_lo[i], ci_hi[i]],
                  color="grey", linestyle="--",
                  label="95 % CI" if i == 0 else "")
-        plt.text(hs_vals[i], ab_vals[i], str(n_pts[i]), fontsize=7)
+        # Skip the n_pts label when the mode itself sits above the visible
+        # range -- it would otherwise render outside the axes (or get
+        # silently clipped), which is confusing rather than informative;
+        # the upward arrow already signals "there's more data here".
+        if ab_vals[i] <= y_top:
+            plt.text(hs_vals[i], ab_vals[i], str(n_pts[i]), fontsize=7)
     plt.plot(X, Y, color="red", alpha=0.7, linewidth=2.5, label="Fitted logistic")
 
     if presence_threshold is not None:
         plt.axhline(presence_threshold, color="green", linestyle="--",
                     label=f"Presence threshold ({presence_threshold:.3f})")
+
+    plt.axhline(min_maxposterior, color="black", linestyle=":",
+                label=f"Min. max-posterior ({min_maxposterior:.3f} at HS={min_maxposterior_hs:.2g})")
 
     plt.xlabel("Habitat Suitability")
     plt.ylabel(r"Relative abundance $\frac{N_{sp}}{N_{taxa}}$")
@@ -352,6 +376,32 @@ def plot_carrying_capacity(
     plt.legend()
     plt.grid(linestyle="--", alpha=0.3, color="grey")
     plt.xlim(0, 1)
+
+    # Fix the y-range to ~1.5x K(HS=1) -- the logistic's own value at HS=1,
+    # NOT necessarily L itself (only equal when x0 is far enough from 0 --
+    # see the Kmax note elsewhere in this codebase) -- so the FIT stays the
+    # readable focal point of the plot. Deliberately NOT stretched to fit
+    # every data point/CI: a handful of chunks can sit far above the fit
+    # (small-n bins, sampling noise) and letting those drive the axis would
+    # squash the logistic curve itself into an unreadable sliver. Points
+    # that fall outside this range are instead flagged with a small upward
+    # arrow (see below) rather than silently cropped. (`K1`/`y_top` were
+    # already computed above, before the per-bin labels were drawn.)
+    plt.ylim(0, y_top)
+
+    # Small black upward arrows for any chunk whose mode (or CI whisker)
+    # actually extends above `y_top` -- signals "there's more data up
+    # here" without letting it distort the y-scale itself.
+    ax = plt.gca()
+    arrow_y0 = y_top * 0.90
+    arrow_y1 = y_top * 0.985
+    for i in range(len(hs_vals)):
+        if ab_vals[i] > y_top or ci_hi[i] > y_top:
+            ax.annotate(
+                "", xy=(hs_vals[i], arrow_y1), xytext=(hs_vals[i], arrow_y0),
+                arrowprops=dict(arrowstyle="-|>", color="black", linewidth=1.3),
+                zorder=10,
+            )
 
     if save_path is not None:
         plt.savefig(save_path, dpi=200)

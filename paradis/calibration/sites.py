@@ -83,7 +83,7 @@ def spatial_min_distance_filter(
 # Site quality assessment
 # ---------------------------------------------------------------------------
 
-def _overlay_breeding_range(ax, breeding_map, alpha: float = 0.7) -> None:
+def _overlay_breeding_mask(ax, breeding_map, alpha: float = 0.7) -> None:
     """Overlay a red, breeding-range-proportional-alpha layer on *ax* —
     fully transparent where `breeding_map == 0` (colormap underneath
     stays fully visible), red at `alpha` where `breeding_map == 1`
@@ -313,7 +313,7 @@ def sample_calibration_sites(
     verbose: bool = False,
     save_path: str | None = None,
     species_name: str | None = None,
-    breeding_range: np.ndarray | None = None,
+    breeding_mask: np.ndarray | None = None,
 ) -> "CalibrationSites":
     """Sample and select calibration sites from the study region.
 
@@ -330,7 +330,7 @@ def sample_calibration_sites(
         Species observation count map.
     taxa_ref:
         Reference-taxa observation count map.
-    breeding_range:
+    breeding_mask:
         Optional full-extent breeding-range mask (same shape as `hs`,
         values in ``[0, 1]``). If given, cropped at each FINALLY-accepted
         site's window (same bounds as `hs`/`obs`/`taxa_ref`) and stored on
@@ -446,8 +446,8 @@ def sample_calibration_sites(
     # calibration.
     breeding_maps: list = []
     for x0, y0 in best[3]:
-        if breeding_range is not None:
-            breeding_maps.append(breeding_range[x0 - half:x0 + half, y0 - half:y0 + half])
+        if breeding_mask is not None:
+            breeding_maps.append(breeding_mask[x0 - half:x0 + half, y0 - half:y0 + half])
         else:
             breeding_maps.append(None)
 
@@ -455,7 +455,7 @@ def sample_calibration_sites(
         # ── Overview: geographical location of all selected windows on the HS map ──
         # A second panel showing the breeding range on its own is added
         # whenever a breeding range was supplied.
-        if breeding_range is not None:
+        if breeding_mask is not None:
             fig_overview, (ax_overview, ax_breeding) = plt.subplots(1, 2, figsize=(20, 10))
         else:
             fig_overview, ax_overview = plt.subplots(figsize=(10, 10))
@@ -482,8 +482,8 @@ def sample_calibration_sites(
         ax_overview.legend(loc="upper right", markerscale=3, fontsize=8)
         ax_overview.set_title(f"{len(best[3])} calibration sites selected – {species_name or ''}")
 
-        if breeding_range is not None:
-            im_breeding = ax_breeding.imshow(breeding_range, cmap="viridis")
+        if breeding_mask is not None:
+            im_breeding = ax_breeding.imshow(breeding_mask, cmap="viridis")
             fig_overview.colorbar(im_breeding, ax=ax_breeding, label="Breeding range", shrink=0.8)
             ax_breeding.set_title(f"Breeding range – {species_name or ''}")
 
@@ -529,7 +529,7 @@ class CalibrationSites:
         `hs_maps` — or ``None`` at a given index if no breeding range was
         supplied for that site (unconstrained growth there, matching the
         behaviour before this attribute existed). See
-        `sample_calibration_sites`'s `breeding_range` parameter.
+        `sample_calibration_sites`'s `breeding_mask` parameter.
     """
 
     hs_maps: List[np.ndarray] = field(default_factory=list)

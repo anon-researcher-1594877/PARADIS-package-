@@ -58,7 +58,7 @@ from paradis.core.growth import equilibrium_distribution, seed_mask
 def _build_breeding_masks_list(calibration_sites, n_sites_total: int) -> list:
     """Per-site `breeding_ground` masks for `cost_function`/
     `equilibrium_distribution`, built from `calibration_sites.breeding_maps`
-    (see `sample_calibration_sites`'s `breeding_range` parameter) — one
+    (see `sample_calibration_sites`'s `breeding_mask` parameter) — one
     entry per site, `None` wherever that site has no breeding-range window
     (unconstrained growth there, identical to the behaviour before this
     parameter existed). Safe against `CalibrationSites` instances built
@@ -208,23 +208,23 @@ def _s_center(hs_bar: float, delta_h_bar: float) -> float:
 
 
 def _Scrit_box() -> tuple[float, float]:
-    """Fixed box `(0.5, 1.0)` for the learning/sampling variable `S_crit`
+    """Fixed box `(1/3, 1.0)` for the learning/sampling variable `S_crit`
     — the critical PER-DISPERSAL-STEP survival probability below which NO
-    growth rate `g` in `(0, 1)` can sustain a locally-growing population.
-    This is the module's growth-timescale learning axis, replacing both
-    the old geometrically-motivated `ell`/`_ell_box` (characteristic
-    penetration distance) AND an intermediate `x_crit = h_crit**r`
-    candidate (see the derivation below for why that candidate was
-    abandoned).
+    growth rate `g` can sustain a locally-growing population. This is the
+    module's growth-timescale learning axis, replacing both the old
+    geometrically-motivated `ell`/`_ell_box` (characteristic penetration
+    distance) AND an intermediate `x_crit = h_crit**r` candidate (see the
+    derivation below for why that candidate was abandoned). `g` (NOT
+    `Tg`/`a` — those are not used anywhere in this package any more) is
+    the model's actual growth coefficient, used directly in
+    `~paradis.core.growth.equilibrium_distribution`/`growth_step`.
 
     Derivation. Consider a locally-homogeneous patch with per-step
     survival probability `S` (whatever its origin — `S` itself, not a
     habitat-quality proxy for it, is the quantity that actually enters
-    the invasion criterion below). With growth coefficient `g = (1 - a)`
-    (`a = 0.05**(1/Tg)`, so `g` ranges over `(0, 1)` as `Tg` ranges over
-    `(0, inf)`), a population can grow from rare in this patch iff the
-    combined dispersal-then-growth map, linearised near zero density, has
-    slope > 1:
+    the invasion criterion below). A population can grow from rare in
+    this patch iff the combined dispersal-then-growth map, linearised
+    near zero density, has slope > 1:
 
         S*(1 + g) > 1
 
@@ -237,22 +237,31 @@ def _Scrit_box() -> tuple[float, float]:
     backwards):
 
         g(S_crit) = (1 - S_crit) / S_crit = 1/S_crit - 1     [inverse formula]
-        a(S_crit) = 1 - g(S_crit) = (2*S_crit - 1) / S_crit
-        Tg(S_crit) = ln(20) / (-ln(a(S_crit)))
 
-    Requiring `g in (0, 1)` (the model's own inherent constraint on `g`,
-    since `Tg in (0, inf)` with `Tg` strictly finite and positive) pins
-    down the valid domain for `S_crit`: `g -> 0+` gives `S_crit -> 1-`
-    (the `Tg -> inf` limit — infinitely slow growth needs an arbitrarily
-    high per-step survival probability to persist), and `g -> 1-` (the
-    fastest possible growth, `Tg -> 0+`, `a -> 0+`) gives the domain's
-    other edge, `S_crit -> 1/(1+1) = 0.5+`. So:
+    The upper bound on `g` (hence the lower bound on `S_crit`) comes from
+    the discrete logistic recursion's own dynamical stability, NOT from
+    any Tg-based parametrisation: `Un_new = Un + g*Un*(1-Un/K)` has a
+    fixed point at `Un=K`, with linear stability `f'(K) = 1 - g`, so
+    `|f'(K)| < 1` (the fixed point genuinely attracting, no
+    oscillation/period-doubling) requires `0 < g < 2`. `g -> 0+` gives
+    `S_crit -> 1-` (infinitesimally slow growth needs an arbitrarily high
+    per-step survival probability to persist), and `g -> 2-` (the
+    dynamical-stability limit) gives `S_crit -> 1/(1+2) = 1/3+`. So:
 
-        S_crit in (0.5, 1.0)
+        S_crit in (1/3, 1.0)
+
+    `g in [2, 3)` still converges (oscillating: period-2, then a
+    period-doubling cascade toward chaos) but is excluded here to keep
+    the sampled region strictly within the well-behaved, non-oscillatory
+    regime; `g >= 3` makes the UNCLAMPED recursion diverge outright (the
+    package clamps density to `[0, 1]` regardless, so this never produces
+    `NaN`/`inf` in practice, but is a numerically nonsensical regime to
+    sample from — a population violently oscillating between 0 and
+    saturation every single step is not a meaningful biological answer).
 
     Crucially — and this is the whole point of using `S_crit` rather than
     `x_crit = h_crit**r` (an earlier candidate that was tried and
-    abandoned) — this box is a FIXED UNIVERSAL CONSTANT, `(0.5, 1.0)`,
+    abandoned) — this box is a FIXED UNIVERSAL CONSTANT, `(1/3, 1.0)`,
     the SAME for every species, with NO dependency whatsoever on `mdd`,
     `r`, or `n`. The `x_crit` candidate's box was `(x_min, 1.0)` with
     `x_min = 2*C / (1 + C)`, `C = 2*exp(-alpha/mdd) / (1 + exp(-2*alpha/mdd))`
@@ -262,7 +271,7 @@ def _Scrit_box() -> tuple[float, float]:
     `mdd=73.33`: the resulting `x_crit` box had width ~1e-5, making the
     tanh-bounded raw parameter's usable range (and any grid/MCMC sampling
     resolution within it) absurdly, uselessly narrow. `S_crit` sidesteps
-    this failure mode entirely — its box is always exactly `(0.5, 1.0)`,
+    this failure mode entirely — its box is always exactly `(1/3, 1.0)`,
     well-scaled and numerically benign regardless of species, since it
     comes directly from the model's `S*(1+g)>1` invasion/viability
     dynamics rather than from any per-species habitat-quality quantity.
@@ -271,9 +280,9 @@ def _Scrit_box() -> tuple[float, float]:
 
     Returns
     -------
-    (0.5, 1.0) : tuple[float, float]
+    (1/3, 1.0) : tuple[float, float]
     """
-    return 0.5, 1.0
+    return 1.0 / 3.0, 1.0
 
 
 def _Scrit_to_Tg(S_crit):
@@ -559,7 +568,7 @@ def cost_function(
     calibration_sites:
         :class:`~paradis.calibration.sites.CalibrationSites` instance.
     params:
-        ``(n_scaled, r_scaled, Tg_scaled)`` – current parameter values.
+        ``(n_scaled, r_scaled, S_crit_scaled)`` – current parameter values.
     batch_indices:
         Indices of calibration sites to include in this gradient step.
     carrying_capacity_params:
@@ -570,7 +579,8 @@ def cost_function(
         Precomputed adjacency matrices, one per calibration site.
     K_is_list:
         Precomputed flat K_is tensors, one per calibration site.
-        (Only the growth coefficient `a = 0.05^(1/Tg)` is recomputed here.)
+        (Only the growth coefficient `g = 1/S_crit - 1` is recomputed here
+        — no `Tg`/`a` intermediate.)
     plot, verbose:
         Diagnostic flags.
     adaptive, convergence_ratio_tol, max_iter:
@@ -578,11 +588,10 @@ def cost_function(
         Default ``adaptive=True``: iterate until the equilibrium has
         genuinely converged (change-ratio < `convergence_ratio_tol`,
         default 0.01%) rather than a fixed 10 steps — this closes a real
-        artifact where a large Tg (slow dynamics, growth coefficient
-        `1-linear_growth` shrinking toward 0) could stop well short of a
-        true equilibrium, appearing to fit better than it genuinely does.
-        Confirmed empirically: forcing true convergence flipped a
-        previously "better" large-Tg point to substantially worse
+        artifact where a small `g` (slow dynamics) could stop well short
+        of a true equilibrium, appearing to fit better than it genuinely
+        does. Confirmed empirically: forcing true convergence flipped a
+        previously "better" slow-growth point to substantially worse
         (mean cost 0.83 vs 0.51 across sites) — i.e. this was pure
         artifact exploitation, not genuine fit. Costs more compute
         (variable extra iterations, worst where the artifact would have
@@ -593,7 +602,7 @@ def cost_function(
         actually used by `equilibrium_distribution` to reach convergence
         (only meaningful with ``adaptive=True`` — with ``adaptive=False``
         every site trivially uses the fixed `n_iter`). Useful for
-        diagnosing whether the current (n, r, Tg) is landing in a
+        diagnosing whether the current (n, r, S_crit) is landing in a
         slow-to-converge region (e.g. near-singular kernel inversion),
         which directly costs wall-clock time per `cost_function` call
         regardless of how many outer SGD steps are taken.
@@ -625,7 +634,7 @@ def cost_function(
         NaN HS or zero selected locations are simply absent from it).
     """
     posteriors, selected_masks = posteriors_and_masks
-    n_param, r_param, Tg_param = params
+    n_param, r_param, Scrit_param = params
     L, k, x0 = carrying_capacity_params
     size_site = calibration_sites.hs_maps[0].shape[0]
 
@@ -661,9 +670,8 @@ def cost_function(
     denom = torch.where(denom >= 0, denom.clamp(min=1e-4), denom.clamp(max=-1e-4))
     Ew  = torch.clamp(C / denom, min=1e-3, max=1e4)
 
-    # Growth coefficient from learned Tg (trivial recomputation)
-    pt05 = torch.tensor(0.05, device=device, dtype=torch.float32)
-    linear_growth = pt05 ** (1.0 / Tg_param)
+    # Growth coefficient directly from learned S_crit -- no Tg/a intermediate.
+    g_param = 1.0 / Scrit_param - 1.0
 
     total_cost = torch.tensor(0.0, dtype=torch.float32)
     iters_per_site: list[int] = []
@@ -689,7 +697,7 @@ def cost_function(
         )
         if return_iters:
             N_inf, changes = equilibrium_distribution(
-                K_is.to(device), Kd, linear_growth, plot=plot, verbose=verbose,
+                K_is.to(device), Kd, g_param, plot=plot, verbose=verbose,
                 adaptive=adaptive, convergence_ratio_tol=convergence_ratio_tol,
                 max_iter=max_iter, return_history=True,
                 seed_mask_override=seed_mask_override,
@@ -698,7 +706,7 @@ def cost_function(
             iters_per_site.append(len(changes))
         else:
             N_inf = equilibrium_distribution(
-                K_is.to(device), Kd, linear_growth, plot=plot, verbose=verbose,
+                K_is.to(device), Kd, g_param, plot=plot, verbose=verbose,
                 adaptive=adaptive, convergence_ratio_tol=convergence_ratio_tol,
                 max_iter=max_iter,
                 breeding_ground=breeding_ground,
@@ -711,7 +719,7 @@ def cost_function(
             plt.imshow(N_inf.cpu().detach().numpy(), cmap="viridis")
             plt.colorbar()
             plt.title(f"Equilibrium – site {site_idx}  n={n_param.item():.0f}"
-                      f"  r={r_param.item():.5f}  Tg={Tg_param.item():.2f}")
+                      f"  r={r_param.item():.5f}  S_crit={Scrit_param.item():.3f}")
             plt.show()
 
         # Pixels where we have reference-taxa data and the selected mask
@@ -761,22 +769,20 @@ def _per_site_costs(
     hard sites and sits near the *top* of where most mini-batch draws land,
     while the median reflects the "typical" site's cost.
 
-    `theta` is `(n_val, r_val, Scrit_val)` — `Scrit_val` is converted to an
-    actual `Tg` value (via `_Scrit_to_Tg`) right before being handed to
-    `cost_function`, which still expects a `Tg` value (see the module-level
-    growth-timescale note).
+    `theta` is `(n_val, r_val, Scrit_val)` — handed straight to
+    `cost_function`, which itself expects `(n, r, S_crit)` directly, no
+    `Tg`/`a` intermediate.
     """
     n_val, r_val, Scrit_val = theta
-    tg_val = _Scrit_to_Tg(Scrit_val)
     costs = []
     with torch.no_grad():
         n_p  = torch.tensor(n_val,  dtype=torch.float32, device=device)
         r_p  = torch.tensor(r_val,  dtype=torch.float32, device=device)
-        tg_p = torch.tensor(tg_val, dtype=torch.float32, device=device)
+        scrit_p = torch.tensor(Scrit_val, dtype=torch.float32, device=device)
         for site_idx in range(n_sites_total):
             c = cost_function(
                 mdd, posteriors_and_masks, calibration_sites,
-                (n_p, r_p, tg_p), [site_idx],
+                (n_p, r_p, scrit_p), [site_idx],
                 carrying_capacity_params, hmean, adj_mats, K_is_list,
                 plot=False, verbose=False,
                 seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -813,18 +819,14 @@ def _full_dataset_grad(
     Each chunk's graph is freed before the next one is built.
 
     `theta` is `(n_val, r_val, Scrit_val)` — the autograd LEAF is `Scrit_p`
-    (the physical penetration-distance variable), and `Scrit_p` is fed
-    through `_Scrit_to_Tg(Scrit_p)` (kept inside the autograd graph, not
-    detached) before being handed to `cost_function`, so backprop through
-    that conversion gives `Scrit_p.grad = d(loss)/d(S_crit)` directly — NOT
-    `d(loss)/d(Tg)` — matching `S_crit`, not `Tg`, being the actual learned/
-    sampled variable now.
+    (the physical penetration-distance variable), handed DIRECTLY to
+    `cost_function` (no `Tg`/`a` intermediate), so backprop gives
+    `Scrit_p.grad = d(loss)/d(S_crit)` directly.
     """
     n_val, r_val, Scrit_val = theta
     n_p   = torch.tensor(n_val,   requires_grad=True, dtype=torch.float32, device=device)
     r_p   = torch.tensor(r_val,   requires_grad=True, dtype=torch.float32, device=device)
     Scrit_p = torch.tensor(Scrit_val, requires_grad=True, dtype=torch.float32, device=device)
-    tg_p  = _Scrit_to_Tg(Scrit_p)
 
     all_indices = list(range(n_sites_total))
     total_loss_val = 0.0
@@ -835,7 +837,7 @@ def _full_dataset_grad(
         weight = len(chunk) / n_sites_total
         partial = cost_function(
             mdd, posteriors_and_masks, calibration_sites,
-            (n_p, r_p, tg_p), chunk,
+            (n_p, r_p, Scrit_p), chunk,
             carrying_capacity_params, hmean, adj_mats, K_is_list,
             plot=False, verbose=False,
             seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -848,7 +850,7 @@ def _full_dataset_grad(
             torch.cuda.empty_cache()
 
     grad = [n_p.grad.item(), r_p.grad.item(), Scrit_p.grad.item()]
-    del n_p, r_p, Scrit_p, tg_p
+    del n_p, r_p, Scrit_p
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     return total_loss_val, grad
@@ -953,10 +955,9 @@ def _full_dataset_grad_sd(
         log_n_s, log_r_s = _sd_to_logn_logr(s_p, d_p)
         n_s  = 10.0 ** log_n_s
         r_s  = 10.0 ** log_r_s
-        tg_s = _Scrit_to_Tg(Scrit_p)
         partial = cost_function(
             mdd, posteriors_and_masks, calibration_sites,
-            (n_s, r_s, tg_s), chunk,
+            (n_s, r_s, Scrit_p), chunk,
             carrying_capacity_params, hmean, adj_mats, K_is_list,
             plot=False, verbose=False,
             seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -964,7 +965,7 @@ def _full_dataset_grad_sd(
         scaled = partial * weight
         scaled.backward(retain_graph=True)
         total_loss_val += scaled.item()
-        del n_s, r_s, tg_s, partial, scaled
+        del n_s, r_s, partial, scaled
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
@@ -1505,7 +1506,7 @@ def learn_dispersal_parameters(
     # ------------------------------------------------------------------
     # Optimisation
     # ------------------------------------------------------------------
-    all_costs, all_full_cost, all_n, all_r, all_tg, all_Scrit = [], [], [], [], [], []
+    all_costs, all_full_cost, all_n, all_r, all_Scrit = [], [], [], [], []
     all_site_cost_hist = []   # per-run list of (step, [21 per-site costs])
     n_runs = len(learning_runs)
     print("\033[93m[Optimization steps will be printed every 100 steps ... please wait]\033[0m")
@@ -1566,16 +1567,15 @@ def learn_dispersal_parameters(
         # params[0] = s_raw (informative axis, ~log10(n*r)),
         # params[1] = d_raw (near-flat axis, ~log10(n/r)),
         # params[2] = Scrit_raw (tanh-bounded to the S_crit box, see
-        # `_Scrit_box` above — converted to actual Tg via `_Scrit_to_Tg`
-        # immediately before being handed to `cost_function`, which still
-        # expects an actual Tg value).
+        # `_Scrit_box` above — handed directly to `cost_function`, no
+        # Tg/a intermediate).
         params = [
             torch.nn.Parameter(torch.tensor(s_raw_init,   device=device, dtype=torch.float32, requires_grad=True)),
             torch.nn.Parameter(torch.tensor(d_raw_init,   device=device, dtype=torch.float32, requires_grad=True)),
             torch.nn.Parameter(torch.tensor(Scrit_raw_init, device=device, dtype=torch.float32, requires_grad=True)),
         ]
         optimizer = torch.optim.Adam(params)
-        losses, ln, lr, ltg, lScrit = [], [], [], [], []
+        losses, ln, lr, lScrit = [], [], [], []
         full_cost_hist: list[tuple[int, float, float]] = []   # (step, mean, median)
         site_cost_hist: list[tuple[int, list]] = []   # (step, [21 per-site costs])
 
@@ -1622,10 +1622,9 @@ def learn_dispersal_parameters(
                     n_s  = 10.0 ** log_n_s
                     r_s  = 10.0 ** log_r_s
                     Scrit_s = _tanh_rescale(Scrit_raw, SCRIT_MIN, SCRIT_MAX)
-                    tg_s = _Scrit_to_Tg(Scrit_s)
                     site_loss, site_iters = cost_function(
                         mdd, posteriors_and_masks, calibration_sites,
-                        (n_s, r_s, tg_s), [site_idx],
+                        (n_s, r_s, Scrit_s), [site_idx],
                         carrying_capacity_params, hmean, adj_mats, K_is_list,
                         plot=False, verbose=verbose, return_iters=True,
                         seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -1671,23 +1670,21 @@ def learn_dispersal_parameters(
                 # near-degenerate n<->r trade-off at fixed selectivity.
                 # Tg: tanh-bounded via S_crit (see `_Scrit_box` above) instead
                 # of Tg directly — S_crit is tanh-bounded to
-                # [SCRIT_MIN, SCRIT_MAX], then converted to an actual Tg value
-                # via `_Scrit_to_Tg` right before being handed to
-                # `cost_function`.
+                # [SCRIT_MIN, SCRIT_MAX], handed straight to `cost_function`
+                # (no `Tg`/`a` intermediate).
                 s_s  = _tanh_rescale(s_raw, smin, smax)
                 d_s  = _tanh_rescale(d_raw, dmin, dmax)
                 log_n_s, log_r_s = _sd_to_logn_logr(s_s, d_s)
                 n_s  = 10.0 ** log_n_s
                 r_s  = 10.0 ** log_r_s
                 Scrit_s = _tanh_rescale(Scrit_raw, SCRIT_MIN, SCRIT_MAX)
-                tg_s = _Scrit_to_Tg(Scrit_s)
 
                 if batch_chunk_size is not None and batch_chunk_size < len(batch):
                     # Memory-bounded path — same chunked-accumulation
                     # technique as `_full_dataset_grad`: split the batch,
                     # accumulate gradients across several smaller
                     # `.backward()` calls instead of holding every site's
-                    # dense graph in memory at once. n_s/r_s/tg_s are
+                    # dense graph in memory at once. n_s/r_s/Scrit_s are
                     # recomputed FRESH from (s_raw, d_raw, Scrit_raw) inside
                     # each chunk (cheap scalar ops) rather than reusing the
                     # single copy computed above — reusing it would share
@@ -1707,10 +1704,9 @@ def learn_dispersal_parameters(
                         n_c  = 10.0 ** log_n_c
                         r_c  = 10.0 ** log_r_c
                         Scrit_c = _tanh_rescale(Scrit_raw, SCRIT_MIN, SCRIT_MAX)
-                        tg_c = _Scrit_to_Tg(Scrit_c)
                         partial, chunk_iters = cost_function(
                             mdd, posteriors_and_masks, calibration_sites,
-                            (n_c, r_c, tg_c), chunk,
+                            (n_c, r_c, Scrit_c), chunk,
                             carrying_capacity_params, hmean, adj_mats, K_is_list,
                             plot=False, verbose=verbose, return_iters=True,
                             seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -1723,7 +1719,7 @@ def learn_dispersal_parameters(
                 else:
                     loss, batch_iters = cost_function(
                         mdd, posteriors_and_masks, calibration_sites,
-                        (n_s, r_s, tg_s),
+                        (n_s, r_s, Scrit_s),
                         batch,
                         carrying_capacity_params,
                         hmean,
@@ -1762,11 +1758,9 @@ def learn_dispersal_parameters(
                 n_val    = 10.0 ** log_n_val
                 r_val    = 10.0 ** log_r_val
                 Scrit_val  = _logistic_rescale(params[2], SCRIT_MIN, SCRIT_MAX).item()
-                tg_val   = _Scrit_to_Tg(Scrit_val)
                 losses.append(loss_val)
                 ln.append(n_val)
                 lr.append(r_val)
-                ltg.append(tg_val)
                 lScrit.append(Scrit_val)
 
             # Update progress bar: parameters (actual n, r, S_crit — S_crit
@@ -1881,7 +1875,6 @@ def learn_dispersal_parameters(
         all_site_cost_hist.append(site_cost_hist)
         all_n.append(ln)
         all_r.append(lr)
-        all_tg.append(ltg)
         all_Scrit.append(lScrit)
 
     # ------------------------------------------------------------------
@@ -1890,7 +1883,6 @@ def learn_dispersal_parameters(
     r_ends   = np.array([lr[-1]   for lr   in all_r])
     n_ends   = np.array([ln[-1]   for ln   in all_n])
     Scrit_ends = np.array([lScrit[-1] for lScrit in all_Scrit])
-    tg_ends  = np.array([ltg[-1]  for ltg  in all_tg])   # derived, kept for reference/plots
 
     if average_method == "Likelihood":
         final_ll = np.array([-c[-1] for c in all_costs])
@@ -1918,7 +1910,6 @@ def learn_dispersal_parameters(
     mean_r   = float(np.sum(r_ends   * weights))
     mean_n   = float(np.sum(n_ends   * weights))
     mean_Scrit = float(np.sum(Scrit_ends * weights))
-    mean_tg  = float(_Scrit_to_Tg(mean_Scrit))   # derived from mean_Scrit, kept for reference
 
     C            = (2.0 * np.exp(-1.11 / mdd)) / (1.0 + np.exp(-2.0 * 1.11 / mdd))
     estimated_ew = float(C / (hmean ** mean_r - C))
@@ -2030,9 +2021,8 @@ def learn_dispersal_parameters(
             run_suffix = f"_run{learning_runs[idx]}" if not all_together else ""
             _save_show(f"{prefix}site_cost_histograms{run_suffix}.png")
 
-        # Endpoint scatter (n vs r, r vs S_crit, n vs S_crit) — `S_crit` is the
-        # headline learned quantity now (Tg is derived from it, see
-        # `mean_tg`/`tg_ends` above).
+        # Endpoint scatter (n vs r, r vs S_crit, n vs S_crit) — `S_crit` is
+        # the headline learned quantity, used directly (no Tg anywhere).
         sizes_scatter = (
             np.ones(len(r_ends)) * 100
             if average_method in ("Likelihood", "same")
@@ -2077,13 +2067,13 @@ def learn_dispersal_parameters(
             all_together=all_together,
         )
 
-    # NOTE: the 4th return value is kept as `mean_tg` (NOT `mean_Scrit`) for
-    # backward compatibility with callers unpacking
-    # `Ew, n, r, Tg, *_ = learn_dispersal_parameters(...)` (see batch.py) —
-    # `mean_Scrit`, the actual primary learned quantity, is appended at the
-    # end alongside the raw endpoint arrays instead of replacing it.
-    return (estimated_ew, mean_n, mean_r, mean_tg, all_costs, weights,
-            [r_ends, n_ends, tg_ends], mean_Scrit, Scrit_ends)
+    # The 4th return value is `mean_Scrit` directly (NOT `Tg` — Tg is
+    # invalid/NaN for S_crit <= 0.5, a now-reachable region, so it can no
+    # longer be reported at all). Callers unpacking
+    # `Ew, n, r, Tg, *_ = learn_dispersal_parameters(...)` (see batch.py)
+    # must be updated to `Ew, n, r, S_crit, *_ = ...`.
+    return (estimated_ew, mean_n, mean_r, mean_Scrit, all_costs, weights,
+            [r_ends, n_ends, Scrit_ends], mean_Scrit, Scrit_ends)
 
 
 # ---------------------------------------------------------------------------
@@ -2345,7 +2335,7 @@ def refine_from_point(
           f"refinement from s={s0:.4g}  d={d0:.4g}  S_crit={Scrit0:.3g}\033[0m")
 
     cost_hist: list[tuple[int, float]] = []
-    ln, lr_hist, ltg, lScrit, ls, ld = [], [], [], [], [], []
+    ln, lr_hist, lScrit, ls, ld = [], [], [], [], []
     last_cost_val = float("nan")  # last known cost, for the progress-bar postfix on non-print steps
     step_bar = tqdm(range(max_iter), desc="  Deterministic steps", leave=True)
     for step in step_bar:
@@ -2371,10 +2361,9 @@ def refine_from_point(
                 n_s  = 10.0 ** log_n_s
                 r_s  = 10.0 ** log_r_s
                 Scrit_s = _tanh_rescale(Scrit_raw, SCRIT_MIN, SCRIT_MAX)
-                tg_s = _Scrit_to_Tg(Scrit_s)
                 site_loss = cost_function(
                     mdd, posteriors_and_masks, calibration_sites,
-                    (n_s, r_s, tg_s), [site_idx],
+                    (n_s, r_s, Scrit_s), [site_idx],
                     carrying_capacity_params, hmean, adj_mats, K_is_list,
                     plot=False, verbose=False,
                     seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -2384,7 +2373,7 @@ def refine_from_point(
                 site_grads.append([p.grad.item() for p in params])
                 if compute_cost:
                     loss_val_accum += site_loss.item()
-                del n_s, r_s, tg_s, site_loss
+                del n_s, r_s, site_loss
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
 
@@ -2408,10 +2397,9 @@ def refine_from_point(
                 n_s  = 10.0 ** log_n_s
                 r_s  = 10.0 ** log_r_s
                 Scrit_s = _tanh_rescale(Scrit_raw, SCRIT_MIN, SCRIT_MAX)
-                tg_s = _Scrit_to_Tg(Scrit_s)
                 partial = cost_function(
                     mdd, posteriors_and_masks, calibration_sites,
-                    (n_s, r_s, tg_s), chunk,
+                    (n_s, r_s, Scrit_s), chunk,
                     carrying_capacity_params, hmean, adj_mats, K_is_list,
                     plot=False, verbose=False,
                     seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -2419,7 +2407,7 @@ def refine_from_point(
                 scaled = partial * weight
                 scaled.backward()
                 total_loss_val += scaled.item()
-                del n_s, r_s, tg_s, partial, scaled
+                del n_s, r_s, partial, scaled
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
 
@@ -2438,11 +2426,10 @@ def refine_from_point(
             n_val  = 10.0 ** log_n_val
             r_val  = 10.0 ** log_r_val
             Scrit_val = _logistic_rescale(params[2], SCRIT_MIN, SCRIT_MAX).item()
-            tg_val = _Scrit_to_Tg(Scrit_val)
         if total_loss_val is not None:
             cost_hist.append((step, total_loss_val))
             last_cost_val = total_loss_val
-        ln.append(n_val); lr_hist.append(r_val); ltg.append(tg_val); lScrit.append(Scrit_val)
+        ln.append(n_val); lr_hist.append(r_val); lScrit.append(Scrit_val)
         ls.append(s_val); ld.append(d_val)
 
         step_bar.set_postfix(cost=f"{last_cost_val:.5f}", s=f"{s_val:.3g}",
@@ -2479,17 +2466,16 @@ def refine_from_point(
                     Scrit_p = torch.tensor(Scrit_val, requires_grad=True, dtype=torch.float32, device=device)
                     log_n_p, log_r_p = _sd_to_logn_logr(s_p, d_p)
                     n_p, r_p = 10.0 ** log_n_p, 10.0 ** log_r_p
-                    tg_p  = _Scrit_to_Tg(Scrit_p)
                     site_loss = cost_function(
                         mdd, posteriors_and_masks, calibration_sites,
-                        (n_p, r_p, tg_p), [site_idx],
+                        (n_p, r_p, Scrit_p), [site_idx],
                         carrying_capacity_params, hmean, adj_mats, K_is_list,
                         plot=False, verbose=False,
                         seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
                     )
                     site_loss.backward()
                     site_grads.append([s_p.grad.item(), d_p.grad.item(), Scrit_p.grad.item()])
-                    del s_p, d_p, Scrit_p, n_p, r_p, tg_p, site_loss
+                    del s_p, d_p, Scrit_p, n_p, r_p, site_loss
                     if torch.cuda.is_available():
                         torch.cuda.empty_cache()
 
@@ -2501,7 +2487,7 @@ def refine_from_point(
                       f"   geometric median=[s={median_grad[0]:+.4g}  d={median_grad[1]:+.4g}"
                       f"  S_crit={median_grad[2]:+.4g}]\033[0m")
 
-    n_final, r_final, tg_final, Scrit_final = ln[-1], lr_hist[-1], ltg[-1], lScrit[-1]
+    n_final, r_final, Scrit_final = ln[-1], lr_hist[-1], lScrit[-1]
     s_final, d_final = ls[-1], ld[-1]
     C_final = (2.0 * np.exp(-1.11 / mdd)) / (1.0 + np.exp(-2.0 * 1.11 / mdd))
     estimated_ew = float(C_final / (hmean ** r_final - C_final))
@@ -2581,12 +2567,12 @@ def refine_from_point(
         fig.tight_layout()
         _save_show(f"{prefix}refine_from_point.png")
 
-    # NOTE: the 4th return value is kept as `tg_final` (NOT `Scrit_final`)
-    # for backward compatibility with callers unpacking
-    # `Ew, n, r, Tg, *_ = refine_from_point(...)` (see batch.py) —
-    # `Scrit_final`, the actual primary learned quantity, is appended at the
-    # end instead of replacing it.
-    return estimated_ew, n_final, r_final, tg_final, cost_hist, Scrit_final
+    # The 4th return value is `Scrit_final` directly (NOT `Tg` — Tg is
+    # invalid/NaN for S_crit <= 0.5, which is now a reachable region, so
+    # it can no longer be reported at all). Callers unpacking
+    # `Ew, n, r, Tg, *_ = refine_from_point(...)` (see batch.py) must be
+    # updated to `Ew, n, r, S_crit, *_ = ...`.
+    return estimated_ew, n_final, r_final, Scrit_final, cost_hist, Scrit_final
 
 
 # ---------------------------------------------------------------------------
@@ -2853,7 +2839,7 @@ def run_mala(
     print(f"[precompute] Seeded initial densities: {seed_fraction*100:.0f}% of "
           f"pixels per site, FIXED for the whole run (not redrawn per step).")
 
-    def _chunk_nll(n_val: torch.Tensor, r_val: torch.Tensor, tg_val: torch.Tensor,
+    def _chunk_nll(n_val: torch.Tensor, r_val: torch.Tensor, Scrit_val: torch.Tensor,
                     chunk: list) -> torch.Tensor:
         # `seed_masks_list` reaches here the same way `adj_mats`/`K_is_list`
         # already do — via closure capture, not as an explicit `checkpoint()`
@@ -2861,7 +2847,7 @@ def run_mala(
         # differentiated through.
         partial = cost_function(
             mdd, posteriors_and_masks, calibration_sites,
-            (n_val, r_val, tg_val), chunk,
+            (n_val, r_val, Scrit_val), chunk,
             carrying_capacity_params, hmean, adj_mats, K_is_list,
             plot=False, verbose=False,
             seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -2917,11 +2903,10 @@ def run_mala(
         s, d, S_crit = theta_g[0], theta_g[1], theta_g[2]
         log_n, log_r = _sd_to_logn_logr(s, d)
         n_val, r_val = 10.0 ** log_n, 10.0 ** log_r
-        tg = _Scrit_to_Tg(S_crit)
         nll = torch.zeros((), device=device)
         for start in range(0, n_sites_total, chunk_size):
             chunk = all_indices[start:start + chunk_size]
-            nll = nll + checkpoint(_chunk_nll, n_val, r_val, tg, chunk, use_reentrant=False)
+            nll = nll + checkpoint(_chunk_nll, n_val, r_val, S_crit, chunk, use_reentrant=False)
         log_post = -nll   # uniform prior contributes a constant (0) inside the box
         log_post.backward()
         return log_post.detach(), theta_g.grad.detach().clone()
@@ -3143,13 +3128,10 @@ def run_mala(
         Scrit_samp = np.stack(all_Scrit, axis=0)
     else:
         s_samp, d_samp, Scrit_samp = all_s[0], all_d[0], all_Scrit[0]
-    # `all_Scrit`/`chain_Scrit` collected the RAW sampled `S_crit` values directly
-    # (see `_log_post_and_grad` — theta[2] IS S_crit, the actual learned/
-    # sampled variable now). `tg_samp` is DERIVED from `Scrit_samp` (via
-    # `_Scrit_to_Tg`), kept purely for reference/backward compatibility with
-    # every other function's persisted "Tg" key — `Scrit_samp` is the
-    # primary result from here on.
-    tg_samp = _Scrit_to_Tg(Scrit_samp)
+    # `all_Scrit`/`chain_Scrit` collected the RAW sampled `S_crit` values
+    # directly (see `_log_post_and_grad` — theta[2] IS S_crit, the actual
+    # learned/sampled variable) — the primary result from here on, no
+    # `Tg` anywhere.
     log_n_samp, log_r_samp = _sd_to_logn_logr(s_samp, d_samp)
     n_samp = 10.0 ** log_n_samp
     r_samp = 10.0 ** log_r_samp
@@ -3165,7 +3147,6 @@ def run_mala(
         return float(lo), float(hi)
 
     s_ci, d_ci, Scrit_ci = _ci(s_samp), _ci(d_samp), _ci(Scrit_samp)
-    tg_ci = _ci(tg_samp)   # derived from Scrit_samp, kept for reference
     n_ci, r_ci = _ci(n_samp), _ci(r_samp)
 
     print(f"\033[92m[run_mala] Done. Posterior summary "
@@ -3246,20 +3227,20 @@ def run_mala(
         _save_show(f"{prefix}mala_nr_reference.png")
 
     # `S_crit` is the actual sampled/reported variable (see the module-level
-    # growth-timescale note) — `Tg` is kept in both `samples`/`ci_95` too,
-    # DERIVED from `S_crit` via `_Scrit_to_Tg`, purely so nothing downstream
-    # that still expects a "Tg" key (e.g. `batch.py`'s
-    # `samples[k] for k in ("n", "r", "Tg")`, or `analyze_posterior_samples`)
-    # breaks silently.
+    # growth-timescale note) — no `Tg` key anywhere: `Tg` is invalid/NaN
+    # for `S_crit <= 0.5`, a reachable region now that the box goes down
+    # to 1/3, so it can no longer be reported at all. Callers expecting a
+    # "Tg" key (e.g. `batch.py`'s `samples[k] for k in ("n", "r", "Tg")`)
+    # must be updated to use "S_crit" instead.
     return {
         "samples": {
-            "s": s_samp, "d": d_samp, "S_crit": Scrit_samp, "Tg": tg_samp,
+            "s": s_samp, "d": d_samp, "S_crit": Scrit_samp,
             "n": n_samp, "r": r_samp,
         },
         # Equal-tailed 95% credible intervals, (low, high) per parameter —
         # the same values printed above, for programmatic use without
         # re-deriving them from the raw samples.
-        "ci_95": {"s": s_ci, "d": d_ci, "S_crit": Scrit_ci, "Tg": tg_ci, "n": n_ci, "r": r_ci},
+        "ci_95": {"s": s_ci, "d": d_ci, "S_crit": Scrit_ci, "n": n_ci, "r": r_ci},
         "accept_rate": float(np.mean(accept_rates)),
     }
 
@@ -3361,7 +3342,6 @@ def analyze_posterior_samples(
     """
     data = np.load(npz_path)
     s_raw, d_raw, Scrit_raw = data["s"], data["d"], data["S_crit"]
-    tg_raw = data["Tg"]
     n_raw, r_raw = data["n"], data["r"]
 
     # Multiple chains (shape (num_chains, num_samples)) are analysed
@@ -3381,27 +3361,25 @@ def analyze_posterior_samples(
               f"statistically valid (breaks the chain's temporal order) — "
               f"exploratory only. See `run_mala`'s box-overshoot fix for "
               f"the correct way to avoid this cluster in a fresh run.\033[0m")
-        s_f, d_f, Scrit_f, tg_f, n_f, r_f = [], [], [], [], [], []
+        s_f, d_f, Scrit_f, n_f, r_f = [], [], [], [], []
         n_before = n_after = 0
-        for sc, dc, Sc, tc, nc, rc in zip(
+        for sc, dc, Sc, nc, rc in zip(
             _as_chain_list(s_raw), _as_chain_list(d_raw), _as_chain_list(Scrit_raw),
-            _as_chain_list(tg_raw), n_chains_list, r_chains_list,
+            n_chains_list, r_chains_list,
         ):
             keep = rc <= r_max_filter
             n_before += rc.size
             n_after  += int(keep.sum())
             s_f.append(sc[keep]); d_f.append(dc[keep]); Scrit_f.append(Sc[keep])
-            tg_f.append(tc[keep])
             n_f.append(nc[keep]); r_f.append(rc[keep])
         print(f"[analyze_posterior_samples] Kept {n_after}/{n_before} samples "
               f"({n_after/n_before*100:.1f}%).")
-        s_raw, d_raw, Scrit_raw, tg_raw = s_f, d_f, Scrit_f, tg_f   # already lists of (possibly ragged) chains
+        s_raw, d_raw, Scrit_raw = s_f, d_f, Scrit_f   # already lists of (possibly ragged) chains
         n_chains_list, r_chains_list = n_f, r_f
 
     s_chains  = _as_chain_list(s_raw)
     d_chains  = _as_chain_list(d_raw)
     Scrit_chains = _as_chain_list(Scrit_raw)
-    tg_chains = _as_chain_list(tg_raw)
     n_chains_data = len(s_chains)
     sizes = [c.size for c in s_chains]
     print(f"[analyze_posterior_samples] Loaded {npz_path}: "
@@ -3474,18 +3452,16 @@ def analyze_posterior_samples(
               f"ACF < {acf_threshold}): {decorrelation_lag} steps.")
 
     # Thin each chain independently by this interval, then concatenate.
-    thin_s, thin_d, thin_Scrit, thin_tg, thin_n, thin_r = [], [], [], [], [], []
-    for sc, dc, Sc, tc, nc, rc in zip(
-        s_chains, d_chains, Scrit_chains, tg_chains, n_chains_list, r_chains_list
+    thin_s, thin_d, thin_Scrit, thin_n, thin_r = [], [], [], [], []
+    for sc, dc, Sc, nc, rc in zip(
+        s_chains, d_chains, Scrit_chains, n_chains_list, r_chains_list
     ):
         sl = slice(None, None, max(1, decorrelation_lag))
         thin_s.append(sc[sl]); thin_d.append(dc[sl]); thin_Scrit.append(Sc[sl])
-        thin_tg.append(tc[sl])
         thin_n.append(nc[sl]); thin_r.append(rc[sl])
     thin_s     = np.concatenate(thin_s)
     thin_d     = np.concatenate(thin_d)
     thin_Scrit = np.concatenate(thin_Scrit)
-    thin_tg    = np.concatenate(thin_tg)
     thin_n     = np.concatenate(thin_n)
     thin_r     = np.concatenate(thin_r)
     print(f"[analyze_posterior_samples] Thinned {sum(c.size for c in s_chains)} "
@@ -3528,7 +3504,6 @@ def analyze_posterior_samples(
         s_all     = np.concatenate(s_chains)
         d_all     = np.concatenate(d_chains)
         Scrit_all = np.concatenate(Scrit_chains)
-        tg_all    = np.concatenate(tg_chains)
 
         def _kde_volume_figure(
             x_all, y_all, z_all, x_thin, y_thin, z_thin,
@@ -3608,11 +3583,195 @@ def analyze_posterior_samples(
         "acf": {"s": acf_s, "d": acf_d, "S_crit": acf_Scrit, "joint": acf_joint},
         "decorrelation_lag": int(decorrelation_lag),
         "thinned_samples": {
-            "s": thin_s, "d": thin_d, "S_crit": thin_Scrit, "Tg": thin_tg,
+            "s": thin_s, "d": thin_d, "S_crit": thin_Scrit,
             "n": thin_n, "r": thin_r,
         },
         "n_thinned": int(thin_s.size),
     }
+
+
+def _plot_speed_3d_plotly(
+    s_arr: np.ndarray,
+    d_arr: np.ndarray,
+    Scrit_arr: np.ndarray,
+    speed: np.ndarray,
+    sample_density: np.ndarray,
+    hpd_mask: np.ndarray,
+    idx_low: int,
+    idx_high: int,
+    s_map: float,
+    d_map: float,
+    Scrit_map: float,
+    save_fig_folder: str | None = None,
+    species_name: str | None = None,
+) -> tuple:
+    """Two interactive 3-D Plotly figures over the raw `(s, d, S_crit)`
+    posterior samples from `estimate_low_map_high_from_posterior`, meant to
+    be viewed side by side to understand WHERE in parameter space the
+    colonisation-speed extremes/bump come from (see the discussion this
+    follows from: a flat marginal speed histogram can still hide a real
+    bump once the joint density is accounted for).
+
+    Both figures use the SAME plain point-scatter style — every raw
+    posterior sample plotted at its own `(s, d, S_crit)`, with BOTH marker
+    size and color mapped to a per-sample scalar. No surface/isosurface is
+    fit or rendered for either — deliberately, so the two figures stay
+    directly comparable point-for-point.
+
+    Figure 1 — colored/sized by the analytic speed proxy — shows WHICH
+    regions of parameter space produce which speeds. LOW/HIGH/MAP points
+    (same picks as the caller's histogram) are marked separately.
+
+    Figure 2 — colored/sized by `sample_density` (the joint `(s, d,
+    S_crit)` KDE density evaluated AT each raw sample — the exact same
+    values `estimate_low_map_high_from_posterior` already computed to pick
+    its HPD region, reused here rather than refit or evaluated on a
+    separate grid). Samples inside the caller's HPD region are drawn with
+    full opacity; samples outside it are faded, so the region boundary is
+    visible directly on the point cloud. Comparing the two figures shows
+    whether high-speed regions coincide with high-density (jointly
+    plausible) regions or sit off in the low-density tails.
+
+    Returns
+    -------
+    (fig_scatter, fig_density) : tuple of `plotly.graph_objects.Figure`
+        Also written to disk as standalone HTML (if `save_fig_folder` is
+        given) or shown inline (if not) — same convention as
+        `_kde_3d_plotly` elsewhere in this module.
+    """
+    prefix = f"{species_name}_" if species_name else ""
+
+    # --- Figure 1: every sample, size + color both mapped to speed -------
+    # Faded outside the `ci_mass` HPD region (same `hpd_mask` the caller
+    # used to pick LOW/HIGH), split into two traces for the same reason as
+    # Figure 2 below: Plotly's `marker.opacity` is per-trace, not per-point.
+    speed_range = speed.max() - speed.min() + 1e-12
+    sizes = 3.0 + 12.0 * (speed - speed.min()) / speed_range
+
+    scatter_in = go.Scatter3d(
+        x=s_arr[hpd_mask], y=d_arr[hpd_mask], z=Scrit_arr[hpd_mask],
+        mode="markers",
+        marker=dict(
+            size=sizes[hpd_mask],
+            color=speed[hpd_mask],
+            colorscale="Viridis",
+            cmin=float(speed.min()), cmax=float(speed.max()),
+            colorbar=dict(title="Speed proxy c", x=1.02),
+            opacity=0.85,
+            line=dict(width=0),
+        ),
+        name="Inside the HPD region",
+    )
+    scatter_out = go.Scatter3d(
+        x=s_arr[~hpd_mask], y=d_arr[~hpd_mask], z=Scrit_arr[~hpd_mask],
+        mode="markers",
+        marker=dict(
+            size=sizes[~hpd_mask],
+            color=speed[~hpd_mask],
+            colorscale="Viridis",
+            cmin=float(speed.min()), cmax=float(speed.max()),
+            showscale=False,
+            opacity=0.06,
+            line=dict(width=0),
+        ),
+        name="Outside the HPD region",
+    )
+    low_pt = go.Scatter3d(
+        x=[s_arr[idx_low]], y=[d_arr[idx_low]], z=[Scrit_arr[idx_low]],
+        mode="markers+text",
+        marker=dict(size=9, color="blue", symbol="diamond",
+                    line=dict(width=1, color="black")),
+        text=["LOW"], textposition="top center", name="LOW (min speed)",
+    )
+    high_pt = go.Scatter3d(
+        x=[s_arr[idx_high]], y=[d_arr[idx_high]], z=[Scrit_arr[idx_high]],
+        mode="markers+text",
+        marker=dict(size=9, color="red", symbol="diamond",
+                    line=dict(width=1, color="black")),
+        text=["HIGH"], textposition="top center", name="HIGH (max speed)",
+    )
+    map_pt = go.Scatter3d(
+        x=[s_map], y=[d_map], z=[Scrit_map],
+        mode="markers+text",
+        marker=dict(size=9, color="cyan", symbol="x",
+                    line=dict(width=1, color="black")),
+        text=["MAP"], textposition="top center", name="MAP",
+    )
+    fig_scatter = go.Figure(data=[scatter_out, scatter_in, low_pt, high_pt, map_pt])
+    fig_scatter.update_layout(
+        title=f"Colonisation-speed proxy over the (s, d, S_crit) posterior "
+              f"— {species_name or ''}",
+        scene=dict(xaxis_title="s", yaxis_title="d", zaxis_title="S_crit",
+                    aspectmode="cube"),
+        legend=dict(title="Legend", x=1.02, y=0.5),
+        margin=dict(r=140),
+    )
+
+    # --- Figure 2: same raw samples, size + color both mapped to their own
+    # KDE density value (`sample_density`, evaluated AT each sample by the
+    # caller) — plain point scatter, exactly like Figure 1, no surface fit.
+    dens_range = sample_density.max() - sample_density.min() + 1e-12
+    dens_sizes = 3.0 + 12.0 * (sample_density - sample_density.min()) / dens_range
+    # Fade samples OUTSIDE the HPD region so its boundary reads directly off
+    # the point cloud, without hiding them entirely. Plotly's
+    # `marker.opacity` only accepts a scalar per-trace, not a per-point
+    # array, so this is done by splitting into two traces (in-HPD full
+    # opacity, outside-HPD faded) rather than one trace with a fade array.
+    density_scatter_in = go.Scatter3d(
+        x=s_arr[hpd_mask], y=d_arr[hpd_mask], z=Scrit_arr[hpd_mask],
+        mode="markers",
+        marker=dict(
+            size=dens_sizes[hpd_mask],
+            color=sample_density[hpd_mask],
+            colorscale="Plasma",
+            cmin=float(sample_density.min()), cmax=float(sample_density.max()),
+            colorbar=dict(title="Posterior density", x=1.02),
+            opacity=0.9,
+            line=dict(width=0),
+        ),
+        name="Inside the HPD region",
+    )
+    density_scatter_out = go.Scatter3d(
+        x=s_arr[~hpd_mask], y=d_arr[~hpd_mask], z=Scrit_arr[~hpd_mask],
+        mode="markers",
+        marker=dict(
+            size=dens_sizes[~hpd_mask],
+            color=sample_density[~hpd_mask],
+            colorscale="Plasma",
+            cmin=float(sample_density.min()), cmax=float(sample_density.max()),
+            showscale=False,
+            opacity=0.06,
+            line=dict(width=0),
+        ),
+        name="Outside the HPD region",
+    )
+    map_pt2 = go.Scatter3d(
+        x=[s_map], y=[d_map], z=[Scrit_map],
+        mode="markers+text",
+        marker=dict(size=9, color="cyan", symbol="x",
+                    line=dict(width=1, color="black")),
+        text=["MAP"], textposition="top center", name="MAP",
+    )
+    fig_density = go.Figure(data=[density_scatter_out, density_scatter_in, map_pt2])
+    fig_density.update_layout(
+        title=f"3-D KDE density at each posterior sample over (s, d, S_crit) "
+              f"— {species_name or ''}",
+        scene=dict(xaxis_title="s", yaxis_title="d", zaxis_title="S_crit",
+                    aspectmode="cube"),
+        legend=dict(title="Legend", x=1.02, y=0.5),
+        margin=dict(r=140),
+    )
+
+    if save_fig_folder:
+        fig_scatter.write_html(os.path.join(
+            save_fig_folder, f"{prefix}low_map_high_speed_3d_scatter.html"))
+        fig_density.write_html(os.path.join(
+            save_fig_folder, f"{prefix}low_map_high_density_3d_scatter.html"))
+    else:
+        fig_scatter.show()
+        fig_density.show()
+
+    return fig_scatter, fig_density
 
 
 # ---------------------------------------------------------------------------
@@ -3625,9 +3784,11 @@ def estimate_low_map_high_from_posterior(
     hmean: float,
     mdd: float,
     ci_mass: float = 0.68,
-    map_grid_size: int = 25,
+    density_frac_of_map: float | None = None,
+    map_grid_size: int = 40,
     save_fig_folder: str | None = None,
     species_name: str | None = None,
+    plot_3d: bool = True,
 ) -> dict:
     """Rank ALL raw posterior samples (from a `run_mala` `.npz`) by an
     ANALYTIC colonisation-speed proxy — no simulation at all — and return
@@ -3733,7 +3894,35 @@ def estimate_low_map_high_from_posterior(
     ci_mass:
         Credible mass defining the 3-D HPD region (default 0.68) — see
         above. Applied to the JOINT `(s, d, S_crit)` density, not to the
-        speed proxy directly.
+        speed proxy directly. Ignored if `density_frac_of_map` is given.
+    density_frac_of_map:
+        Alternative region-selection rule, mutually exclusive with
+        `ci_mass` (takes precedence when given). Instead of choosing the
+        density threshold to hit a TARGET PROBABILITY MASS (the `ci_mass`
+        recipe above), this fixes the threshold directly as a fraction of
+        the peak (MAP) density: keep every sample whose joint `(s, d,
+        S_crit)` density is `>= density_frac_of_map * density_at_MAP`.
+        E.g. `density_frac_of_map=0.5` keeps everything within a factor of
+        2 of the MAP's own density — a "relative-density" / likelihood-
+        ratio-style support region, sometimes used for peak-width
+        summaries, as opposed to a proper Bayesian credible region.
+
+        IMPORTANT CAVEAT: unlike `ci_mass`, this does NOT correspond to a
+        fixed, known probability mass — how much mass a given density
+        fraction encloses depends entirely on the POSTERIOR'S SHAPE
+        (curvature/spread near the mode), and can differ wildly between
+        species/runs even at the same `density_frac_of_map` value. A
+        sharply peaked posterior encloses very little mass at, say, 50% of
+        peak density; a broad/flat one can enclose nearly all of it. The
+        actual mass captured (`n_hpd/n_total`) is still reported so you
+        can see what you actually got, but it is a CONSEQUENCE of this
+        choice, not something you are directly controlling the way
+        `ci_mass` lets you. Use this when you want "how far can the
+        parameters drift from the MAP while staying within a fixed
+        density ratio of it" (a peak-sharpness question); use `ci_mass`
+        when you want "the smallest region I am `ci_mass`-confident
+        contains the truth" (a genuine credible-region question) — they
+        answer different questions and are not interchangeable.
     map_grid_size:
         Grid resolution per axis for the MAP-finding 3-D KDE (cubic
         cost).
@@ -3741,17 +3930,29 @@ def estimate_low_map_high_from_posterior(
         If given, the speed-proxy histogram (restricted to the HPD
         subset, with the LOW/MAP/HIGH picks marked) is saved to this
         folder.
+    plot_3d:
+        If ``True`` (default), also build two interactive Plotly figures
+        via :func:`_plot_speed_3d_plotly` — both plain 3-D point scatters
+        (no surface/isosurface fit) of every raw sample over `(s, d,
+        S_crit)`: one colored/sized by the speed proxy, the other by the
+        sample's own KDE density value. Comparing the two shows whether
+        high/low-speed regions coincide with jointly plausible
+        (high-density) parameter combinations or sit in the
+        low-density tails. Saved as standalone HTML next to the histogram
+        if `save_fig_folder` is given, else shown inline.
 
     Returns
     -------
     dict
-        ``{"speed": array (n_total,), "ci_mass": float, "n_total": int,
-        "n_hpd": int, "low": {"n":, "r":, "Tg":, "speed":},
-        "high": {"n":, "r":, "Tg":, "speed":},
-        "map": {"n":, "r":, "Tg":}}`` — `low`/`high`/`map` are each ready
-        to unpack directly as the ``(n, r, Tg)`` triple `cost_function`/
-        `equilibrium_distribution` expect. ``speed`` covers ALL raw
-        samples (not just the HPD subset) for reference.
+        ``{"speed": array (n_total,), "ci_mass": float | None,
+        "density_frac_of_map": float | None, "region_label": str,
+        "n_total": int, "n_hpd": int, "low": {"s":, "d":, "S_crit":, "speed":},
+        "high": {"s":, "d":, "S_crit":, "speed":},
+        "map": {"s":, "d":, "S_crit":}}`` — `low`/`high`/`map` are each
+        ready to unpack directly as the ``(s, d, S_crit)`` triple
+        `PopulationSimulator`/`run_simulation` expect — NOT `(n, r, Tg)`.
+        ``speed`` covers ALL raw samples (not just the HPD subset) for
+        reference.
     """
     from scipy.stats import gaussian_kde
 
@@ -3763,7 +3964,6 @@ def estimate_low_map_high_from_posterior(
     Scrit_arr = np.asarray(data["S_crit"]).flatten()
     n_arr = np.asarray(data["n"]).flatten()
     r_arr = np.asarray(data["r"]).flatten()
-    tg_arr = np.asarray(data["Tg"]).flatten()
     n_total = s_arr.size
     print(f"[low_map_high] {n_total} raw samples loaded (no thinning needed — "
           f"cheap enough to evaluate on every sample).")
@@ -3785,32 +3985,16 @@ def estimate_low_map_high_from_posterior(
     h_r = hmean ** r_clamped
     S_arr = _survival(r_clamped, hmean, 1.11, mdd)
     Ew_star_arr = Ew_arr * h_r * S_arr
-    g_arr = 1.0 - 0.05 ** (1.0 / tg_arr)
+    g_arr = 1.0 / Scrit_arr - 1.0
     speed = np.sqrt(2.0 * g_arr * Ew_star_arr)
 
-    print(f"\033[96m[low_map_high] Fitting the joint (s, d, S_crit) density and "
-          f"finding the {ci_mass*100:.0f}% HPD region\033[0m")
+    print(f"\033[96m[low_map_high] Fitting the joint (s, d, S_crit) density\033[0m")
     kde3d = gaussian_kde(np.vstack([s_arr, d_arr, Scrit_arr]))
-    # HPD threshold: evaluate the density AT the samples themselves, sort,
-    # and keep the top `ci_mass` fraction — the standard empirical HPD
-    # recipe (Hyndman 1996; same one `_hpd_levels`-style contours use
-    # elsewhere in this module), just in 3-D and applied to the samples
-    # directly rather than a rendered grid.
     sample_density = kde3d(np.vstack([s_arr, d_arr, Scrit_arr]))
-    density_threshold = np.percentile(sample_density, (1.0 - ci_mass) * 100)
-    hpd_mask = sample_density >= density_threshold
-    n_hpd = int(hpd_mask.sum())
-    print(f"[low_map_high] {n_hpd}/{n_total} samples ({n_hpd/n_total*100:.1f}%) "
-          f"inside the {ci_mass*100:.0f}% HPD region.")
 
-    hpd_indices = np.where(hpd_mask)[0]
-    speed_hpd = speed[hpd_mask]
-    idx_low  = int(hpd_indices[np.argmin(speed_hpd)])
-    idx_high = int(hpd_indices[np.argmax(speed_hpd)])
-    print(f"[low_map_high] speed proxy within the HPD region: "
-          f"min={speed[idx_low]:.4g}  max={speed[idx_high]:.4g}  "
-          f"(low sample idx={idx_low}, high sample idx={idx_high})")
-
+    # MAP first (via a 3-D KDE grid argmax) — needed BEFORE region
+    # selection below when `density_frac_of_map` is used, since that rule
+    # thresholds relative to the MAP's own density.
     print(f"\033[96m[low_map_high] Recovering the MAP via a 3-D KDE argmax "
           f"over the (s, d, S_crit) samples\033[0m")
     s_g = np.linspace(s_arr.min(), s_arr.max(), map_grid_size)
@@ -3820,9 +4004,9 @@ def estimate_low_map_high_from_posterior(
     dens = kde3d(np.vstack([Sg.ravel(), Dg.ravel(), Cg.ravel()])).reshape(Sg.shape)
     i_m, j_m, k_m = np.unravel_index(np.argmax(dens), dens.shape)
     s_map, d_map, Scrit_map = float(s_g[i_m]), float(d_g[j_m]), float(Sc_g[k_m])
+    map_density = float(dens.max())
     log_n_map, log_r_map = _sd_to_logn_logr(s_map, d_map)
     n_map, r_map = 10.0 ** log_n_map, 10.0 ** log_r_map
-    tg_map = float(_Scrit_to_Tg(Scrit_map))
     r_map_clamped = min(r_map, rmax - 1e-6)
     denom_map = hmean ** r_map_clamped - C_np
     denom_map = max(denom_map, 1e-4) if denom_map >= 0 else min(denom_map, -1e-4)
@@ -3830,35 +4014,83 @@ def estimate_low_map_high_from_posterior(
     h_r_map = hmean ** r_map_clamped
     S_map = float(_survival(r_map_clamped, hmean, 1.11, mdd))
     Ew_star_map = Ew_map * h_r_map * S_map
-    print(f"[low_map_high] MAP: n={n_map:.4g}  r={r_map:.6g}  Tg={tg_map:.4g}  "
-          f"Ew(r)={Ew_map:.4g}  Ew*(r)={Ew_star_map:.4g}  "
-          f"(s={s_map:.4g}  d={d_map:.4g}  S_crit={Scrit_map:.4g})")
+    g_map = 1.0 / Scrit_map - 1.0
+    speed_map = float(np.sqrt(2.0 * g_map * Ew_star_map))
+    print(f"[low_map_high] MAP: s={s_map:.4g}  d={d_map:.4g}  S_crit={Scrit_map:.4g}  "
+          f"density={map_density:.4g}  "
+          f"(n={n_map:.4g}  r={r_map:.6g}  Ew(r)={Ew_map:.4g}  Ew*(r)={Ew_star_map:.4g}  "
+          f"speed={speed_map:.4g})")
 
-    print(f"\033[92m[low_map_high] LOW:  n={n_arr[idx_low]:.4g}  "
-          f"r={r_arr[idx_low]:.6g}  Tg={tg_arr[idx_low]:.4g}  "
+    # ── Region selection: either the ci_mass HPD recipe, or a fixed
+    # fraction of the MAP's own density (see `density_frac_of_map`'s
+    # docstring for why these are NOT interchangeable) ─────────────────
+    if density_frac_of_map is not None:
+        density_threshold = density_frac_of_map * map_density
+        region_label = f"{density_frac_of_map*100:.0f}% of MAP density"
+        print(f"\033[96m[low_map_high] Selecting samples with density >= "
+              f"{density_frac_of_map*100:.0f}% of the MAP's own density "
+              f"({density_threshold:.4g})\033[0m")
+    else:
+        # HPD threshold: evaluate the density AT the samples themselves,
+        # sort, and keep the top `ci_mass` fraction — the standard
+        # empirical HPD recipe (Hyndman 1996; same one `_hpd_levels`-style
+        # contours use elsewhere in this module), just in 3-D and applied
+        # to the samples directly rather than a rendered grid.
+        density_threshold = np.percentile(sample_density, (1.0 - ci_mass) * 100)
+        region_label = f"{ci_mass*100:.0f}% HPD"
+        print(f"\033[96m[low_map_high] Finding the {ci_mass*100:.0f}% HPD "
+              f"region\033[0m")
+
+    hpd_mask = sample_density >= density_threshold
+    n_hpd = int(hpd_mask.sum())
+    print(f"[low_map_high] {n_hpd}/{n_total} samples ({n_hpd/n_total*100:.1f}%) "
+          f"inside the {region_label} region.")
+
+    hpd_indices = np.where(hpd_mask)[0]
+    speed_hpd = speed[hpd_mask]
+    idx_low  = int(hpd_indices[np.argmin(speed_hpd)])
+    idx_high = int(hpd_indices[np.argmax(speed_hpd)])
+    print(f"[low_map_high] speed proxy within the {region_label} region: "
+          f"min={speed[idx_low]:.4g}  max={speed[idx_high]:.4g}  "
+          f"(low sample idx={idx_low}, high sample idx={idx_high})")
+
+    print(f"\033[92m[low_map_high] LOW:  s={s_arr[idx_low]:.4g}  "
+          f"d={d_arr[idx_low]:.4g}  S_crit={Scrit_arr[idx_low]:.4g}  "
+          f"(n={n_arr[idx_low]:.4g}  r={r_arr[idx_low]:.6g}  "
           f"Ew(r)={Ew_arr[idx_low]:.4g}  Ew*(r)={Ew_star_arr[idx_low]:.4g}  "
-          f"(speed={speed[idx_low]:.4g})\033[0m")
-    print(f"\033[92m[low_map_high] HIGH: n={n_arr[idx_high]:.4g}  "
-          f"r={r_arr[idx_high]:.6g}  Tg={tg_arr[idx_high]:.4g}  "
+          f"speed={speed[idx_low]:.4g})\033[0m")
+    print(f"\033[92m[low_map_high] HIGH: s={s_arr[idx_high]:.4g}  "
+          f"d={d_arr[idx_high]:.4g}  S_crit={Scrit_arr[idx_high]:.4g}  "
+          f"(n={n_arr[idx_high]:.4g}  r={r_arr[idx_high]:.6g}  "
           f"Ew(r)={Ew_arr[idx_high]:.4g}  Ew*(r)={Ew_star_arr[idx_high]:.4g}  "
-          f"(speed={speed[idx_high]:.4g})\033[0m")
+          f"speed={speed[idx_high]:.4g})\033[0m")
+
+    if plot_3d:
+        print(f"\033[96m[low_map_high] Building 3-D interactive Plotly figures "
+              f"(speed-colored scatter + KDE density scatter)\033[0m")
+        _plot_speed_3d_plotly(
+            s_arr, d_arr, Scrit_arr, speed, sample_density, hpd_mask,
+            idx_low, idx_high, s_map, d_map, Scrit_map,
+            save_fig_folder=save_fig_folder, species_name=species_name,
+        )
 
     prefix = f"{species_name}_" if species_name else ""
     fig, ax = plt.subplots(figsize=(9, 5.5))
     ax.hist(speed_hpd, bins=40, density=True, color="steelblue", alpha=0.45,
-            edgecolor="white", label=f"samples inside the {ci_mass*100:.0f}% HPD region")
+            edgecolor="white", label=f"samples inside the {region_label} region")
     kde1d = gaussian_kde(speed_hpd)
     xs = np.linspace(speed_hpd.min(), speed_hpd.max(), 400)
     ax.plot(xs, kde1d(xs), color="steelblue", linewidth=2.2, label="KDE fit")
     ax.axvline(speed[idx_low], color="tab:blue", linewidth=2.0, linestyle="--",
-               label=f"LOW (n={n_arr[idx_low]:.3g}, r={r_arr[idx_low]:.3g}, Tg={tg_arr[idx_low]:.3g})")
+               label=f"LOW (s={s_arr[idx_low]:.3g}, d={d_arr[idx_low]:.3g}, S_crit={Scrit_arr[idx_low]:.3g})")
     ax.axvline(speed[idx_high], color="tab:red", linewidth=2.0, linestyle="--",
-               label=f"HIGH (n={n_arr[idx_high]:.3g}, r={r_arr[idx_high]:.3g}, Tg={tg_arr[idx_high]:.3g})")
-    ax.plot([], [], "*", color="cyan", markersize=14, markeredgecolor="black",
-            label=f"MAP (n={n_map:.3g}, r={r_map:.3g}, Tg={tg_map:.3g})")
+               label=f"HIGH (s={s_arr[idx_high]:.3g}, d={d_arr[idx_high]:.3g}, S_crit={Scrit_arr[idx_high]:.3g})")
+    ax.axvline(speed_map, color="cyan", linewidth=2.0, linestyle="-",
+               label=f"MAP (s={s_map:.3g}, d={d_map:.3g}, S_crit={Scrit_map:.3g}, "
+                     f"speed={speed_map:.3g})")
     ax.set_xlabel("Analytic colonisation-speed proxy  c = sqrt(2*g*Ew*(r))")
     ax.set_ylabel("Density")
-    ax.set_title(f"Colonisation-speed proxy within the {ci_mass*100:.0f}% HPD region "
+    ax.set_title(f"Colonisation-speed proxy within the {region_label} region "
                  f"(n={n_hpd}/{n_total}) — {species_name or ''}")
     ax.grid(linestyle="--", color="grey", linewidth=0.2, alpha=0.5)
     ax.legend(fontsize=8, framealpha=0.8)
@@ -3870,14 +4102,18 @@ def estimate_low_map_high_from_posterior(
 
     return {
         "speed": speed,
-        "ci_mass": ci_mass,
+        "ci_mass": ci_mass if density_frac_of_map is None else None,
+        "density_frac_of_map": density_frac_of_map,
+        "region_label": region_label,
         "n_total": n_total,
         "n_hpd": n_hpd,
-        "low": {"n": float(n_arr[idx_low]), "r": float(r_arr[idx_low]),
-                "Tg": float(tg_arr[idx_low]), "speed": float(speed[idx_low])},
-        "high": {"n": float(n_arr[idx_high]), "r": float(r_arr[idx_high]),
-                 "Tg": float(tg_arr[idx_high]), "speed": float(speed[idx_high])},
-        "map": {"n": n_map, "r": r_map, "Tg": tg_map},
+        # (s, d, S_crit) -- NOT (n, r, Tg) -- ready to unpack directly as
+        # the `PopulationSimulator(hs, ewalk, s, d, S_crit, ...)` triple.
+        "low": {"s": float(s_arr[idx_low]), "d": float(d_arr[idx_low]),
+                "S_crit": float(Scrit_arr[idx_low]), "speed": float(speed[idx_low])},
+        "high": {"s": float(s_arr[idx_high]), "d": float(d_arr[idx_high]),
+                 "S_crit": float(Scrit_arr[idx_high]), "speed": float(speed[idx_high])},
+        "map": {"s": s_map, "d": d_map, "S_crit": Scrit_map, "speed": speed_map},
     }
 
 
@@ -3925,6 +4161,13 @@ def compare_equilibrium_distributions(
         directly in this module's own learning space (not ``(n, r, Tg)``
         any more) — see the module-level notes above
         `_hs_local_contrast`/`_Scrit_box`.
+    calibration_sites.breeding_maps, if present (see
+    `sample_calibration_sites`'s `breeding_mask` parameter), is now used
+    to constrain both points' equilibria exactly like `run_mala`/
+    `cost_function` do — growth outside the breeding range is limited to
+    the density-dependent mortality term alone (see
+    `equilibrium_distribution`'s docstring), not the unconstrained
+    logistic growth used everywhere before this was wired in.
     posteriors_and_masks:
         Output of :func:`~paradis.calibration.ratios.compute_all_posteriors`
         (same object passed to `cost_function`/`learn_dispersal_parameters`).
@@ -4006,14 +4249,25 @@ def compare_equilibrium_distributions(
         for hs_map in calibration_sites.hs_maps
     ]
 
+    # Per-site breeding-range masks, built the same way `run_mala`/
+    # `cost_function` do (see `_build_breeding_masks_list`) — without this,
+    # `compare` would silently compute both equilibria under fully
+    # unconstrained growth even when the underlying MALA run was
+    # breeding-range-constrained, making the comparison inconsistent with
+    # what was actually optimised. Falls back to a list of `None` when
+    # `calibration_sites` carries no breeding_maps, matching the
+    # unconstrained-everywhere default elsewhere.
+    breeding_masks_list = _build_breeding_masks_list(calibration_sites, n_sites_total)
+
     def _compute_maps(point: tuple, label: str = "") -> tuple:
-        # `point` is (s, d, S_crit) — this function's own learning space
-        # — not (n, r, Tg) any more, converted here to the actual values
-        # `equilibrium_distribution`/`Ew` need.
+        # `point` is (s, d, S_crit) — this function's own learning space —
+        # converted here to the actual values `equilibrium_distribution`/
+        # `Ew` need. No Tg/a intermediate anywhere: g comes straight from
+        # S_crit.
         s_val, d_val, Scrit_val = point
         log_n_val, log_r_val = _sd_to_logn_logr(s_val, d_val)
         n_val, r_val = 10.0 ** log_n_val, 10.0 ** log_r_val
-        tg_val = _Scrit_to_Tg(Scrit_val)
+        g_val = 1.0 / Scrit_val - 1.0
         ew_val = _ew(r_val)
         p_val = ew_val / (1.0 + ew_val)
         maps = []
@@ -4024,7 +4278,7 @@ def compare_equilibrium_distributions(
             n_p  = torch.tensor(float(n_val),  device=device, dtype=torch.float32)
             r_p  = torch.tensor(float(r_val),  device=device, dtype=torch.float32)
             ew_p = torch.tensor(float(ew_val), device=device, dtype=torch.float32)
-            linear_growth = torch.tensor(0.05, device=device, dtype=torch.float32) ** (1.0 / tg_val)
+            g_p = torch.tensor(float(g_val), device=device, dtype=torch.float32)
             site_bar = tqdm(range(n_sites_total), desc=f"  {label} sites", leave=False)
             for site_idx in site_bar:
                 hs_map = calibration_sites.hs_maps[site_idx]
@@ -4043,21 +4297,23 @@ def compare_equilibrium_distributions(
                 site_debug = debug and debug_site_idx is not None and site_idx == debug_site_idx
                 if site_debug:
                     print(f"\033[95m[compare] debug=True for site {site_idx} — {label}"
-                          f" (n={n_val:.4g}, r={r_val:.4g}, Tg={tg_val:.4g})\033[0m")
+                          f" (n={n_val:.4g}, r={r_val:.4g}, S_crit={Scrit_val:.4g})\033[0m")
                     N_inf, changes, dbg_hist = equilibrium_distribution(
-                        K_is, Kd, linear_growth, plot=False, verbose=False,
+                        K_is, Kd, g_p, plot=False, verbose=False,
                         return_history=True, adaptive=adaptive,
                         convergence_ratio_tol=convergence_ratio_tol, max_iter=max_iter,
                         progress_callback=_report, debug=True,
                         seed_mask_override=site_seed_masks[site_idx],
+                        breeding_ground=breeding_masks_list[site_idx],
                     )
                 else:
                     N_inf, changes = equilibrium_distribution(
-                        K_is, Kd, linear_growth, plot=False, verbose=False,
+                        K_is, Kd, g_p, plot=False, verbose=False,
                         return_history=True, adaptive=adaptive,
                         convergence_ratio_tol=convergence_ratio_tol, max_iter=max_iter,
                         progress_callback=_report,
                         seed_mask_override=site_seed_masks[site_idx],
+                        breeding_ground=breeding_masks_list[site_idx],
                     )
                 N_inf_2d = N_inf.reshape(size_site, size_site)
                 maps.append(N_inf_2d.cpu().numpy())
@@ -4171,7 +4427,7 @@ def compare_equilibrium_distributions(
         idxs = list(range(b * max_sites_per_figure,
                            min((b + 1) * max_sites_per_figure, n_sites_total)))
         nrows = len(idxs)
-        fig, axes = plt.subplots(nrows, 3, figsize=(12, 3.2 * nrows), squeeze=False)
+        fig, axes = plt.subplots(nrows, 4, figsize=(15.5, 3.2 * nrows), squeeze=False)
         for row, site_idx in enumerate(idxs):
             m1, m2 = maps1[site_idx], maps2[site_idx]
             vmax = max(float(m1.max()), float(m2.max())) or 1.0
@@ -4199,6 +4455,22 @@ def compare_equilibrium_distributions(
                               if have_posts else "")
             axes[row, 2].set_title(
                 f"site {site_idx} — {label2} minus {label1}{diff_cost_str}", fontsize=8)
+
+            # 4th column: breeding range shown as its own panel (not
+            # overlaid on the density/diff panels above — an overlay there
+            # was tried and reduced readability of the density maps
+            # themselves) — plain grayscale, 1=breeding range, 0=outside.
+            bm = calibration_sites.breeding_maps[site_idx] if hasattr(
+                calibration_sites, "breeding_maps") else None
+            if bm is not None:
+                bm = np.asarray(bm, dtype=float)
+                axes[row, 3].imshow(bm, cmap="Reds", vmin=0, vmax=1)
+                axes[row, 3].set_title(f"site {site_idx} — breeding range", fontsize=8)
+            else:
+                axes[row, 3].text(0.5, 0.5, "no breeding\nrange data",
+                                   ha="center", va="center", fontsize=8, color="grey",
+                                   transform=axes[row, 3].transAxes)
+                axes[row, 3].set_title(f"site {site_idx} — breeding range", fontsize=8)
 
             # Overlay the exact pixels used by the likelihood: green
             # circles for used presences, blue triangles for selected
@@ -4279,10 +4551,18 @@ def _scan_cost_grid(
                 for kk, tg_val in enumerate(tg_grid):
                     n_p  = torch.tensor(float(n_val),  device=device, dtype=torch.float32)
                     r_p  = torch.tensor(float(r_val),  device=device, dtype=torch.float32)
-                    tg_p = torch.tensor(float(tg_val), device=device, dtype=torch.float32)
+                    # This grid is still defined in Tg-space (a legacy axis
+                    # kept for this diagnostic tool's plots/labels) —
+                    # converted to S_crit here ONLY to satisfy
+                    # `cost_function`'s contract (no Tg/a used internally
+                    # anywhere else). g = a's old low-eps relaxation rate;
+                    # S_crit = 1/(1+g).
+                    a_val = 0.05 ** (1.0 / tg_val)
+                    scrit_val = 1.0 / (2.0 - a_val)
+                    scrit_p = torch.tensor(float(scrit_val), device=device, dtype=torch.float32)
                     c = cost_function(
                         mdd, posteriors_and_masks, calibration_sites,
-                        (n_p, r_p, tg_p), all_indices,
+                        (n_p, r_p, scrit_p), all_indices,
                         carrying_capacity_params, hmean, adj_mats, K_is_list,
                         plot=False, verbose=False,
                         seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
@@ -4364,10 +4644,17 @@ def _scan_cost_grid(
         print(f"[grid:{tag}] Skipped 3-D volume ({e}).")
 
     min_idx = np.unravel_index(np.argmin(results), results.shape)
-    best = (float(n_grid[min_idx[0]]), float(r_grid[min_idx[1]]), float(tg_grid[min_idx[2]]))
+    best_tg_val = float(tg_grid[min_idx[2]])
+    # Converted to S_crit here so `best`'s 3rd element has the SAME meaning
+    # as `_scan_cost_grid_sd`'s own `best` tuple (S_crit, not Tg) —
+    # this grid's own axis is still Tg-space (a legacy diagnostic choice),
+    # but nothing downstream should have to know that.
+    best_a_val = 0.05 ** (1.0 / best_tg_val)
+    best_scrit_val = 1.0 / (2.0 - best_a_val)
+    best = (float(n_grid[min_idx[0]]), float(r_grid[min_idx[1]]), best_scrit_val)
     best_cost = float(results[min_idx])
     print(f"\033[92m[grid:{tag}] Minimum: cost={best_cost:.5f}  "
-          f"n={best[0]:.4g}  r={best[1]:.6g}  Tg={best[2]:.4g}\033[0m")
+          f"n={best[0]:.4g}  r={best[1]:.6g}  S_crit={best[2]:.4g}\033[0m")
 
     return {
         "results": results, "flat": flat_arr,
@@ -4551,18 +4838,17 @@ def _scan_cost_grid_sd(
                 r_p = torch.tensor(float(r_val), device=device, dtype=torch.float32)
                 for kk, Scrit_val in enumerate(Scrit_grid):
                     Scrit_safe = min(max(Scrit_val, 0.5 + 1e-6), 1.0 - 1e-6)
-                    tg_val = _Scrit_to_Tg(Scrit_safe)
-                    tg_p = torch.tensor(float(tg_val), device=device, dtype=torch.float32)
+                    scrit_p = torch.tensor(float(Scrit_safe), device=device, dtype=torch.float32)
                     c = cost_function(
                         mdd, posteriors_and_masks, calibration_sites,
-                        (n_p, r_p, tg_p), all_indices,
+                        (n_p, r_p, scrit_p), all_indices,
                         carrying_capacity_params, hmean, adj_mats, K_is_list,
                         plot=False, verbose=False,
                         seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
                     )
                     cost_val = c.item()
                     results[i, j, kk] = cost_val
-                    flat_records.append((s_val, d_val, n_val, r_val, Scrit_val, tg_val, cost_val))
+                    flat_records.append((s_val, d_val, n_val, r_val, Scrit_val, cost_val))
                     pbar.update(1)
     pbar.close()
 
@@ -4578,9 +4864,8 @@ def _scan_cost_grid_sd(
     min_idx = np.unravel_index(np.nanargmin(results), results.shape)
     best_s, best_d, best_Scrit = float(s_grid[min_idx[0]]), float(d_grid[min_idx[1]]), float(Scrit_grid[min_idx[2]])
     best_Scrit_safe = min(max(best_Scrit, 0.5 + 1e-6), 1.0 - 1e-6)
-    best_tg = _Scrit_to_Tg(best_Scrit_safe)
     best_log_n, best_log_r = _sd_to_logn_logr(best_s, best_d)
-    best = (10.0 ** best_log_n, 10.0 ** best_log_r, best_tg)
+    best = (10.0 ** best_log_n, 10.0 ** best_log_r, best_Scrit_safe)
     best_cost = float(results[min_idx])
     minimum_str = (f"[grid:{tag}] Minimum: cost={best_cost:.5f}  "
                     f"s={best_s:.4g}  d={best_d:.4g}  "
@@ -4840,7 +5125,14 @@ def _run_grid(
     scrit_min, scrit_max = _Scrit_box()
     scrit_lo = scrit_min + 1e-3 * (scrit_max - scrit_min)
     scrit_hi = scrit_max - 1e-6
-    tg_box = (_Scrit_to_Tg(scrit_lo), _Scrit_to_Tg(scrit_hi))
+    # `_scan_cost_grid` (the legacy Tg-axis grid diagnostic) is still fed a
+    # Tg-space range here — Tg is undefined for S_crit <= 0.5, which is
+    # now reachable, so clamp the LOWER bound used for this conversion
+    # ONLY, well above 0.5, before converting (this is purely this one
+    # legacy tool's own fallback default range, not the actual sampling
+    # box elsewhere).
+    scrit_lo_tg_safe = max(scrit_lo, 0.5 + 1e-3)
+    tg_box = (_Scrit_to_Tg(scrit_lo_tg_safe), _Scrit_to_Tg(scrit_hi))
     print(f"[priors] S_crit (survival-threshold) reparametrisation for "
           f"this species: S_crit box=[{scrit_min:.4g}, {scrit_max:.4g}]  "
           f"(interpretation: S_crit = critical per-dispersal-step survival "
@@ -4893,12 +5185,12 @@ def _run_grid(
             tag="single", **scan_kwargs,
         )
 
-    n_best, r_best, tg_best = info["best"]
+    n_best, r_best, Scrit_best = info["best"]
     C = (2.0 * np.exp(-1.11 / mdd)) / (1.0 + np.exp(-2.0 * 1.11 / mdd))
     estimated_ew = float(C / (hmean ** r_best - C))
 
-    return (estimated_ew, n_best, r_best, tg_best, [], np.ones(1),
-            [np.array([r_best]), np.array([n_best]), np.array([tg_best])], info)
+    return (estimated_ew, n_best, r_best, Scrit_best, [], np.ones(1),
+            [np.array([r_best]), np.array([n_best]), np.array([Scrit_best])], info)
 
 
 def _run_precise_gridscan(
@@ -5031,14 +5323,13 @@ def _run_precise_gridscan(
         n_val = 10.0 ** log_n_val
         r_val = 10.0 ** log_r_val
         Scrit_safe = min(max(Scrit_val, SCRIT_MIN + 1e-6), SCRIT_MAX - 1e-6)
-        tg_val = _Scrit_to_Tg(Scrit_safe)
         n_p  = torch.tensor(float(n_val),  device=device, dtype=torch.float32)
         r_p  = torch.tensor(float(r_val),  device=device, dtype=torch.float32)
-        tg_p = torch.tensor(float(tg_val), device=device, dtype=torch.float32)
+        scrit_p = torch.tensor(float(Scrit_safe), device=device, dtype=torch.float32)
         with torch.no_grad():
             c = cost_function(
                 mdd, posteriors_and_masks, calibration_sites,
-                (n_p, r_p, tg_p), all_indices,
+                (n_p, r_p, scrit_p), all_indices,
                 carrying_capacity_params, hmean, adj_mats, K_is_list,
                 plot=False, verbose=False, seed_masks_list=seed_masks_list, breeding_masks_list=breeding_masks_list,
             )
@@ -5082,7 +5373,6 @@ def _run_precise_gridscan(
             float(s_grid[i_sc]), d_c, float(Scrit_grid[k_sc]), cost_sc_min)
     best_log_n, best_log_r = _sd_to_logn_logr(best_s, best_d)
     n_best, r_best = 10.0 ** best_log_n, 10.0 ** best_log_r
-    tg_best = _Scrit_to_Tg(best_Scrit)
     estimated_ew = float(C_const / (hmean ** r_best - C_const))
     minimum_str = (f"[precise_gridscan] Minimum: cost={best_cost:.5f}  "
                     f"s={best_s:.4g}  d={best_d:.4g}  "
@@ -5131,8 +5421,8 @@ def _run_precise_gridscan(
         "s_grid": s_grid, "d_grid": d_grid, "Scrit_grid": Scrit_grid,
         "best_cost": best_cost, "best_sd": (best_s, best_d), "best_Scrit": best_Scrit,
     }
-    return (estimated_ew, n_best, r_best, tg_best, [], np.ones(1),
-            [np.array([r_best]), np.array([n_best]), np.array([tg_best])], info)
+    return (estimated_ew, n_best, r_best, best_Scrit, [], np.ones(1),
+            [np.array([r_best]), np.array([n_best]), np.array([best_Scrit])], info)
 
 
 # ---------------------------------------------------------------------------

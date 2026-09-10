@@ -4,6 +4,7 @@ from paradis.simulation.engine import (
     PopulationSimulator,
     crop_to_mask,
     dispersal_step,
+    plot_density_map,
     run_simulation,
     show_expansion,
     show_final,
@@ -19,6 +20,7 @@ from paradis.simulation.tuning import suggest_window_params
 __all__ = [
     "PopulationSimulator",
     "crop_to_mask",
+    "plot_density_map",
     "show_expansion",
     "show_final",
     "DiskKernelCache",

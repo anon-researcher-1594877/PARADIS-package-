@@ -2,16 +2,15 @@
 
 The growth model uses a discrete logistic-type recursion::
 
-    U_{t+1} = U_t + (1 - a) * U_t * (1 - U_t / K)
+    U_{t+1} = U_t + g * U_t * (1 - U_t / K)
 
-where ``a = 0.05^{1/Tg}`` is the linear growth coefficient and ``K`` is
-the per-pixel carrying capacity inferred from the habitat-suitability map.
+where ``g`` is the growth coefficient (per-capita net growth rate at low
+density), used directly throughout — no `Tg`/`a` intermediate — and ``K``
+is the per-pixel carrying capacity inferred from the habitat-suitability
+map.
 
 Key functions
 -------------
-:func:`growth_coefficient`
-    Compute the scalar growth coefficient ``a`` from the characteristic
-    growth time ``Tg``.
 :func:`carrying_capacity_from_hs`
     Compute per-pixel carrying capacities using a fitted logistic
     relationship between HS and relative abundance.
@@ -32,53 +31,9 @@ from __future__ import annotations
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
+from matplotlib.colors import SymLogNorm
 
 from paradis._device import device
-
-
-def growth_coefficient(tgrowth: float) -> float:
-    """Return the linear growth coefficient ``a = 0.05^{1/Tg}``.
-
-    Parameters
-    ----------
-    tgrowth:
-        Characteristic growth time. ``a`` is DEFINED so that, if the
-        relative distance to carrying capacity ``eps_t = 1 - U_t/K``
-        decayed by a constant factor ``a`` every step (``eps_{t+1} =
-        a*eps_t``), it would reach ``eps_Tg = a^Tg = 0.05`` (5 % short of
-        ``K``, i.e. 95 % of ``K``) after ``Tg`` steps — hence
-        ``a = 0.05**(1/Tg)``.
-
-        This is NOT literally "the time for a population starting at
-        near-zero density to reach 95 % of K": the EXACT recursion for
-        ``eps_t`` under this model (substitute ``U_t = K*(1-eps_t)`` into
-        ``U_{t+1} = U_t + (1-a)*U_t*(1-U_t/K)`` and simplify) is
-
-            eps_{t+1} = a*eps_t + (1-a)*eps_t**2
-
-        which is QUADRATIC in ``eps_t``, not linear — the simple
-        ``eps_t = a**t`` relation used to define ``a`` above is only the
-        exact behaviour in the small-``eps`` limit (i.e. NEAR ``K``,
-        where the quadratic term is negligible), not for ``eps`` near 1
-        (i.e. ``U`` near 0). In fact ``U = 0`` is itself a fixed point of
-        the exact recursion (``eps_{t+1} = a*1 + (1-a)*1 = 1`` when
-        ``eps_t = 1``) — a population starting EXACTLY at zero density
-        never grows at all under this deterministic map, regardless of
-        ``Tg`` (only dispersal bringing in mass from elsewhere can start
-        it moving — see `equilibrium_distribution`'s seeding machinery).
-
-        So ``Tg`` is better understood as the model's characteristic
-        RELAXATION time near the equilibrium ``K`` (the timescale that
-        genuinely governs ``eps_{t+1} approx a*eps_t`` once a trajectory
-        is already close to ``K``), not a literal near-zero-to-95%
-        travel time — the "starting near zero" framing is a convenient
-        but not strictly accurate way to motivate the ``0.05`` constant.
-
-    Returns
-    -------
-    float
-    """
-    return 0.05 ** (1.0 / tgrowth)
 
 
 def _logistic(x: np.ndarray | torch.Tensor, L: float, k: float, x0: float):
@@ -111,7 +66,7 @@ def _logistic(x: np.ndarray | torch.Tensor, L: float, k: float, x0: float):
 
 def carrying_capacity_from_hs(
     hs: np.ndarray | torch.Tensor,
-    tgrowth: float,
+    g: float,
     L: float,
     k: float,
     x0: float,
@@ -122,28 +77,29 @@ def carrying_capacity_from_hs(
     ----------
     hs:
         2-D or flat array of HS values in ``[0, 1]``.
-    tgrowth:
-        Characteristic growth time.
+    g:
+        Growth coefficient (per-capita net growth rate at low density) —
+        used directly, no `Tg`/`a` intermediate.
     L, k, x0:
         Logistic parameters for the K(HS) relationship.
 
     Returns
     -------
-    a : float
-        Linear growth coefficient.
+    g : float
+        Growth coefficient, passed straight through (kept in the return
+        tuple for backward-compatible call-site unpacking).
     K_is : torch.Tensor
         Per-pixel carrying capacities (flat).
     vecb : torch.Tensor
-        Per-pixel growth intercepts ``K_i * (1 - a)``.
+        Per-pixel growth intercepts ``K_i * g``.
     """
     if not isinstance(hs, torch.Tensor):
         hs = torch.tensor(hs, dtype=torch.float32, device="cpu")
     hs_flat = hs.flatten().float()
     K_is = _logistic(hs_flat, L, k, x0)
     K_is = torch.tensor(np.array(K_is), dtype=torch.float32) if isinstance(K_is, np.ndarray) else K_is.float()
-    a = growth_coefficient(tgrowth)
-    vecb = K_is * (1.0 - a)
-    return a, K_is, vecb
+    vecb = K_is * g
+    return g, K_is, vecb
 
 
 def seed_mask(shape, seed_fraction: float = 0.25, device=None, dtype=None) -> torch.Tensor:
@@ -179,7 +135,7 @@ def seed_mask(shape, seed_fraction: float = 0.25, device=None, dtype=None) -> to
 def equilibrium_distribution(
     init_distrib: torch.Tensor,
     kernel: torch.Tensor,
-    linear_growth: float | torch.Tensor,
+    g: float | torch.Tensor,
     n_iter: int = 10,
     plot: bool = False,
     verbose: bool = False,
@@ -198,11 +154,10 @@ def equilibrium_distribution(
 
     By default (``adaptive=False``) this runs a FIXED number of iterations
     (`n_iter`, default 10) with no convergence check/early stop. The
-    per-iteration growth coefficient is `1 - linear_growth` — since
-    `linear_growth = 0.05**(1/Tg)` (see cost_function), this coefficient
-    shrinks toward 0 as Tg grows large (e.g. ~0.26 at Tg=10 vs ~0.03 at
-    Tg=100), meaning the dynamics move increasingly slowly per iteration.
-    For large enough Tg, `n_iter=10` steps may stop well before the true
+    per-iteration growth coefficient is `g` directly — `g` shrinks toward
+    0 as the population approaches the slow-growth end of its range,
+    meaning the dynamics move increasingly slowly per iteration.
+    For small enough `g`, `n_iter=10` steps may stop well before the true
     steady state is reached — the returned "equilibrium" can then be
     dominated by `init_distrib` itself rather than genuine
     dispersal-driven dynamics (confirmed empirically: ~0.3-0.4%
@@ -226,8 +181,9 @@ def equilibrium_distribution(
         capacity (``K = init_distrib``).
     kernel:
         ``(N, N)`` dispersal transition matrix.
-    linear_growth:
-        Scalar growth coefficient ``a``.
+    g:
+        Scalar growth coefficient (per-capita net growth rate at low
+        density) — used directly, no `Tg`/`a` intermediate.
     n_iter:
         Number of iterations (default 10). With ``adaptive=True``, this is
         instead the MINIMUM number of iterations run before the
@@ -287,14 +243,14 @@ def equilibrium_distribution(
         a fresh random ``seed_fraction`` of pixels start at their own local
         ``K_i`` and the remaining pixels start at exactly ``0``. This
         matters because at ``Un=0`` the logistic growth term
-        ``(1 - a) * Un * (1 - Un / K)`` is identically ``0`` — a pixel that
+        ``g * Un * (1 - Un / K)`` is identically ``0`` — a pixel that
         starts empty can ONLY become populated through dispersal from an
         occupied neighbour, never spontaneously via growth. Starting
         instead at ``Un = K`` everywhere (the old, and still available via
         ``random_seed_init=False``, behaviour) makes the growth term
         exactly zero EVERYWHERE at the first iteration too (since
-        ``Un/K = 1``), and for fast growth (small `Tg`, `linear_growth`
-        near 0) any dispersal-driven deviation from `K` gets "healed" by
+        ``Un/K = 1``), and for fast growth (large `g`) any dispersal-driven
+        deviation from `K` gets "healed" by
         growth almost immediately on later iterations — so the fitted
         equilibrium ends up sitting extremely close to the raw habitat map
         `K` itself, with the loss barely sensitive to the dispersal
@@ -363,21 +319,27 @@ def equilibrium_distribution(
         `seed_fraction` as already described.
     breeding_ground:
         Optional mask (same flat shape as `init_distrib`, values in
-        ``[0, 1]``) constraining WHERE the population can actually grow.
-        Applied only to the POSITIVE part of the per-iteration logistic
-        growth term — a pixel outside the breeding ground (mask value 0)
-        can still DECLINE (the negative-growth case, e.g. density above
-        local carrying capacity relaxing back down, or simply density
-        that arrived via dispersal without enough local recruitment to
-        sustain it) but cannot GAIN density from local reproduction; a
-        pixel can only gain density there via dispersal FROM elsewhere,
-        never via its own local growth term. This deliberately does NOT
-        zero out the growth term entirely outside the breeding ground
-        (that would also block decline, effectively freezing density
-        there) — only its positive part is masked:
-        ``growth = where(growth > 0, growth * breeding_ground, growth)``.
-        ``None`` (default) leaves growth completely unconstrained
-        everywhere, matching every existing call site's behaviour before
+        ``[0, 1]``) constraining WHERE the population can actually
+        reproduce. Inside the breeding ground (mask value 1), the full
+        logistic growth term applies as usual: ``growth = g * Un * (1 - Un/K)``.
+        OUTSIDE the breeding ground (mask value 0), there is NO local
+        reproduction at all — only the density-DEPENDENT mortality
+        (crowding/competition) term implied by the SAME logistic model
+        still applies. Decomposing the logistic net rate into a constant
+        per-capita birth rate ``g`` and a density-dependent death rate
+        ``g * Un/K`` (the standard birth-death split reproducing
+        ``birth - death = g*(1-Un/K)`` exactly, with no extra free
+        parameter beyond what the model already has) and then setting
+        ``birth = 0`` outside the breeding ground leaves:
+        ``growth = -g * Un**2 / K`` there — a pixel with no reproduction
+        nearby decays under its OWN density-dependent mortality alone,
+        asymptoting to 0 (algebraically, ``N(t) = N0/(1 + (g*N0/K)*t)``),
+        never toward `K` (which is a reproduction/resource concept that
+        no longer applies once breeding is impossible there). It can
+        still GAIN density only via dispersal FROM elsewhere, never via
+        its own local growth term. ``None`` (default) leaves growth
+        completely unconstrained everywhere (breeding assumed possible
+        everywhere), matching every existing call site's behaviour before
         this parameter was added.
 
     Returns
@@ -491,15 +453,21 @@ def equilibrium_distribution(
         # causes NaN gradients in the backward pass.  The clamp value (1e-7) is
         # far below any physically meaningful carrying capacity.
         safe_cap = carrying_cap.clamp(min=1e-7)
-        growth = (1.0 - linear_growth) * Un * (1.0 - Un / safe_cap)
+        growth = g * Un * (1.0 - Un / safe_cap)
         growth = torch.nan_to_num(growth, nan=0.0, posinf=0.0, neginf=0.0)
         if bg_t is not None:
-            # Only the POSITIVE part of growth is breeding-ground-gated —
-            # decline (e.g. relaxation back toward a lower carrying
-            # capacity, or unsustained density that arrived via dispersal)
-            # is allowed everywhere; only local reproduction is restricted
-            # to the breeding ground. See this function's docstring.
-            growth = torch.where(growth > 0, growth * bg_t, growth)
+            # Outside the breeding ground, there is NO local reproduction
+            # at all — only the density-dependent mortality (crowding)
+            # term implied by the SAME logistic model still applies:
+            # decomposing the net rate g*(1-Un/K) into a constant
+            # per-capita birth rate g and a density-dependent death rate
+            # g*Un/K, then zeroing the birth term, leaves
+            # growth = -g*Un**2/K there (decays toward 0, NOT toward K —
+            # see this function's docstring for the full derivation).
+            growth_nonbreeding = -g * Un * Un / safe_cap
+            growth_nonbreeding = torch.nan_to_num(
+                growth_nonbreeding, nan=0.0, posinf=0.0, neginf=0.0)
+            growth = torch.where(bg_t > 0, growth, growth_nonbreeding)
         un_post_growth = (Un + growth).detach() if debug else None
         Un = Un + growth
         Un = torch.clamp(Un, 0.0, 1.0)
@@ -624,11 +592,23 @@ def equilibrium_distribution(
             axes = np.atleast_1d(axes).flatten()
             if map_key == "growth_map":
                 vabs = max(abs(debug_history[i][map_key]).max() for i in frame_idxs) or 1.0
-                vmin, vmax = -vabs, vabs
+                # A linear scale is dominated by the few pixels with the
+                # largest |growth| (typically at the colonisation front),
+                # flattening everywhere else to near-white — a symmetric
+                # log scale keeps the sign (growth vs. decay) while making
+                # small changes visible too. `linthresh` is set well below
+                # the map's own extreme so the log regime kicks in quickly
+                # instead of the linear region swallowing everything.
+                linthresh = max(vabs * 1e-3, 1e-8)
+                norm = SymLogNorm(linthresh=linthresh, vmin=-vabs, vmax=vabs)
             else:
                 vmin, vmax = 0.0, max(debug_history[i][map_key].max() for i in frame_idxs) or 1.0
+                norm = None
             for ax, i in zip(axes, frame_idxs):
-                im = ax.imshow(debug_history[i][map_key], cmap=cmap, vmin=vmin, vmax=vmax)
+                if map_key == "growth_map":
+                    im = ax.imshow(debug_history[i][map_key], cmap=cmap, norm=norm)
+                else:
+                    im = ax.imshow(debug_history[i][map_key], cmap=cmap, vmin=vmin, vmax=vmax)
                 # debug_history[0] is the pre-dispersal/growth seed snapshot
                 # (see its insertion above) — label it "seed", not "iter 0",
                 # and shift the iteration numbers of every later frame down
@@ -654,7 +634,7 @@ def equilibrium_distribution(
 
 def growth_step(
     distrib: torch.Tensor,
-    linear_growth: float | torch.Tensor,
+    g: float | torch.Tensor,
     K_is: torch.Tensor,
     tested_xs: list,
     tested_ys: list,
@@ -670,8 +650,9 @@ def growth_step(
     ----------
     distrib:
         2-D abundance map ``(H, W)``.
-    linear_growth:
-        Scalar growth coefficient.
+    g:
+        Scalar growth coefficient (per-capita net growth rate at low
+        density) — used directly, no `Tg`/`a` intermediate.
     K_is:
         Flat carrying-capacity vector (length ``H * W``).
     tested_xs, tested_ys:
@@ -683,7 +664,13 @@ def growth_step(
     blacklisted_points:
         List of ``(x, y)`` tuples already near carrying capacity.
     breeding_ground:
-        Optional 2-D binary mask – growth only where this is 1.
+        Optional 2-D binary mask. Inside it (value 1), the full logistic
+        growth term applies as usual. Outside it (value 0), there is NO
+        local reproduction — only the density-dependent mortality
+        (crowding) term implied by the same logistic model still applies:
+        ``growth = -g*Un**2/K`` there (decays toward 0, not toward K).
+        See `equilibrium_distribution`'s docstring for the full
+        birth/death decomposition this follows.
     plot:
         If ``True``, visualise the growth contribution.
 
@@ -708,15 +695,23 @@ def growth_step(
             breeding_ground = torch.tensor(breeding_ground, dtype=torch.float32, device=device)
         bg = breeding_ground.flatten().clone().detach().to(device)
 
-    growth = (1.0 - linear_growth) * un * (1.0 - un / K_is.to(device))
+    safe_K = K_is.to(device).clamp(min=1e-7)
+    growth = g * un * (1.0 - un / safe_K)
     growth = torch.nan_to_num(growth, nan=0.0)
-    # Only the POSITIVE part is breeding-ground-gated — decline is allowed
-    # everywhere, only local reproduction is restricted to the breeding
-    # ground (see `equilibrium_distribution`'s docstring for the same
-    # convention). Previously this multiplied the WHOLE growth term by
-    # `bg`, which also zeroed out decline outside the breeding ground —
-    # freezing density there instead of letting it relax down.
-    growth = torch.where(growth > 0, growth * bg, growth)
+    # Outside the breeding ground, there is NO local reproduction at all —
+    # only the density-dependent mortality (crowding) term implied by the
+    # SAME logistic model still applies: decomposing the net rate
+    # g*(1-un/K) into a constant per-capita birth rate g and a
+    # density-dependent death rate g*un/K, then zeroing the birth term,
+    # leaves growth = -g*un**2/K there (decays toward 0, NOT toward K —
+    # see `equilibrium_distribution`'s docstring for the full derivation).
+    # Previously this multiplied the WHOLE growth term by `bg` (freezing
+    # density at Un<K instead of decaying it), then later just masked the
+    # POSITIVE part to 0 (freezing rather than decaying) — neither matches
+    # "no reproduction nearby -> decays to zero" without new assumptions.
+    growth_nonbreeding = -g * un * un / safe_K
+    growth_nonbreeding = torch.nan_to_num(growth_nonbreeding, nan=0.0)
+    growth = torch.where(bg > 0, growth, growth_nonbreeding)
 
     new_un = un + growth
     new_un = torch.clamp(new_un, 0.0, 1.0)
@@ -743,8 +738,9 @@ class GrowthModel:
 
     Parameters
     ----------
-    tgrowth:
-        Characteristic growth time (years / time steps).
+    g:
+        Growth coefficient (per-capita net growth rate at low density) —
+        used directly, no `Tg`/`a` intermediate.
     L, k, x0:
         Logistic parameters describing ``K(HS)``.
 
@@ -752,41 +748,35 @@ class GrowthModel:
     --------
     >>> import numpy as np
     >>> from paradis.core.growth import GrowthModel
-    >>> gm = GrowthModel(tgrowth=7.5, L=0.05, k=5.0, x0=0.5)
+    >>> gm = GrowthModel(g=0.4, L=0.05, k=5.0, x0=0.5)
     >>> hs = np.random.rand(50, 50).astype("float32")
-    >>> a, K_is, vecb = gm.carrying_capacity(hs)
+    >>> g, K_is, vecb = gm.carrying_capacity(hs)
     """
 
     def __init__(
         self,
-        tgrowth: float,
+        g: float,
         L: float,
         k: float,
         x0: float,
     ) -> None:
-        self.tgrowth = tgrowth
+        self.g = g
         self.L = L
         self.k = k
         self.x0 = x0
-        self._a = growth_coefficient(tgrowth)
-
-    @property
-    def a(self) -> float:
-        """Scalar linear growth coefficient."""
-        return self._a
 
     def carrying_capacity(self, hs: np.ndarray | torch.Tensor) -> tuple:
         """Compute carrying-capacity parameters for *hs*.
 
         Returns
         -------
-        a, K_is, vecb
+        g, K_is, vecb
             See :func:`carrying_capacity_from_hs`.
         """
-        return carrying_capacity_from_hs(hs, self.tgrowth, self.L, self.k, self.x0)
+        return carrying_capacity_from_hs(hs, self.g, self.L, self.k, self.x0)
 
     def __repr__(self) -> str:
         return (
-            f"GrowthModel(tgrowth={self.tgrowth}, "
+            f"GrowthModel(g={self.g}, "
             f"L={self.L}, k={self.k}, x0={self.x0})"
         )

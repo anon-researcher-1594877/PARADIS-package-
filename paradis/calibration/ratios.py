@@ -24,7 +24,7 @@ import numpy as np
 from scipy.spatial import KDTree
 from tqdm import tqdm
 
-from paradis.calibration.sites import _overlay_breeding_range
+from paradis.calibration.sites import _overlay_breeding_mask
 
 
 # ---------------------------------------------------------------------------
@@ -227,7 +227,7 @@ def compute_all_posteriors(
         ax.imshow(hs_win, cmap="viridis")
         breeding_maps = calibration_sites.breeding_maps
         if site_idx < len(breeding_maps):
-            _overlay_breeding_range(ax, breeding_maps[site_idx])
+            _overlay_breeding_mask(ax, breeding_maps[site_idx])
 
         # Recover 2-D coordinates of all taxa pixels and the selection mask
         x_all, y_all = np.where(taxa_win > 0)

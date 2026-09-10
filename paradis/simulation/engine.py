@@ -853,9 +853,9 @@ def run_simulation(
     hs: np.ndarray,
     init_distrib: "np.ndarray | str | pathlib.Path",
     ewalk: float,
-    n: float,
-    r: float,
-    tgrowth: float,
+    s: float,
+    d: float,
+    S_crit: float,
     carrying_capacity_params: tuple,
     presence_threshold: float,
     n_steps: int = 35,
@@ -871,6 +871,7 @@ def run_simulation(
     solver: str = 'lu',
     gmres_tol: float = 1e-5,
     gpu_batch_mem_fraction: float = 0.8,
+    overdispersion_cap: float = 1e5,
     _snapshot_store: list | None = None,
 ) -> np.ndarray:
     """Run the PARADIS population simulation.
@@ -882,10 +883,20 @@ def run_simulation(
     init_distrib:
         2-D initial abundance map, or a path (``str``/``pathlib.Path``) to
         a ``.npy`` file holding one (loaded via ``numpy.load``).
-    ewalk, n, r:
-        Dispersal parameters.
-    tgrowth:
-        Characteristic growth time.
+    ewalk:
+        Dispersal parameter (expected number of steps).
+    s, d:
+        Learning-space dispersal parameters — ``s = log10(n) + log10(r)``,
+        ``d = log10(n) - log10(r)`` — converted internally to the actual
+        ``(n, r)`` kernel parameters via ``n = 10**((s+d)/2)``,
+        ``r = 10**((s-d)/2)``.
+    S_crit:
+        Critical per-dispersal-step survival probability (the model's
+        growth-timescale learning axis — see the module-level growth note
+        elsewhere in this package). Converted internally to the growth
+        coefficient ``g = 1/S_crit - 1`` used directly by
+        `~paradis.core.growth.carrying_capacity_from_hs`/`growth_step` —
+        no `Tg`/`a` intermediate anywhere in this path.
     carrying_capacity_params:
         ``(L, k, x0)`` logistic parameters.
     presence_threshold:
@@ -899,7 +910,13 @@ def run_simulation(
     sub_window:
         Sub-window width (pixels).
     additional_events:
-        Dict ``{year: (x, y)}`` of reintroduction events.
+        Dict ``{year: (x, y)}`` of reintroduction events. Each event seeds a
+        10x10 px square centred on ``(x, y)`` at that pixel's OWN local
+        carrying capacity ``K(HS_i)`` (NOT a flat ``presence_threshold``
+        level) -- so a release point on poor habitat is seeded near-zero
+        (matching what it can actually sustain) while one on prime habitat
+        is seeded at its full local K, rather than every site starting from
+        the same arbitrary "presence" abundance regardless of local HS.
     breeding_ground:
         Optional binary mask restricting reproduction.
     region_mask:
@@ -921,6 +938,25 @@ def run_simulation(
         solved together since they're independent, so this directly
         controls how much of that independence gets exploited in
         parallel.
+    overdispersion_cap:
+        Forwarded to `dispersal_step` — see its docstring. The
+        overdispersion loop (re-dispersing mass that lands on a window's
+        BORDER pixels, since it hasn't actually settled yet) stops once
+        the border's max density drops below ``presence_threshold /
+        overdispersion_cap`` (default `1e5`, e.g. `1.7e-7` for
+        `presence_threshold=0.017`). Each overdispersion iteration
+        re-injects mass at the SAME `sub_window`-spaced window-grid
+        locations, so a slowly-decaying border (e.g. from injecting
+        near-carrying-capacity point sources via `additional_events`,
+        or a very fine `window_size`/`sub_window` ratio) can produce a
+        visible periodic "grid" accumulation artifact in the final map if
+        it takes many iterations to converge. LOWERING this value raises
+        the stopping threshold (`presence_threshold / overdispersion_cap`
+        gets bigger), so the loop stops after FEWER iterations — trades
+        some numerical precision for less of that grid artifact. Raising
+        it lowers the stopping threshold (more iterations needed), which
+        is more numerically exact but slower and more prone to the
+        artifact.
 
     Returns
     -------
@@ -930,6 +966,16 @@ def run_simulation(
     if not isinstance(init_distrib, np.ndarray):
         init_distrib = np.load(init_distrib)
 
+    # (s, d) -> (n, r): the actual dispersal-kernel parameters this
+    # function's internals need, converted once here from the
+    # learning-space inputs. No Tg/a intermediate anywhere below — S_crit
+    # maps straight to g.
+    log_n = (s + d) / 2.0
+    log_r = (s - d) / 2.0
+    n = 10.0 ** log_n
+    r = 10.0 ** log_r
+    g = 1.0 / S_crit - 1.0
+
     L, k, x0 = carrying_capacity_params
     hs_t = torch.tensor(hs, dtype=torch.float32, device=device)
     # Whole-population dispersal model (deliberate simplification, matching
@@ -938,9 +984,19 @@ def run_simulation(
     # no Dt/SP (disperser/settled) split, a single state `SP` covers both.
     SP = torch.tensor(init_distrib, dtype=torch.float32)
 
-    a, K_is, _ = carrying_capacity_from_hs(hs_t.cpu(), tgrowth, L, k, x0)
+    g, K_is, _ = carrying_capacity_from_hs(hs_t.cpu(), g, L, k, x0)
     K_is_gpu = K_is.to(device)
-    a_tensor = torch.tensor(a, device=device)
+    g_tensor = torch.tensor(g, device=device)
+    # 2-D, CPU, per-pixel carrying capacity K(HS_i) -- used below to seed
+    # each `additional_events` pixel at ITS OWN local K_i rather than a
+    # single flat `presence_threshold` (which was an arbitrary "presence"
+    # level, not a real abundance -- a pixel with poor local HS would get
+    # inflated to `presence_threshold` even if its true K_i is far lower,
+    # while a prime-habitat pixel would get seeded below what it can
+    # actually sustain). K_is is already CPU (built from `hs_t.cpu()`
+    # above), matching SP's own device, so no extra `.to()`/`.cpu()` is
+    # needed at the injection site itself.
+    K_is_2d = K_is.reshape(hs_t.shape)
 
     if kernel_cache is None:
         kernel_cache = {}
@@ -1023,7 +1079,7 @@ def run_simulation(
 
         if additional_events and year in additional_events:
             for xe, ye in additional_events[year]:
-                SP[xe - 5: xe + 5, ye - 5: ye + 5] = presence_threshold
+                SP[xe - 5: xe + 5, ye - 5: ye + 5] = K_is_2d[xe - 5: xe + 5, ye - 5: ye + 5]
 
         for _ in range(time_division):
             SP, xs, ys, _ = dispersal_step(
@@ -1038,6 +1094,7 @@ def run_simulation(
                 _out_borders=_buf_borders,
                 solver=solver, gmres_tol=gmres_tol,
                 gpu_batch_mem_fraction=gpu_batch_mem_fraction,
+                overdispersion_cap=overdispersion_cap,
             )
 
         # Logistic growth applied to the WHOLE post-dispersal density — no
@@ -1048,7 +1105,7 @@ def run_simulation(
         # breeding or not, already disperses every year regardless.
         new_dens, growth_bl = growth_step(
             SP,
-            a_tensor,
+            g_tensor,
             K_is_gpu,
             xs, ys,
             window_size // 2,
@@ -1314,6 +1371,101 @@ def show_final(sim: "PopulationSimulator") -> None:
     plt.show()
 
 
+def plot_density_map(
+    npy_path: "str | pathlib.Path",
+    hs_path: "str | pathlib.Path | None" = None,
+    vmax: float | None = None,
+    title: str | None = None,
+    save_path: "str | pathlib.Path | None" = None,
+) -> None:
+    """Standalone plasma/contour density plot from a saved ``.npy`` map.
+
+    Reproduces `show_final`'s third panel (simulated distribution) exactly
+    — same plasma colormap, same value-proportional alpha blending, same
+    black contour lines — but as its own standalone figure that only needs
+    a path to a saved density array, not a live `PopulationSimulator`. The
+    one difference from `show_final`: `vmax` lets you CAP the colormap/
+    alpha scale at a chosen value instead of always stretching it to the
+    array's own max — any pixel above `vmax` is clamped down to it, so it
+    renders with the same (maximum) color/opacity as `vmax` itself, rather
+    than a single hotspot washing out the color scale for the rest of the
+    map. Useful to compare multiple saved runs on the SAME fixed scale, or
+    to keep a big transient hotspot from dominating the whole plot.
+
+    Parameters
+    ----------
+    npy_path:
+        Path to a ``.npy`` file holding a 2-D relative-abundance/density
+        array (e.g. `PopulationSimulator.run`'s return value, saved via
+        `numpy.save`).
+    hs_path:
+        Optional path to a habitat-suitability raster (loaded via
+        `~paradis.io.raster.load_hs`) to show as a grey background, same
+        convention as `show_final`'s panels. ``None`` (default): no
+        background, the density is drawn on its own.
+    vmax:
+        Density value at and above which the colormap/alpha saturate.
+        ``None`` (default): uses the array's own max, matching
+        `show_final`'s behaviour exactly (no capping).
+    title:
+        Plot title. ``None`` (default): a generic title built from
+        *npy_path*'s filename.
+    save_path:
+        If given, the figure is also saved here (``dpi=150``,
+        ``bbox_inches="tight"``) before being shown.
+
+    Example
+    -------
+    >>> from paradis.simulation import plot_density_map
+    >>> plot_density_map("outputs/Elanus_caeruleus_final_distrib.npy",
+    ...                   hs_path="HS_Elanus_caeruleus.tif", vmax=0.3)
+    """
+    final = np.load(npy_path)
+
+    data_max = float(np.nanmax(final)) if np.nanmax(final) > 0 else 1.0
+    plot_vmax = float(vmax) if vmax is not None else data_max
+    if plot_vmax <= 0:
+        plot_vmax = 1.0
+    clipped = np.clip(final, 0.0, plot_vmax)
+
+    fig, ax = plt.subplots(figsize=(7, 6))
+
+    if hs_path is not None:
+        from paradis.io.raster import load_hs
+        hs = load_hs(hs_path)
+        hs_display = np.where(hs > 0, hs, np.nan)
+        ax.imshow(hs_display, cmap="Greys", alpha=0.5, interpolation="nearest")
+
+    ax.imshow(
+        clipped,
+        cmap="plasma",
+        alpha=np.clip(clipped / plot_vmax, 0.0, 1.0),
+        vmin=0,
+        vmax=plot_vmax,
+        interpolation="nearest",
+        zorder=5,
+    )
+    ax.contour(
+        clipped,
+        levels=[plot_vmax / (4 - i) for i in range(3)],
+        colors="black",
+        linewidths=0.8,
+        alpha=0.3,
+    )
+    plt.colorbar(
+        plt.cm.ScalarMappable(cmap="plasma", norm=plt.Normalize(0, plot_vmax)),
+        ax=ax,
+        shrink=0.8,
+        label="Relative abundance" + (f" (capped at {plot_vmax:.3g})" if vmax is not None else ""),
+    )
+    ax.axis("off")
+    ax.set_title(title or f"Simulated distribution — {pathlib.Path(npy_path).stem}")
+
+    if save_path is not None:
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+    plt.show()
+
+
 # ---------------------------------------------------------------------------
 # Object-oriented wrapper
 # ---------------------------------------------------------------------------
@@ -1325,10 +1477,16 @@ class PopulationSimulator:
     ----------
     hs:
         Habitat-suitability map.
-    ewalk, n, r:
-        Dispersal parameters.
-    tgrowth:
-        Characteristic growth time.
+    ewalk:
+        Dispersal parameter (expected number of steps).
+    s, d:
+        Learning-space dispersal parameters — ``s = log10(n) + log10(r)``,
+        ``d = log10(n) - log10(r)`` — converted internally to the actual
+        ``(n, r)`` kernel parameters.
+    S_crit:
+        Critical per-dispersal-step survival probability. Converted
+        internally to the growth coefficient ``g = 1/S_crit - 1`` used
+        directly — no `Tg`/`a` intermediate anywhere in this path.
     carrying_capacity_params:
         ``(L, k, x0)``.
     presence_threshold:
@@ -1359,6 +1517,22 @@ class PopulationSimulator:
         `max_mem_windows` (a fixed count, only relevant for the disk
         cache). Lower this if you're running other memory-heavy work
         alongside the simulation.
+    region_mask:
+        Optional binary study-region mask (2-D array, OR a path to a
+        raster — loaded via `~paradis.io.raster.load_mask`), same spatial
+        extent/shape as *hs* BEFORE cropping. When given, `hs` is
+        automatically cropped ONCE here, at construction, to this mask's
+        bounding box (plus `region_mask_padding` pixels of margin) — no
+        manual `crop_to_mask` call needed. Any full-extent `init_distrib`
+        or `breeding_ground` passed to `run()` afterwards is auto-cropped
+        to match on every call (see `run`'s `**kwargs` and `_maybe_crop`) —
+        only arrays whose shape still matches this mask's ORIGINAL
+        (uncropped) shape are touched, so an already-cropped or custom-size
+        array passed directly is left alone. ``None`` (default): no
+        cropping, `hs` is used at its full extent exactly as given.
+    region_mask_padding:
+        Margin (pixels) added on every side of *region_mask*'s bounding box
+        before cropping. Only used when *region_mask* is given. Default 50.
 
     Examples
     --------
@@ -1367,8 +1541,8 @@ class PopulationSimulator:
     >>> hs = np.random.rand(200, 200).astype("float32")
     >>> init = np.zeros_like(hs)
     >>> init[90:110, 90:110] = 0.05
-    >>> sim = PopulationSimulator(hs, ewalk=50, n=500, r=0.05,
-    ...                           tgrowth=7.5, carrying_capacity_params=(0.1, 5, 0.5),
+    >>> sim = PopulationSimulator(hs, ewalk=50, s=1.4, d=3.6,
+    ...                           S_crit=0.75, carrying_capacity_params=(0.1, 5, 0.5),
     ...                           presence_threshold=0.02)
     >>> final = sim.run(n_steps=10, init_distrib=init)
     """
@@ -1377,9 +1551,9 @@ class PopulationSimulator:
         self,
         hs: "np.ndarray | str | pathlib.Path",
         ewalk: float,
-        n: float,
-        r: float,
-        tgrowth: float,
+        s: float,
+        d: float,
+        S_crit: float,
         carrying_capacity_params: tuple,
         presence_threshold: float,
         cache_dir: str | pathlib.Path | None = None,
@@ -1387,15 +1561,43 @@ class PopulationSimulator:
         ram_fraction: float = 0.9,
         solver: str = 'lu',
         gmres_tol: float = 1e-5,
+        region_mask: "np.ndarray | str | pathlib.Path | None" = None,
+        region_mask_padding: int = 50,
     ) -> None:
         if not isinstance(hs, np.ndarray):
             from paradis.io.raster import load_hs
             hs = load_hs(hs)
+
+        # Automatic region-mask cropping: done ONCE here, at construction,
+        # so `self.hs` (and everything derived from it — kernel geometry,
+        # `show_final`/`show_expansion`'s background panels) is consistently
+        # the CROPPED extent from this point on. `run()` below crops any
+        # user-supplied `init_distrib`/`breeding_ground` to match on every
+        # call, using the same stored (uncropped) mask + padding, so nothing
+        # needs to be cropped manually by the caller — matches this mask's
+        # bounding box (plus `region_mask_padding` margin) automatically.
+        if region_mask is not None and not isinstance(region_mask, np.ndarray):
+            from paradis.io.raster import load_mask
+            region_mask = load_mask(region_mask)
+        if region_mask is not None:
+            (hs,), crop_origin = crop_to_mask([hs], region_mask, padding=region_mask_padding)
+        else:
+            crop_origin = (0, 0)
+        self._region_mask     = region_mask
+        self._region_padding  = region_mask_padding
+        self._crop_origin     = crop_origin
+
         self.hs = hs
         self.ewalk = ewalk
-        self.n = n
-        self.r = r
-        self.tgrowth = tgrowth
+        self.s = s
+        self.d = d
+        self.S_crit = S_crit
+        # (s, d) -> (n, r): actual dispersal-kernel parameters, computed
+        # once here and reused internally (suggest_window_params, the
+        # disk-backed kernel cache, __repr__) — no Tg/a intermediate
+        # anywhere in this class.
+        self.n = 10.0 ** ((s + d) / 2.0)
+        self.r = 10.0 ** ((s - d) / 2.0)
         self.carrying_capacity_params = carrying_capacity_params
         self.presence_threshold = presence_threshold
 
@@ -1470,6 +1672,25 @@ class PopulationSimulator:
             shutil.rmtree(self._cache_dir, ignore_errors=True)
             self._cache_dir.mkdir(parents=True, exist_ok=True)
 
+    def _maybe_crop(self, arr: "np.ndarray | None") -> "np.ndarray | None":
+        """Auto-crop *arr* to match `self.hs` if a `region_mask` was given
+        at construction — used by `run()` for `init_distrib`/
+        `breeding_ground` so callers never have to crop those manually.
+
+        Only crops when *arr*'s shape matches the ORIGINAL (uncropped)
+        `region_mask` shape — i.e. it looks like a full-extent raster the
+        caller loaded fresh, exactly like `self.hs` was before `__init__`
+        cropped it. An array already at `self.hs`'s (cropped) shape, or any
+        other custom shape, is passed through unchanged, so this is safe to
+        apply unconditionally without guessing the caller's intent.
+        """
+        if arr is None or self._region_mask is None:
+            return arr
+        if arr.shape != self._region_mask.shape:
+            return arr
+        (arr_cropped,), _ = crop_to_mask([arr], self._region_mask, padding=self._region_padding)
+        return arr_cropped
+
     def run(
         self,
         n_steps: int = 35,
@@ -1503,8 +1724,17 @@ class PopulationSimulator:
             init_distrib[h // 2 - 5: h // 2 + 5, w // 2 - 5: w // 2 + 5] = (
                 self.presence_threshold
             )
-        elif not isinstance(init_distrib, np.ndarray):
-            init_distrib = np.load(init_distrib)
+        else:
+            if not isinstance(init_distrib, np.ndarray):
+                init_distrib = np.load(init_distrib)
+            # Auto-crop to match `self.hs` if a `region_mask` was given at
+            # construction — a fresh, full-extent `init_distrib` the caller
+            # just loaded needs the same crop `self.hs` already got; see
+            # `_maybe_crop`.
+            init_distrib = self._maybe_crop(init_distrib)
+
+        if "breeding_ground" in kwargs and kwargs["breeding_ground"] is not None:
+            kwargs["breeding_ground"] = self._maybe_crop(kwargs["breeding_ground"])
 
         # Build the kernel cache for this run.
         #
@@ -1550,9 +1780,9 @@ class PopulationSimulator:
             hs=self.hs,
             init_distrib=init_distrib,
             ewalk=self.ewalk,
-            n=self.n,
-            r=self.r,
-            tgrowth=self.tgrowth,
+            s=self.s,
+            d=self.d,
+            S_crit=self.S_crit,
             carrying_capacity_params=self.carrying_capacity_params,
             presence_threshold=self.presence_threshold,
             n_steps=n_steps,
@@ -1568,5 +1798,6 @@ class PopulationSimulator:
     def __repr__(self) -> str:
         return (
             f"PopulationSimulator(hs={self.hs.shape}, "
-            f"Ew={self.ewalk:.1f}, n={self.n:.1f}, r={self.r:.5f})"
+            f"Ew={self.ewalk:.1f}, s={self.s:.4g}, d={self.d:.4g}, "
+            f"S_crit={self.S_crit:.4g})"
         )
